@@ -11,7 +11,7 @@
 #include <iostream>
 #include <cassert>
 
-namespace Base {
+namespace base {
 
 	Window::Window(const WindowProps& props)
 		: m_Width(props.width), m_Height(props.height)

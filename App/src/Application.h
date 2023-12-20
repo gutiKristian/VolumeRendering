@@ -5,26 +5,26 @@
 
 int main(int argc, char* argv[]);
 
-namespace Base {
+namespace med {
 
 	class Application
 	{
 	public:
 		Application();
-		virtual ~Application();
+		~Application();
 
-		virtual void Update(Timestep ts) = 0;
-		virtual void Render() = 0;
-		virtual void RenderImGui() = 0;
+		void OnUpdate(base::Timestep ts);
+		void OnRender();
+		void OnImGuiRender();
 	private:
 		void Run();
-		void OnFrame(Timestep ts);
+		void OnFrame(base::Timestep ts);
 	private:
 #if defined(PLATFORM_WEB)
 		static int EMSRedraw(double time, void* userData);
 #endif
 	private:
-		Window* m_Window;
+		base::Window* m_Window;
 		bool m_Running = false;
 	private:
 		friend int ::main(int argc, char* argv[]);

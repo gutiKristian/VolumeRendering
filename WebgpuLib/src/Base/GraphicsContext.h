@@ -4,7 +4,7 @@
 
 struct GLFWwindow;
 
-namespace Base {
+namespace base {
 
 	class GraphicsContext
 	{

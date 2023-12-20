@@ -5,7 +5,7 @@
 #include "Base/Base.h"
 #include "Base/Filesystem.h"
 
-namespace Base {
+namespace base {
 
 	void Filesystem::Init()
 	{

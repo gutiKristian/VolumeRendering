@@ -5,7 +5,7 @@
 #include <chrono>
 #include <sstream>
 
-namespace Base {
+namespace base {
 
 	const char* Logger::RESET_CLR = "\x1B[0m";
 	const char* Logger::RED_CLR = "\x1B[31m";

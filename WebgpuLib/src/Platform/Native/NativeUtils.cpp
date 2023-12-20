@@ -6,7 +6,7 @@
 
 #include <chrono>
 
-namespace Base {
+namespace base {
 
 	void Utils::Sleep(uint32_t ms)
 	{

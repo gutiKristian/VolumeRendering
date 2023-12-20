@@ -14,7 +14,7 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
-namespace Base {
+namespace base {
 
 	static wgpu::Surface GetGLFWSurface(wgpu::Instance instance, GLFWwindow* window)
 	{

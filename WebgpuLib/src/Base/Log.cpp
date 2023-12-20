@@ -1,6 +1,6 @@
 #include "Log.h"
 
-namespace Base {
+namespace base {
 
 	std::shared_ptr<Logger> Log::s_Logger;
 

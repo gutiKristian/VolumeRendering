@@ -2,7 +2,6 @@
 
 #include "Base/Base.h"
 #include "Base/Filesystem.h"
-#include "Base/Utils.h"
 #include "Base/Timer.h"
 
 #include "Base/GraphicsContext.h"
@@ -15,15 +14,15 @@
 	#include <emscripten/html5_webgpu.h>
 #endif
 
-namespace Base {
+namespace med {
 
 	Application::Application()
 	{
-		Log::Init();
-		Filesystem::Init();
+		base::Log::Init();
+		base::Filesystem::Init();
 
-		WindowProps props{ .width = 1280, .height = 720, .title = "SVGscape" };
-		m_Window = new Window(props);
+		base::WindowProps props{ .width = 1280, .height = 720, .title = "Volume Rendering" };
+		m_Window = new base::Window(props);
 	}
 
 	Application::~Application()
@@ -31,16 +30,29 @@ namespace Base {
 		delete m_Window;
 	}
 
+	void Application::OnUpdate(base::Timestep ts)
+	{
+	}
+
+	void Application::OnRender()
+	{
+	}
+
+	void Application::OnImGuiRender()
+	{
+	}
+
 	void Application::Run()
 	{
+		INFO("Run Application");
 		m_Running = true;
 #if defined(PLATFORM_WEB)
 		emscripten_request_animation_frame_loop(Application::EMSRedraw, (void*)this);
 #else
-		Timer timer;
+		base::Timer timer;
 		while (m_Running)
 		{
-			Timestep ts = Timestep(timer.ElapsedNs());
+			auto ts = base::Timestep(timer.ElapsedNs());
 			timer.Reset();
 
 			OnFrame(ts);
@@ -48,27 +60,27 @@ namespace Base {
 #endif
 	}
 
-	void Application::OnFrame(Timestep ts)
+	void Application::OnFrame(base::Timestep ts)
 	{
-		const WindowResizedEvent* lastWindowResizeEvent = nullptr;
-		for (const Event& ev : m_Window->GetEvents())
+		const base::WindowResizedEvent* lastWindowResizeEvent = nullptr;
+		for (const base::Event& ev : m_Window->GetEvents())
 		{
 			switch (ev.type)
 			{
-			case  EventType::WindowResized:
+			case  base::EventType::WindowResized:
 				lastWindowResizeEvent = &ev.as.windowResizedEvent;
 				break;
-			case EventType::WindowClosed:
+			case base::EventType::WindowClosed:
 				m_Running = false;
 				return;
 			}
 		}
 
-		Update(ts);
+		OnUpdate(ts);
 
 		if (m_Window->GetWidth() != 0 && m_Window->GetHeight() != 0)
 		{
-			Render();
+			OnRender();
 		}
 
 		m_Window->Update();

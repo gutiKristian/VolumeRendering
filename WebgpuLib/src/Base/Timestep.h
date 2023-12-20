@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace Base {
+namespace base {
 
 	class Timestep
 	{

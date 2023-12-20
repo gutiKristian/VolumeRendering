@@ -4,8 +4,6 @@ set(WEBGPU_LIB_Sources
 	"src/Base/Main.cpp"
 	"src/Base/Base.h"
 	"src/Base/Assert.h"
-	"src/Base/Application.h"
-	"src/Base/Application.cpp"
 	"src/Base/Window.h"
 	"src/Base/Event.h"
 	"src/Base/Utils.h"

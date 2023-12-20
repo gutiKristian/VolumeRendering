@@ -1,4 +1,4 @@
-#include "Base/Application.h"
+#include "../../App/src/Application.h"
 
 #include <GLFW/glfw3.h>
 
@@ -10,11 +10,9 @@
 
 #include <webgpu/webgpu_cpp.h>
 
-extern Base::Application* CreateApplication();
-
 int main(int argc, char* argv[])
 {
-	Base::Application* app = CreateApplication();
+	auto* app = new med::Application();
 	app->Run();
 #if !defined(PLATFORM_WEB)
 	delete app;

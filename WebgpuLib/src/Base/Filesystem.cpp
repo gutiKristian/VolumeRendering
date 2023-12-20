@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-namespace Base {
+namespace base {
 
 	std::optional<std::string> Filesystem::ReadFile(const std::filesystem::path& relativeFilepath)
 	{

@@ -3,7 +3,7 @@
 #include "Base/Base.h"
 #include "Base/Utils.h"
 
-namespace Base {
+namespace base {
 
 	wgpu::Adapter GraphicsContext::RequestAdapter(wgpu::Instance instance, const wgpu::RequestAdapterOptions* options)
 	{

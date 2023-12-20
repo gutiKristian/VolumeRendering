@@ -1,7 +1,7 @@
 ﻿project(App CXX)
 
 add_executable(App
-	"src/Playground.cpp"
+ "src/Application.cpp"
 )
 
 target_compile_definitions(App

@@ -9,7 +9,7 @@
 #include <utility>
 #include <tuple>
 
-namespace Base {
+namespace base {
 
 	template<typename T>
 	static std::string ToStdString(const T& rhs)

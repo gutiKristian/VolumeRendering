@@ -9,7 +9,7 @@
 
 struct GLFWwindow;
 
-namespace Base {
+namespace base {
 
 	struct WindowProps
 	{
