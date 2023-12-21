@@ -151,14 +151,22 @@ namespace base {
 		{
 			wgpu::AdapterProperties prop;
 			adapter.GetProperties(&prop);
+			std::vector<const char*> features = adapter.GetSupportedFeatures();
 
 			log << "\n";
 			log << "Adapter type: " << ResolveAdapterType(prop.adapterType) << "\n";
 			log << "Name: " << prop.name << "\n" << "Architecture: " << prop.architecture << "\n";
 			log << "Vendor: " << prop.vendorName << "\n" << "Driver description: " << prop.driverDescription << "\n";
 			log << "Backend: " << ResolveBackendType(prop.backendType) << "\n";
-		}
+			log << "List of supported features:\n";
 
+			int i = 1;
+			for (const auto* ptr : features)
+			{
+				log << ptr << ((i++ % 3 == 0) ? "\n" : "\t\t");
+			}
+			log << "\n";
+		}
 		std::string result = log.str();
 		INFO(result.c_str());
 	}
