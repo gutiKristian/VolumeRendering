@@ -16,6 +16,10 @@ add_executable(App
  "src/renderer/Sampler.cpp"
  "src/renderer/PipelineBuilder.h"
  "src/renderer/PipelineBuilder.cpp"
+ "src/renderer/BindGroup.h"
+ "src/renderer/BindGroup.cpp"
+ "src/renderer/IndexBuffer.h"
+ "src/renderer/IndexBuffer.cpp"
  )
 
 target_compile_definitions(App
