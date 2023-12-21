@@ -49,8 +49,8 @@ namespace base {
 		s_Adapter = RequestAdapter(s_Instance, &opts);
 
 		wgpu::DeviceDescriptor deviceDesc;
-		deviceDesc.label = "SVGscape_Device";
-		deviceDesc.defaultQueue.label = "SVGscape_Queue";
+		deviceDesc.label = "Volume_Device";
+		deviceDesc.defaultQueue.label = "Volume_Queue";
 
 		s_Device = RequestDevice(s_Adapter, &deviceDesc);
 
