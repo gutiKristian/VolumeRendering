@@ -2,7 +2,7 @@
 #include "webgpu/webgpu.h"
 #include <cassert>
 
-namespace visitlab
+namespace med
 {
 	UniformBuffer::UniformBuffer(WGPUBuffer buffer, std::uint32_t size, const std::string& name) noexcept : m_Buffer(buffer), m_Size(size), m_Name(name)
 	{

@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-namespace visitlab
+namespace med
 {
 	class UniformBuffer
 	{

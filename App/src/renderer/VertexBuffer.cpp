@@ -1,7 +1,7 @@
 #include "VertexBuffer.h"
 #include <cassert>
 
-namespace visitlab
+namespace med
 {
 
 	static uint32_t GetFormatSize(WGPUVertexFormat format)
