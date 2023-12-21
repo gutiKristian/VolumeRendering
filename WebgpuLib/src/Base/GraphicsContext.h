@@ -1,6 +1,7 @@
 #pragma once
 
 #include <webgpu/webgpu_cpp.h>
+#include <string>
 
 struct GLFWwindow;
 
@@ -15,6 +16,7 @@ namespace base {
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
+		static void ListAvailableAdapters();
 		static wgpu::Device GetDevice() { return s_Device; }
 		static wgpu::Surface GetSurface() { return s_Surface; }
 		static wgpu::Queue GetQueue() { return s_Queue; }
@@ -24,6 +26,8 @@ namespace base {
 	private:
 		static wgpu::Adapter RequestAdapter(wgpu::Instance instance, const wgpu::RequestAdapterOptions* options);
 		static wgpu::Device RequestDevice(wgpu::Adapter adapter, const wgpu::DeviceDescriptor* descriptor);
+		static std::string ResolveBackendType(wgpu::BackendType type);
+		static std::string ResolveAdapterType(wgpu::AdapterType type);
 	private:
 		static inline wgpu::Instance s_Instance;
 		static inline wgpu::Adapter s_Adapter;
