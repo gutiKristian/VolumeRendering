@@ -8,6 +8,14 @@ add_executable(App
  "src/renderer/VertexBuffer.cpp"
  "src/renderer/UniformBuffer.h"
  "src/renderer/UniformBuffer.cpp"
+ "src/renderer/RenderPipeline.h"
+ "src/renderer/RenderPipeline.cpp"
+ "src/renderer/StorageBuffer.h"
+ "src/renderer/StorageBuffer.cpp"
+ "src/renderer/Sampler.h"
+ "src/renderer/Sampler.cpp"
+ "src/renderer/PipelineBuilder.h"
+ "src/renderer/PipelineBuilder.cpp"
  )
 
 target_compile_definitions(App
