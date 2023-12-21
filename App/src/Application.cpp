@@ -5,7 +5,6 @@
 #include "Base/Timer.h"
 
 #include "Base/GraphicsContext.h"
-
 #include <webgpu/webgpu_cpp.h>
 
 #if defined(PLATFORM_WEB)
