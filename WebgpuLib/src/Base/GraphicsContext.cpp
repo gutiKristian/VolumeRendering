@@ -8,11 +8,11 @@
 
 namespace base {
 
-	wgpu::Adapter GraphicsContext::RequestAdapter(wgpu::Instance instance, const wgpu::RequestAdapterOptions* options)
+	WGPUAdapter GraphicsContext::RequestAdapter(WGPUInstance instance, const WGPURequestAdapterOptions* options)
 	{
 		struct UserData
 		{
-			wgpu::Adapter adapter = nullptr;
+			WGPUAdapter adapter = nullptr;
 			bool requestEnded = false;
 		} userData;
 
@@ -21,7 +21,7 @@ namespace base {
 			UserData& userData = *reinterpret_cast<UserData*>(userdata);
 			if (status == WGPURequestAdapterStatus_Success)
 			{
-				userData.adapter = wgpu::Adapter(adapter);
+				userData.adapter = adapter;
 			}
 			else
 			{
@@ -32,7 +32,8 @@ namespace base {
 			userData.requestEnded = true;
 		};
 
-		instance.RequestAdapter(options, onAdapterRequestEnded, &userData);
+		wgpuInstanceRequestAdapter(instance, options, onAdapterRequestEnded, &userData);
+		
 		while (!userData.requestEnded)
 		{
 			Utils::Sleep(10);
@@ -40,14 +41,13 @@ namespace base {
 
 		ASSERT(userData.requestEnded, "Request has not yet ended");
 
-		wgpu::Adapter adapter = userData.adapter;
-		wgpu::SupportedLimits limits;
-		adapter.GetLimits(&limits);
-		s_Limits = limits.limits;
+		WGPUSupportedLimits limits{};
+		wgpuAdapterGetLimits(userData.adapter, &limits);
+		s_LimitsC = limits.limits;
 		return userData.adapter;
 	}
 
-	wgpu::Device GraphicsContext::RequestDevice(wgpu::Adapter adapter, const wgpu::DeviceDescriptor* descriptor)
+	WGPUDevice GraphicsContext::RequestDevice(WGPUAdapter adapter, const WGPUDeviceDescriptor* descriptor)
 	{
 		struct UserData
 		{
@@ -70,7 +70,7 @@ namespace base {
 				userData.requestEnded = true;
 			};
 
-		adapter.RequestDevice(descriptor, onDeviceRequestEnded, &userData);
+		wgpuAdapterRequestDevice(adapter, descriptor, onDeviceRequestEnded, &userData);
 		while (!userData.requestEnded)
 		{
 			Utils::Sleep(10);
@@ -124,14 +124,14 @@ namespace base {
 
 	void GraphicsContext::OnWindowResize(uint32_t width, uint32_t height)
 	{
-		wgpu::SwapChainDescriptor swapChainDesc;
-		swapChainDesc.format = s_DefaultTextureFormat;
-		swapChainDesc.presentMode = wgpu::PresentMode::Fifo;
-		swapChainDesc.usage = wgpu::TextureUsage::RenderAttachment;
-		swapChainDesc.width = width;
+		WGPUSwapChainDescriptor swapChainDesc{};
+		swapChainDesc.format = s_DefaultTextureFormatC;
+		swapChainDesc.presentMode = WGPUPresentMode_Fifo;
+		swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
 		swapChainDesc.height = height;
+		swapChainDesc.width = width;
 
-		s_SwapChain = s_Device.CreateSwapChain(s_Surface, &swapChainDesc);
+		s_SwapChainC = wgpuDeviceCreateSwapChain(s_DeviceC, s_SurfaceC, &swapChainDesc);
 	}
 
 	/*

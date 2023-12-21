@@ -32,48 +32,70 @@ namespace base {
 		return instance.CreateSurface(&surfaceDesc);
 	}
 
+	static WGPUSurface GetGLFWSurface(WGPUInstance instance, GLFWwindow* window)
+	{
+		HWND hWnd = glfwGetWin32Window(window);
+		HINSTANCE hInstance = GetModuleHandle(NULL);
+
+		WGPUChainedStruct str{};
+		str.sType = WGPUSType_SurfaceDescriptorFromWindowsHWND;
+
+		WGPUSurfaceDescriptorFromWindowsHWND windowDesc{};
+		windowDesc.hinstance = hInstance;
+		windowDesc.hwnd = hWnd;
+		windowDesc.chain = str;
+
+		WGPUSurfaceDescriptor surfaceDesc{};
+		surfaceDesc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&windowDesc);
+
+		WGPUSurface surface = wgpuInstanceCreateSurface(instance, &surfaceDesc);
+		wgpuSurfaceReference(surface);
+		return surface;
+	}
+
 	void GraphicsContext::Init(GLFWwindow* window, uint32_t width, uint32_t height)
 	{
 		ListAvailableAdapters();
 
-		wgpu::InstanceDescriptor desc = {};
-		s_Instance = wgpu::CreateInstance(&desc);
+		const WGPUInstanceDescriptor descC{};
+		s_InstanceC = wgpuCreateInstance(&descC);
 
-		s_Surface = GetGLFWSurface(s_Instance, window);
+		s_SurfaceC = GetGLFWSurface(s_InstanceC, window);
 
-		wgpu::RequestAdapterOptions opts;
-		opts.compatibleSurface = s_Surface;
-		opts.backendType = wgpu::BackendType::D3D12;
-		opts.powerPreference = wgpu::PowerPreference::HighPerformance;
+		WGPURequestAdapterOptions options{};
+		options.compatibleSurface = s_SurfaceC;
+		options.backendType = WGPUBackendType_D3D12;
+		options.powerPreference = WGPUPowerPreference_HighPerformance;
 
-		s_Adapter = RequestAdapter(s_Instance, &opts);
+		s_AdapterC = RequestAdapter(s_InstanceC, &options);
 
-		wgpu::DeviceDescriptor deviceDesc;
-		deviceDesc.label = "Volume_Device";
-		deviceDesc.defaultQueue.label = "Volume_Queue";
+		WGPUDeviceDescriptor devDesc{};
+		devDesc.label = "Volume Device";
+		devDesc.defaultQueue.label = "Volume Queue";
 
-		s_Device = RequestDevice(s_Adapter, &deviceDesc);
+		s_DeviceC = RequestDevice(s_AdapterC, &devDesc);
 
-		s_Device.SetUncapturedErrorCallback([](WGPUErrorType type, char const* message, void* pUserData)
+		wgpuDeviceSetUncapturedErrorCallback(s_DeviceC,[](WGPUErrorType type, char const* message, void* pUserData)
 		{
 			ERROR("WebGPU Error: {0}", message);
 		}, nullptr);
-		s_Device.SetLoggingCallback([](WGPULoggingType type, char const* message, void* userdata)
+
+		wgpuDeviceSetLoggingCallback(s_DeviceC, [](WGPULoggingType type, char const* message, void* userdata)
 		{
 			ERROR("WebGPU log: {0}", message);
 		}, nullptr);
 
-		s_Queue = s_Device.GetQueue();
-		s_DefaultTextureFormat = wgpu::TextureFormat::BGRA8Unorm;
+		s_QueueC = wgpuDeviceGetQueue(s_DeviceC);
+		s_DefaultTextureFormatC = WGPUTextureFormat_BGRA8Unorm;
 
-		wgpu::SwapChainDescriptor swapChainDesc;
-		swapChainDesc.format = s_DefaultTextureFormat;
-		swapChainDesc.presentMode = wgpu::PresentMode::Fifo;
-		swapChainDesc.usage = wgpu::TextureUsage::RenderAttachment;
-		swapChainDesc.width = width;
+		WGPUSwapChainDescriptor swapChainDesc{};
+		swapChainDesc.format = s_DefaultTextureFormatC;
+		swapChainDesc.presentMode = WGPUPresentMode_Fifo;
+		swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
 		swapChainDesc.height = height;
+		swapChainDesc.width = width;
 
-		s_SwapChain = s_Device.CreateSwapChain(s_Surface, &swapChainDesc);
+		s_SwapChainC = wgpuDeviceCreateSwapChain(s_DeviceC, s_SurfaceC, &swapChainDesc);
 	}
 
 }
