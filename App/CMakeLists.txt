@@ -2,7 +2,9 @@
 
 add_executable(App
  "src/Application.cpp"
-)
+ "src/renderer/Texture.h"
+ "src/renderer/Texture.cpp"
+ )
 
 target_compile_definitions(App
 	PRIVATE
