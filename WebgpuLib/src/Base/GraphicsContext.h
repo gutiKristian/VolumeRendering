@@ -17,26 +17,27 @@ namespace base {
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		static void ListAvailableAdapters();
-		static wgpu::Device GetDevice() { return s_Device; }
-		static wgpu::Surface GetSurface() { return s_Surface; }
-		static wgpu::Queue GetQueue() { return s_Queue; }
-		static wgpu::SwapChain GetSwapChain() { return s_SwapChain; }
-		static wgpu::TextureFormat GetDefaultTextureFormat() { return s_DefaultTextureFormat; }
-		static const wgpu::Limits& GetLimits() { return s_Limits; }
+
+		static WGPUDevice GetDevice() { return s_DeviceC; }
+		static WGPUSurface GetSurface() { return s_SurfaceC; }
+		static WGPUQueue GetQueue() { return s_QueueC; }
+		static WGPUSwapChain GetSwapChain() { return s_SwapChainC; }
+		static WGPUTextureFormat GetDefaultTextureFormat() { return s_DefaultTextureFormatC; }
+		static const WGPULimits& GetLimits() { return s_LimitsC; }
 	private:
-		static wgpu::Adapter RequestAdapter(wgpu::Instance instance, const wgpu::RequestAdapterOptions* options);
-		static wgpu::Device RequestDevice(wgpu::Adapter adapter, const wgpu::DeviceDescriptor* descriptor);
+		static WGPUAdapter RequestAdapter(WGPUInstance instance, const WGPURequestAdapterOptions* options);
+		static WGPUDevice RequestDevice(WGPUAdapter adapter, const WGPUDeviceDescriptor* descriptor);
 		static std::string ResolveBackendType(wgpu::BackendType type);
 		static std::string ResolveAdapterType(wgpu::AdapterType type);
 	private:
-		static inline wgpu::Instance s_Instance;
-		static inline wgpu::Adapter s_Adapter;
-		static inline wgpu::Device s_Device;
-		static inline wgpu::Surface s_Surface;
-		static inline wgpu::Queue s_Queue;
-		static inline wgpu::SwapChain s_SwapChain;
-		static inline wgpu::TextureFormat s_DefaultTextureFormat;
-		static inline wgpu::Limits s_Limits;
+		static inline WGPUInstance s_InstanceC;
+		static inline WGPUAdapter s_AdapterC;
+		static inline WGPUDevice s_DeviceC;
+		static inline WGPUSurface s_SurfaceC;
+		static inline WGPUQueue s_QueueC;
+		static inline WGPUSwapChain s_SwapChainC;
+		static inline WGPUTextureFormat s_DefaultTextureFormatC;
+		static inline WGPULimits s_LimitsC;
 	};
 
 }
