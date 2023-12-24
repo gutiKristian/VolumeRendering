@@ -22,11 +22,18 @@ namespace med {
 
 		base::WindowProps props{ .width = 1280, .height = 720, .title = "Volume Rendering" };
 		m_Window = new base::Window(props);
+		OnStart();
 	}
 
 	Application::~Application()
 	{
 		delete m_Window;
+	}
+
+	void Application::OnStart()
+	{
+		INFO("On start");
+
 	}
 
 	void Application::OnUpdate(base::Timestep ts)
@@ -39,6 +46,11 @@ namespace med {
 
 	void Application::OnImGuiRender()
 	{
+	}
+
+	void Application::OnEnd()
+	{
+		INFO("On end");
 	}
 
 	void Application::Run()
@@ -56,6 +68,7 @@ namespace med {
 
 			OnFrame(ts);
 		}
+		OnEnd();
 #endif
 	}
 

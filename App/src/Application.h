@@ -13,11 +13,39 @@ namespace med {
 		Application();
 		~Application();
 
+		/*
+		 * Application data initialization
+		*/
+		void OnStart();
+
+		/*
+		 * Updating data
+		 */
 		void OnUpdate(base::Timestep ts);
+
+		/*
+		 * Render calls.
+		 */
 		void OnRender();
+
+		/*
+		 * Rendering UI.
+		 */
 		void OnImGuiRender();
+
+		/*
+		 * Called when application is closed (not in ems for now)
+		 */
+		void OnEnd();
 	private:
+		/*
+		 * Main loop of the application
+		 */
 		void Run();
+
+		/*
+		 * Event processing stuff and pre-precessing things around window
+		 */
 		void OnFrame(base::Timestep ts);
 	private:
 #if defined(PLATFORM_WEB)
