@@ -168,6 +168,6 @@ namespace base {
 			log << "\n";
 		}
 		std::string result = log.str();
-		INFO(result.c_str());
+		TRACE(result.c_str());
 	}
 }
