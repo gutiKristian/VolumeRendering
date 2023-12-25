@@ -1,9 +1,8 @@
 #include "DcmImpl.h"
-#include <iostream>
-#include <sstream>
 #include <cassert>
 #include <string>
 
+#include "Base/Log.h"
 
 namespace med
 {
@@ -24,7 +23,7 @@ namespace med
 
 		if (numberOfFiles == 0)
 		{
-			log("No files found!");
+			ERROR("No files found!");
 			throw new std::exception("no files");
 		}
 
@@ -46,7 +45,7 @@ namespace med
 				{
 					if (!allocateMemory(numberOfFiles, isDir))
 					{
-						log("Allocation failed");
+						ERROR("Allocation failed");
 ;						throw std::exception("Couldn't allocate memory");
 					}
 					isFirstRun = false;
@@ -58,7 +57,7 @@ namespace med
 			}
 			else
 			{
-				log("Cannot continue, unable to open: " + file.string());
+				ERROR("Cannot continue, unable to open: ", file.string());
 				throw std::exception("Error!");
 			}
 
@@ -97,8 +96,8 @@ namespace med
 	{
 		if (originalVal != 0 && originalVal != newVal)
 		{
-			log("Mismatch in tag: " + tag);
-			log("Original value: " + std::to_string(originalVal) + ", new value: " + std::to_string(newVal));
+			ERROR("Mismatch in tag: ", tag);
+			ERROR("Original value: ", std::to_string(originalVal), ", new value: ", std::to_string(newVal));
 			throw std::exception("Mismatch ");
 		}
 		originalVal = newVal;
