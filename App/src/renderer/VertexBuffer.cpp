@@ -6,7 +6,7 @@ namespace med
 
 	static uint32_t GetFormatSize(WGPUVertexFormat format)
 	{
-		constexpr float floatVal = sizeof(float);
+		constexpr uint32_t floatVal = sizeof(float);
 
 		switch (format)
 		{

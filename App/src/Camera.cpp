@@ -1,7 +1,6 @@
 #include "Camera.h"
 #include <glfw/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 #include <glm/gtx/io.hpp>
 
 namespace med

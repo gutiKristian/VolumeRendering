@@ -1,14 +1,10 @@
 #pragma once
 
-#include <string>
 #include <glm/glm.hpp>
-#include <glm/matrix.hpp>
 #include <glm/gtx/quaternion.hpp>
-
 
 namespace med
 {
-
 	enum class CameraType
 	{
 		Undefined,
@@ -35,7 +31,6 @@ namespace med
 		const glm::mat4& GetViewMatrix() const;
 		const glm::mat4& GetInverseProjectionMatrix() const;
 		const glm::mat4& GetInverseViewMatrix() const;
-
 		glm::quat GetOrientation() const;
 		glm::vec3 GetUp() const;
 		glm::vec3 GetForward() const;

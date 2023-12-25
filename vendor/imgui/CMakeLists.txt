@@ -11,4 +11,4 @@ if (NOT EMSCRIPTEN)
 	target_link_libraries(IMGUI_LIB PUBLIC DAWN_LIB GLFW_LIB)
 endif()
 
-target_include_directories(IMGUI_LIB PUBLIC "${CMAKE_CURRENT_LIST_DIR}/ext/" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/ext/imgui/")
+target_include_directories(IMGUI_LIB PUBLIC "${CMAKE_CURRENT_LIST_DIR}/ext/" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/ext/imgui/")
