@@ -3,9 +3,14 @@
 #include "Base/Base.h"
 #include "Base/Filesystem.h"
 #include "Base/Timer.h"
-
+#include "dicom/FileReader.h"
+#include "Shader.h"
 #include "Base/GraphicsContext.h"
 #include <webgpu/webgpu_cpp.h>
+
+#include <glm/gtc/type_ptr.hpp>
+
+
 
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
@@ -20,7 +25,7 @@ namespace med {
 		base::Log::Init();
 		base::Filesystem::Init();
 
-		base::WindowProps props{ .width = 1280, .height = 720, .title = "Volume Rendering" };
+		base::WindowProps props{ .width = m_Width, .height = m_Height, .title = "Volume Rendering" };
 		m_Window = new base::Window(props);
 		OnStart();
 	}
@@ -33,7 +38,13 @@ namespace med {
 	void Application::OnStart()
 	{
 		INFO("On start");
-
+		InitializeSamplers();
+		InitializeUniforms();
+		InitializeTextures();
+		InitializeVertexBuffers();
+		InitializeIndexBuffers();
+		InitializeBindGroups();
+		InitializeRenderPipelines();
 	}
 
 	void Application::OnUpdate(base::Timestep ts)
@@ -112,4 +123,112 @@ namespace med {
 	}
 #endif
 
+	/* Helpers */
+
+	void Application::InitializeSamplers()
+	{
+		INFO("Initializing samplers");
+		p_Sampler = Sampler::CreateSampler(base::GraphicsContext::GetDevice());
+	}
+
+	void Application::InitializeUniforms()
+	{
+		INFO("Initializing uniforms");
+		glm::mat4 dummy_model{ 1.0f };
+		constexpr float UNIFORM_CAMERA_SIZE = sizeof(float) * 16 * 5; // float * mat4 *  card({Model, View, Proj, InverseProj, InverseView})
+		p_UCamera = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), static_cast<void*>(&dummy_model),
+			/* float * mat4 *  MVP IP IV = */ sizeof(float) * 16 * 5, 0, false, "Camera Uniform");
+		p_UCamera->UpdateBuffer(base::GraphicsContext::GetQueue(), sizeof(float) * 16, &m_Camera.GetViewMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(base::GraphicsContext::GetQueue(), sizeof(float) * 16 * 2, &m_Camera.GetProjectionMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(base::GraphicsContext::GetQueue(), sizeof(float) * 16 * 3, &m_Camera.GetInverseViewMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(base::GraphicsContext::GetQueue(), sizeof(float) * 16 * 4, &m_Camera.GetInverseProjectionMatrix(), sizeof(float) * 16);
+
+
+		p_UCameraPos = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
+		p_UFragmentMode = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), &m_FragmentMode, sizeof(int));
+	}
+
+	void Application::InitializeTextures()
+	{
+		INFO("Initializing textures");
+		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_FileVolumeData.get4BPtr(), WGPUTextureDimension_3D, m_FileVolumeData.getSize(),
+			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Data texture");
+
+		p_TexStart = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
+		p_TexEnd = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
+	}
+
+	void Application::InitializeVertexBuffers()
+	{
+		INFO("Initializing vertex buffers");
+		p_VBCube = VertexBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_CubeVertexData, sizeof(m_CubeVertexData), 0, false, "Cube VertexBuffer");
+		//. XYZ
+		p_VBCube->AddVertexAttribute({
+			.format = WGPUVertexFormat_Float32x3,
+			.offset = 0,
+			.shaderLocation = 0
+		});
+		//. UVW
+		p_VBCube->AddVertexAttribute({
+			.format = WGPUVertexFormat_Float32x3,
+			.offset = sizeof(float) * 3,
+			.shaderLocation = 1
+		});
+	}
+
+	void Application::InitializeIndexBuffers()
+	{
+		INFO("Initializing index buffers");
+		p_IBCube = IndexBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_CubeIndexData,
+			sizeof(m_CubeIndexData), sizeof(m_CubeIndexData) / sizeof(uint16_t));
+	}
+
+	void Application::InitializeBindGroups()
+	{
+		INFO("Initializing bind groups");
+		m_BGroupCamera.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
+		m_BGroupCamera.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
+		m_BGroupCamera.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+
+		m_BGroupTextures.AddTexture(*p_TexData, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddSampler(*p_Sampler);
+		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+
+		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
+		m_BGroupImGui.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+	}
+
+	void Application::InitializeRenderPipelines()
+	{
+		INFO("Initializing render pipelines");
+		//Hardcode for now
+		FileReader fileReader;
+		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), fileReader.readFile("shaders/simple.wgsl"));
+		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), fileReader.readFile("shaders/rayCoords.wgsl"));
+
+		PipelineBuilder builder;
+		builder.DepthTexMagic(m_Width, m_Height);
+		builder.AddBuffer(*p_VBCube);
+		builder.AddBindGroup(m_BGroupCamera);
+		builder.AddBindGroup(m_BGroupTextures);
+		builder.AddBindGroup(m_BGroupImGui);
+		builder.AddShaderModule(shaderModule);
+		builder.SetFrontFace(WGPUFrontFace_CCW);
+		builder.SetCullFace(WGPUCullMode_Back);
+		p_RenderPipeline = builder.BuildPipeline();
+
+		PipelineBuilder builderAtt;
+		builderAtt.AddBuffer(*p_VBCube);
+		builderAtt.AddBindGroup(m_BGroupCamera);
+		builderAtt.AddShaderModule(shaderModuleAtt);
+		builderAtt.SetFrontFace(WGPUFrontFace_CCW);
+
+		builderAtt.SetCullFace(WGPUCullMode_Back);
+		p_RenderPipelineStart = builderAtt.BuildPipeline();
+
+		builderAtt.SetCullFace(WGPUCullMode_Front);
+		p_RenderPipelineEnd = builderAtt.BuildPipeline();
+	}
 }

@@ -12,6 +12,7 @@ namespace med
 	protected:
 		using Size = std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>;
 	public:
+		VolumeFile() = default;
 		VolumeFile(const std::filesystem::path& path, bool isDir) : m_Path(path), m_IsDir(isDir) {}
 		
 	public:

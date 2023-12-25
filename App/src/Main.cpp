@@ -1,4 +1,4 @@
-#include "../../App/src/Application.h"
+#include "Application.h"
 
 #include <GLFW/glfw3.h>
 

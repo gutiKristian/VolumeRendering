@@ -1,7 +1,6 @@
 ﻿project(WEBGPU_LIB CXX)
 
 set(WEBGPU_LIB_Sources
-	"src/Base/Main.cpp"
 	"src/Base/Base.h"
 	"src/Base/Assert.h"
 	"src/Base/Window.h"

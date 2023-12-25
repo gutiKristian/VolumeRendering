@@ -1,35 +1,40 @@
 ﻿project(App CXX)
 
 add_executable(App
- "src/Application.cpp"
- "src/Camera.h"
- "src/Camera.cpp"
- "src/Shader.h"
- "src/renderer/Texture.h"
- "src/renderer/Texture.cpp"
- "src/renderer/VertexBuffer.h"
- "src/renderer/VertexBuffer.cpp"
- "src/renderer/UniformBuffer.h"
- "src/renderer/UniformBuffer.cpp"
- "src/renderer/RenderPipeline.h"
- "src/renderer/RenderPipeline.cpp"
- "src/renderer/StorageBuffer.h"
- "src/renderer/StorageBuffer.cpp"
- "src/renderer/Sampler.h"
- "src/renderer/Sampler.cpp"
- "src/renderer/PipelineBuilder.h"
- "src/renderer/PipelineBuilder.cpp"
- "src/renderer/BindGroup.h"
- "src/renderer/BindGroup.cpp"
- "src/renderer/IndexBuffer.h"
- "src/renderer/IndexBuffer.cpp"
-  "src/dicom/DcmImpl.cpp"
-  "src/dicom/DcmImpl.h"
-  "src/dicom/FileDataType.h"
-  "src/dicom/FileReader.cpp"
-  "src/dicom/FileReader.h"
-  "src/dicom/VolumeFile.cpp"
-  "src/dicom/VolumeFile.h")
+	"src/Main.cpp"
+	"src/Application.h"
+	"src/Application.cpp"
+	"src/Camera.h"
+	"src/Camera.cpp"
+	"src/Shader.h"
+	
+	"src/renderer/Texture.h"
+	"src/renderer/Texture.cpp"
+	"src/renderer/VertexBuffer.h"
+	"src/renderer/VertexBuffer.cpp"
+	"src/renderer/UniformBuffer.h"
+	"src/renderer/UniformBuffer.cpp"
+	"src/renderer/RenderPipeline.h"
+	"src/renderer/RenderPipeline.cpp"
+	"src/renderer/StorageBuffer.h"
+	"src/renderer/StorageBuffer.cpp"
+	"src/renderer/Sampler.h"
+	"src/renderer/Sampler.cpp"
+	"src/renderer/PipelineBuilder.h"
+	"src/renderer/PipelineBuilder.cpp"
+	"src/renderer/BindGroup.h"
+	"src/renderer/BindGroup.cpp"
+	"src/renderer/IndexBuffer.h"
+	"src/renderer/IndexBuffer.cpp"
+	
+	 "src/dicom/DcmImpl.cpp"
+	 "src/dicom/DcmImpl.h"
+	 "src/dicom/FileDataType.h"
+	 "src/dicom/FileReader.cpp"
+	 "src/dicom/FileReader.h"
+	 "src/dicom/VolumeFile.cpp"
+	 "src/dicom/VolumeFile.h"
+)
 
 target_compile_definitions(App
 	PRIVATE
@@ -50,7 +55,6 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/dcm "vendor/dcm")
 
 set(BOOST_ROOT "C:\\dev\\boost_1_83_0")
 find_package(Boost COMPONENTS system filesystem REQUIRED)
-
 
 target_link_libraries(App PUBLIC IMGUI_LIB GLM_LIB DCM_LIB ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
