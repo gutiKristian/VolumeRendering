@@ -204,9 +204,10 @@ namespace med {
 	{
 		INFO("Initializing render pipelines");
 		//Hardcode for now
-		FileReader fileReader;
-		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), fileReader.readFile("shaders/simple.wgsl"));
-		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), fileReader.readFile("shaders/rayCoords.wgsl"));
+		FileReader shaderReader;
+		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");
+		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("simple.wgsl"));
+		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
 
 		PipelineBuilder builder;
 		builder.DepthTexMagic(m_Width, m_Height);

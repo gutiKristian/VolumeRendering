@@ -75,7 +75,7 @@ namespace med
 		}
 
 	protected:
-		std::filesystem::path m_Path = std::filesystem::current_path() / ".." / ".." / "apps" / "analyst";
+		std::filesystem::path m_Path = std::filesystem::current_path() / ".." / ".." / ".." / ".." / "App";
 		std::string m_LogPrefix = "[FILE READER]";
 		const std::string LOG_EMPTY_PLACEHOLDER = "[[Empty]]";
 	};
