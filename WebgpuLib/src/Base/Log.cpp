@@ -6,7 +6,7 @@ namespace base {
 
 	void Log::Init()
 	{
-		s_Logger = std::make_shared<Logger>("LOG");
+		s_Logger = std::make_shared<Logger>("Med");
 	}
 
 }
