@@ -10,6 +10,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "dicom/DcmImpl.h"
 
 
 #if defined(PLATFORM_WEB)
@@ -49,10 +50,122 @@ namespace med {
 
 	void Application::OnUpdate(base::Timestep ts)
 	{
+		const auto& queue = base::GraphicsContext::GetQueue();
+		constexpr size_t sizeOfInt = sizeof(int);
+		constexpr size_t sizeOfFloat = sizeof(float);
+
+		p_UCamera->UpdateBuffer(queue, 64, &m_Camera.GetViewMatrix(), sizeOfFloat * 16);
+		p_UCamera->UpdateBuffer(queue, 128, &m_Camera.GetProjectionMatrix(), sizeOfFloat * 16);
+		p_UCamera->UpdateBuffer(queue, 192, &m_Camera.GetInverseViewMatrix(), sizeOfFloat * 16);
+		p_UCamera->UpdateBuffer(queue, 256, &m_Camera.GetInverseProjectionMatrix(), sizeOfFloat * 16);
+
+		p_UCameraPos->UpdateBuffer(queue, 0, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
+
+		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
+
 	}
 
 	void Application::OnRender()
 	{
+		const WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(base::GraphicsContext::GetDevice(), nullptr);
+
+		// Ray entrance
+
+		WGPURenderPassColorAttachment colorAttachmentsRay = {
+			.view = p_TexStart->GetTextureView(),
+			.loadOp = WGPULoadOp_Clear,
+			.storeOp = WGPUStoreOp_Store,
+			.clearValue = {0.0, 0.0, 0.0, 1.0}
+		};
+
+		WGPURenderPassDescriptor renderPassDescRay = {
+			.label = "Ray entrance render pass",
+			.colorAttachmentCount = 1,
+			.colorAttachments = &colorAttachmentsRay,
+			.depthStencilAttachment = nullptr
+		};
+
+		const WGPURenderPassEncoder passRayEntrance = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescRay);
+
+		p_RenderPipelineStart->Bind(passRayEntrance);
+		p_VBCube->Bind(passRayEntrance);
+		m_BGroupCamera.Bind(passRayEntrance);
+		wgpuRenderPassEncoderSetIndexBuffer(passRayEntrance, p_IBCube->GetBufferPtr(), WGPUIndexFormat_Uint16, 0, p_IBCube->GetSize());
+		wgpuRenderPassEncoderDrawIndexed(passRayEntrance, p_IBCube->GetCount(), 1, 0, 0, 0);
+		wgpuRenderPassEncoderEnd(passRayEntrance);
+		BindGroup::ResetBindSlotsIndices();
+
+		// Ray End
+		colorAttachmentsRay.view = p_TexEnd->GetTextureView();
+		renderPassDescRay.label = "Ray end render pass";
+
+		const WGPURenderPassEncoder passRayEnd = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescRay);
+
+		p_RenderPipelineEnd->Bind(passRayEnd);
+		p_VBCube->Bind(passRayEnd);
+		m_BGroupCamera.Bind(passRayEnd);
+		wgpuRenderPassEncoderSetIndexBuffer(passRayEnd, p_IBCube->GetBufferPtr(), WGPUIndexFormat_Uint16, 0, p_IBCube->GetSize());
+		wgpuRenderPassEncoderDrawIndexed(passRayEnd, p_IBCube->GetCount(), 1, 0, 0, 0);
+		wgpuRenderPassEncoderEnd(passRayEnd);
+		BindGroup::ResetBindSlotsIndices();
+
+		// -------------------
+
+		WGPURenderPassDepthStencilAttachment depthStencilAttachment{};
+		depthStencilAttachment.view = p_RenderPipeline->GetDepthTextureView();
+		depthStencilAttachment.depthClearValue = 1.0f;
+		depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
+		depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
+		// we could turn off writing to the depth buffer globally here
+		depthStencilAttachment.depthReadOnly = false;
+
+		// Stencil setup, mandatory but unused
+		constexpr float NaNf = std::numeric_limits<float>::quiet_NaN();
+		depthStencilAttachment.stencilClearValue = static_cast<uint32_t>(NaNf);
+		depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
+		depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
+		depthStencilAttachment.stencilReadOnly = true;
+
+
+		WGPURenderPassColorAttachment colorAttachments = {
+			.view = wgpuSwapChainGetCurrentTextureView(base::GraphicsContext::GetSwapChain()),
+			.loadOp = WGPULoadOp_Clear,
+			.storeOp = WGPUStoreOp_Store,
+			.clearValue = {0.0, 0.0, 0.0, 1.0}
+		};
+
+		WGPURenderPassDescriptor renderPassDesc = {
+			.label = "Volume renderpass",
+			.colorAttachmentCount = 1,
+			.colorAttachments = &colorAttachments,
+			.depthStencilAttachment = &depthStencilAttachment,
+		};
+
+		WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
+
+		wgpuRenderPassEncoderSetIndexBuffer(pass, p_IBCube->GetBufferPtr(), WGPUIndexFormat_Uint16, 0, p_IBCube->GetSize());
+
+		p_RenderPipeline->Bind(pass);
+		p_VBCube->Bind(pass);
+		m_BGroupCamera.Bind(pass);
+		m_BGroupTextures.Bind(pass);
+		m_BGroupImGui.Bind(pass);
+		wgpuRenderPassEncoderDrawIndexed(pass, p_IBCube->GetCount(), 1, 0, 0, 0);
+		wgpuRenderPassEncoderEnd(pass);
+		BindGroup::ResetBindSlotsIndices();
+
+
+		const WGPUCommandBuffer cmd_buffer = wgpuCommandEncoderFinish(encoder, nullptr);
+		wgpuQueueSubmit(base::GraphicsContext::GetQueue(), 1, &cmd_buffer);
+
+#ifndef defined(PLATFORM_WEB)
+		wgpuSwapChainPresent(base::GraphicsContext::GetSwapChain());
+#endif
+
+		wgpuRenderPassEncoderRelease(pass);             // release pass
+		wgpuCommandEncoderRelease(encoder);             // release encoder
+		wgpuCommandBufferRelease(cmd_buffer);           // release commands
+		wgpuTextureViewRelease(colorAttachments.view); // release textureView
 	}
 
 	void Application::OnImGuiRender()
@@ -151,7 +264,10 @@ namespace med {
 	void Application::InitializeTextures()
 	{
 		INFO("Initializing textures");
-		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_FileVolumeData.get4BPtr(), WGPUTextureDimension_3D, m_FileVolumeData.getSize(),
+		DcmImpl reader;
+		VolumeFile file = reader.readFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
+
+		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.get4BPtr(), WGPUTextureDimension_3D, file.getSize(),
 			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Data texture");
 
 		p_TexStart = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");

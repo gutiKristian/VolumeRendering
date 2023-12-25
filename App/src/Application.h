@@ -100,8 +100,6 @@ namespace med {
 
 		std::shared_ptr<Sampler> p_Sampler = nullptr;
 		// ----------------------------------------- 
-		VolumeFile m_FileVolumeData;
-
 		float m_CubeVertexData[48] = {
 			/*,	   x     y      z     u	  v	   w */
 				 -1.0, -1.0,  0.5,	0.0, 0.0, 0.0,
