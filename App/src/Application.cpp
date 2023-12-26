@@ -220,6 +220,7 @@ namespace med {
 		}
 
 		m_Window->Update();
+		wgpuDeviceTick(base::GraphicsContext::GetDevice());
 	}
 
 #if defined(PLATFORM_WEB)
@@ -347,5 +348,6 @@ namespace med {
 
 		builderAtt.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipelineEnd = builderAtt.BuildPipeline();
+
 	}
 }
