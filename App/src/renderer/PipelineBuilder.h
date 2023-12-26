@@ -12,7 +12,8 @@ namespace med
 	class PipelineBuilder
 	{
 	public:
-		
+		PipelineBuilder();
+
 		/*
 		* Add shader to the pipeline. Fragment, vertex modules,
 		* blend state and color target are set up here.

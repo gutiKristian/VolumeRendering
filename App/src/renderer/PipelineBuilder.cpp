@@ -5,6 +5,11 @@
 
 namespace med
 {
+	PipelineBuilder::PipelineBuilder()
+	{
+		InitPipelineDefaults();
+	}
+
 	void PipelineBuilder::InitPipelineDefaults()
 	{
 		m_PipelineDesc.nextInChain = nullptr;
