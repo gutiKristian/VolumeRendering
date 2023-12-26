@@ -69,11 +69,28 @@ namespace base {
 
 		s_AdapterC = RequestAdapter(s_InstanceC, &options);
 
+		/*
+		 * Based on doc:
+		 * dump_shaders: Log input WGSL shaders and translated backend shaders (MSL/ HLSL/DXBC/DXIL / SPIR-V)
+		 * disable_symbol_renaming: As much as possible, disable renaming of symbols (variables, function names, etc.) This can make dumped shaders more readable
+		 * use_user_defined_labels_in_backend: Forward object labels to the backend so that they can be seen in native debugging tools like RenderDoc, PIX, or Mac Instruments
+		 */
+		const char* const enabledToggles[] = { "dump_shaders", "disable_symbol_renaming", "use_user_defined_labels_in_backend" };
+		WGPUDawnTogglesDescriptor deviceToggleDesc{};
+		deviceToggleDesc.enabledToggles = enabledToggles;
+		deviceToggleDesc.enabledToggleCount = 2;
+
 		WGPUDeviceDescriptor devDesc{};
 		devDesc.label = "Volume Device";
 		devDesc.defaultQueue.label = "Volume Queue";
+		devDesc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(& deviceToggleDesc);
 
 		s_DeviceC = RequestDevice(s_AdapterC, &devDesc);
+
+		wgpuDeviceSetDeviceLostCallback(s_DeviceC, [](WGPUDeviceLostReason reason, char const* message, void* userdata)
+		{
+			LOG_ERROR("WGPU-Device-Lost: {0}", message);
+		}, nullptr);
 
 		wgpuDeviceSetUncapturedErrorCallback(s_DeviceC,[](WGPUErrorType type, char const* message, void* pUserData)
 		{
