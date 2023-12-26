@@ -78,7 +78,7 @@ namespace base {
 		const char* const enabledToggles[] = { "dump_shaders", "disable_symbol_renaming", "use_user_defined_labels_in_backend" };
 		WGPUDawnTogglesDescriptor deviceToggleDesc{};
 		deviceToggleDesc.enabledToggles = enabledToggles;
-		deviceToggleDesc.enabledToggleCount = 2;
+		deviceToggleDesc.enabledToggleCount = sizeof(enabledToggles) / sizeof(char*);
 
 		WGPUDeviceDescriptor devDesc{};
 		devDesc.label = "Volume Device";
