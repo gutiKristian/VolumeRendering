@@ -25,6 +25,8 @@ namespace base {
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
+
+
 		m_WindowHandle = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
 		if (!m_WindowHandle)
 		{

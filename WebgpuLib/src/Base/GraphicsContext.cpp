@@ -25,7 +25,7 @@ namespace base {
 			}
 			else
 			{
-				CRITICAL(message);
+				LOG_CRITICAL(message);
 				ASSERT(false, "Could not get WebGPU adapter");
 			}
 
@@ -64,7 +64,7 @@ namespace base {
 				}
 				else
 				{
-					CRITICAL(message);
+					LOG_CRITICAL(message);
 					ASSERT(false, "Could not get WebGPU device");
 				}
 				userData.requestEnded = true;
@@ -168,6 +168,6 @@ namespace base {
 			log << "\n";
 		}
 		std::string result = log.str();
-		TRACE(result.c_str());
+		LOG_TRACE(result.c_str());
 	}
 }

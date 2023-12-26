@@ -6,7 +6,7 @@
 #include "Base/Filesystem.h"
 
 #ifdef ENABLE_ASSERTS
-	#define INTERNAL_ASSERT_IMPL(check, msg, ...) { if(!(check)) { ERROR(msg, __VA_ARGS__); DEBUGBREAK(); } }
+	#define INTERNAL_ASSERT_IMPL(check, msg, ...) { if(!(check)) { LOG_ERROR(msg, __VA_ARGS__); DEBUGBREAK(); } }
 	#define INTERNAL_ASSERT_WITH_MSG(check, ...) INTERNAL_ASSERT_IMPL(check, "Assertion failed: {0}", __VA_ARGS__)
 	#define INTERNAL_ASSERT_NO_MSG(check) INTERNAL_ASSERT_IMPL(check, "Assertion '{0}' failed at {1}:{2}", STRINGIFY_MACRO(check), std::filesystem::path(__FILE__).filename().string(), __LINE__)
 

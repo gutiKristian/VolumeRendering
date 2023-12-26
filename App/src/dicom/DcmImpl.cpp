@@ -23,7 +23,7 @@ namespace med
 
 		if (numberOfFiles == 0)
 		{
-			ERROR("No files found!");
+			LOG_ERROR("No files found!");
 			throw new std::exception("no files");
 		}
 
@@ -45,7 +45,7 @@ namespace med
 				{
 					if (!allocateMemory(numberOfFiles, isDir))
 					{
-						ERROR("Allocation failed");
+						LOG_ERROR("Allocation failed");
 ;						throw std::exception("Couldn't allocate memory");
 					}
 					isFirstRun = false;
@@ -57,7 +57,7 @@ namespace med
 			}
 			else
 			{
-				ERROR("Cannot continue, unable to open: ", file.string());
+				LOG_ERROR("Cannot continue, unable to open: ", file.string());
 				throw std::exception("Error!");
 			}
 
@@ -96,8 +96,8 @@ namespace med
 	{
 		if (originalVal != 0 && originalVal != newVal)
 		{
-			ERROR("Mismatch in tag: ", tag);
-			ERROR("Original value: ", std::to_string(originalVal), ", new value: ", std::to_string(newVal));
+			LOG_ERROR("Mismatch in tag: ", tag);
+			LOG_ERROR("Original value: ", std::to_string(originalVal), ", new value: ", std::to_string(newVal));
 			throw std::exception("Mismatch ");
 		}
 		originalVal = newVal;

@@ -38,7 +38,7 @@ namespace med {
 
 	void Application::OnStart()
 	{
-		INFO("On start");
+		LOG_INFO("On start");
 		InitializeSamplers();
 		InitializeUniforms();
 		InitializeTextures();
@@ -174,12 +174,12 @@ namespace med {
 
 	void Application::OnEnd()
 	{
-		INFO("On end");
+		LOG_INFO("On end");
 	}
 
 	void Application::Run()
 	{
-		INFO("Run Application");
+		LOG_INFO("Run Application");
 		m_Running = true;
 #if defined(PLATFORM_WEB)
 		emscripten_request_animation_frame_loop(Application::EMSRedraw, (void*)this);
@@ -240,13 +240,13 @@ namespace med {
 
 	void Application::InitializeSamplers()
 	{
-		INFO("Initializing samplers");
+		LOG_INFO("Initializing samplers");
 		p_Sampler = Sampler::CreateSampler(base::GraphicsContext::GetDevice());
 	}
 
 	void Application::InitializeUniforms()
 	{
-		INFO("Initializing uniforms");
+		LOG_INFO("Initializing uniforms");
 		glm::mat4 dummy_model{ 1.0f };
 		constexpr float UNIFORM_CAMERA_SIZE = sizeof(float) * 16 * 5; // float * mat4 *  card({Model, View, Proj, InverseProj, InverseView})
 		p_UCamera = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), static_cast<void*>(&dummy_model),
@@ -263,7 +263,7 @@ namespace med {
 
 	void Application::InitializeTextures()
 	{
-		INFO("Initializing textures");
+		LOG_INFO("Initializing textures");
 		DcmImpl reader;
 		VolumeFile file = reader.readFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
 
@@ -276,7 +276,7 @@ namespace med {
 
 	void Application::InitializeVertexBuffers()
 	{
-		INFO("Initializing vertex buffers");
+		LOG_INFO("Initializing vertex buffers");
 		p_VBCube = VertexBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_CubeVertexData, sizeof(m_CubeVertexData), 0, false, "Cube VertexBuffer");
 		//. XYZ
 		p_VBCube->AddVertexAttribute({
@@ -294,14 +294,14 @@ namespace med {
 
 	void Application::InitializeIndexBuffers()
 	{
-		INFO("Initializing index buffers");
+		LOG_INFO("Initializing index buffers");
 		p_IBCube = IndexBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_CubeIndexData,
 			sizeof(m_CubeIndexData), sizeof(m_CubeIndexData) / sizeof(uint16_t));
 	}
 
 	void Application::InitializeBindGroups()
 	{
-		INFO("Initializing bind groups");
+		LOG_INFO("Initializing bind groups");
 		m_BGroupCamera.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupCamera.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupCamera.FinalizeBindGroup(base::GraphicsContext::GetDevice());
@@ -318,7 +318,7 @@ namespace med {
 
 	void Application::InitializeRenderPipelines()
 	{
-		INFO("Initializing render pipelines");
+		LOG_INFO("Initializing render pipelines");
 		//Hardcode for now
 		FileReader shaderReader;
 		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");

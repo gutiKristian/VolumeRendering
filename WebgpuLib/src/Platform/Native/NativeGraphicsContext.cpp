@@ -77,12 +77,12 @@ namespace base {
 
 		wgpuDeviceSetUncapturedErrorCallback(s_DeviceC,[](WGPUErrorType type, char const* message, void* pUserData)
 		{
-			ERROR("WebGPU Error: {0}", message);
+			LOG_ERROR("WebGPU Error: {0}", message);
 		}, nullptr);
 
 		wgpuDeviceSetLoggingCallback(s_DeviceC, [](WGPULoggingType type, char const* message, void* userdata)
 		{
-			ERROR("WebGPU log: {0}", message);
+			LOG_ERROR("WebGPU log: {0}", message);
 		}, nullptr);
 
 		s_QueueC = wgpuDeviceGetQueue(s_DeviceC);
