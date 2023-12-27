@@ -116,8 +116,6 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	}
 
 
-	let scaler: f32 = 1 / 4095.0;
-
 	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
 	var current_position: vec3<f32> = ray_start.xyz;
 
@@ -136,7 +134,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
  
 	for (var i: i32 = 0; i < iterations; i++)
 	{
-		value = textureSample(tex, texture_sampler, current_position).r * scaler;
+		value = textureSample(tex, texture_sampler, current_position).r;
 		if dst.a <= 0.95
 		{     
 			src = vec4<f32>(value);
