@@ -10,6 +10,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../../WebgpuLib/vendor/dawn/ext/dawn/third_party/glfw/include/GLFW/glfw3.h"
 #include "dicom/DcmImpl.h"
 
 
@@ -209,7 +210,45 @@ namespace med {
 			case base::EventType::WindowClosed:
 				m_Running = false;
 				return;
+			case base::EventType::KeyPressed:
+			{
+				m_Camera.KeyboardEvent(ev.as.keyPressedEvent.key);
 			}
+			case base::EventType::MouseMoved:
+				{
+					static glm::vec2 previousPosition = { ev.as.mouseMovedEvent.xPos, ev.as.mouseMovedEvent.yPos };
+					glm::vec2 currentPosition = { ev.as.mouseMovedEvent.xPos, ev.as.mouseMovedEvent.yPos };
+					const glm::vec2 delta = previousPosition - currentPosition;
+					if (m_ShouldRotate)
+					{
+						m_Camera.Rotate(delta.x, delta.y);
+					}
+					if (m_ShouldZoom)
+					{
+						m_Camera.SetZoomDistance(-delta.y);
+					}
+					previousPosition = currentPosition;
+					break;
+				}
+			case base::EventType::MousePressed:
+				{
+				ToggleMouse(ev.as.mousePressedEvent.button, true);
+				break;
+				}
+			case base::EventType::MouseReleased:
+				{
+				ToggleMouse(ev.as.mouseReleasedEvent.button, false);
+				break;
+				}
+			default:
+				break;
+			}
+		}
+
+		if (lastWindowResizeEvent)
+		{
+			// do something
+			LOG_WARN("Resizing has not been properly set up yet");
 		}
 
 		OnUpdate(ts);
@@ -349,5 +388,20 @@ namespace med {
 		builderAtt.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipelineEnd = builderAtt.BuildPipeline();
 
+	}
+
+	void Application::ToggleMouse(int key, bool toggle)
+	{
+		switch (key)
+		{
+		case GLFW_MOUSE_BUTTON_LEFT:
+			m_ShouldRotate = toggle;
+			break;
+		case GLFW_MOUSE_BUTTON_RIGHT:
+			m_ShouldZoom = toggle;
+			break;
+		default:
+			break;
+		}
 	}
 }
