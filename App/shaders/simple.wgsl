@@ -90,11 +90,11 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	texC.x =  0.5*texC.x + 0.5;
 	texC.y = -0.5*texC.y + 0.5;
 
-	var ray_start: vec4<f32> = textureSample(tex_ray_start, texture_sampler, texC);
-	var ray_end: vec4<f32> = textureSample(tex_ray_end, texture_sampler, texC);
+	//var ray_start: vec4<f32> = textureSample(tex_ray_start, texture_sampler, texC);
+	//var ray_end: vec4<f32> = textureSample(tex_ray_end, texture_sampler, texC);
 
-	// var ray_start: vec4<f32> = textureLoad(tex_ray_start, vec2<i32>(i32(in.position.x), i32(in.position.y)), 0);
-	// var ray_end: vec4<f32> = textureLoad(tex_ray_end, vec2<i32>(i32(in.position.x), i32(in.position.y)), 0);
+	var ray_start: vec4<f32> = textureLoad(tex_ray_start, vec2<i32>(i32(in.position.x), i32(in.position.y)), 0);
+	var ray_end: vec4<f32> = textureLoad(tex_ray_end, vec2<i32>(i32(in.position.x), i32(in.position.y)), 0);
 
 	var ray_direction: vec3<f32> = normalize(ray_end.xyz - ray_start.xyz);
 

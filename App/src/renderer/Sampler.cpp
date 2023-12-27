@@ -12,10 +12,9 @@ namespace med
 		samplerDesc.addressModeU = WGPUAddressMode_ClampToEdge;
 		samplerDesc.addressModeV = WGPUAddressMode_ClampToEdge;
 		samplerDesc.addressModeW = WGPUAddressMode_ClampToEdge;
-		// We want sampler that does not do filtering
-		/*samplerDesc.magFilter = WGPUFilterMode_Linear;
+		samplerDesc.magFilter = WGPUFilterMode_Linear;
 		samplerDesc.minFilter = WGPUFilterMode_Linear;
-		samplerDesc.mipmapFilter = WGPUFilterMode_Linear;*/
+		samplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
 		samplerDesc.lodMinClamp = 0.0f;
 		samplerDesc.lodMaxClamp = 1.0f;
 		samplerDesc.compare = WGPUCompareFunction_Undefined;

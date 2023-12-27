@@ -70,7 +70,7 @@ namespace med
 		entry.nextInChain = nullptr;
 		entry.binding = m_BindingsCount;
 		entry.visibility = WGPUShaderStage_Fragment;
-		entry.sampler.type = WGPUSamplerBindingType_NonFiltering;
+		entry.sampler.type = WGPUSamplerBindingType_Filtering;
 
 		m_BindGroupLayoutEntries.push_back(entry);
 
