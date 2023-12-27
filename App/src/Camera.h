@@ -56,8 +56,8 @@ namespace med
 		float m_Top = 0.0f;
 		// Controls
 		float m_Speed = 0.1f;
-		float m_Pitch;
-		float m_Yaw;
+		float m_Pitch = 0.0f;
+		float m_Yaw = 0.0f;
 		float m_RotateSens = 0.005f;
 		float m_Distance = 5.0f;
 
