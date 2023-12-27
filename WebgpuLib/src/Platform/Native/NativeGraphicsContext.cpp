@@ -80,9 +80,12 @@ namespace base {
 		deviceToggleDesc.enabledToggles = enabledToggles;
 		deviceToggleDesc.enabledToggleCount = sizeof(enabledToggles) / sizeof(char*);
 
+		WGPUFeatureName feature = WGPUFeatureName_Float32Filterable;
 		WGPUDeviceDescriptor devDesc{};
 		devDesc.label = "Volume Device";
 		devDesc.defaultQueue.label = "Volume Queue";
+		devDesc.requiredFeatures = &feature;
+		devDesc.requiredFeatureCount = 1;
 		devDesc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(& deviceToggleDesc);
 
 		s_DeviceC = RequestDevice(s_AdapterC, &devDesc);
