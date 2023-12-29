@@ -166,8 +166,8 @@ namespace med {
 		wgpuRenderPassEncoderEnd(pass);
 		// --------------- END OF IMGUI PASS --------------------------
 
-		const WGPUCommandBuffer cmd_buffer = wgpuCommandEncoderFinish(encoder, nullptr);
-		wgpuQueueSubmit(base::GraphicsContext::GetQueue(), 1, &cmd_buffer);
+		const WGPUCommandBuffer cmdBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
+		wgpuQueueSubmit(base::GraphicsContext::GetQueue(), 1, &cmdBuffer);
 
 #ifndef defined(PLATFORM_WEB)
 		wgpuSwapChainPresent(base::GraphicsContext::GetSwapChain());
@@ -175,7 +175,7 @@ namespace med {
 
 		wgpuRenderPassEncoderRelease(pass);             // release pass
 		wgpuCommandEncoderRelease(encoder);             // release encoder
-		wgpuCommandBufferRelease(cmd_buffer);           // release commands
+		wgpuCommandBufferRelease(cmdBuffer);           // release commands
 		wgpuTextureViewRelease(colorAttachments.view); // release textureView
 	}
 
