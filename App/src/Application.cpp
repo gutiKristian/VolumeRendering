@@ -9,6 +9,7 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui/imgui.h>
 
 #include "../../WebgpuLib/vendor/dawn/ext/dawn/third_party/glfw/include/GLFW/glfw3.h"
 #include "backends/imgui_impl_glfw.h"
@@ -187,6 +188,7 @@ namespace med {
 
 		// My code
 		ImGui::Begin("Fragment Mode");
+		ImGui::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::End();
 

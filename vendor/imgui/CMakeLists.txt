@@ -1,5 +1,6 @@
 add_library(IMGUI_LIB STATIC
 	"${CMAKE_CURRENT_LIST_DIR}/ext/imgui/imgui.cpp"
+	"${CMAKE_CURRENT_LIST_DIR}/ext/imgui/imgui_demo.cpp"
 	"${CMAKE_CURRENT_LIST_DIR}/ext/imgui/imgui_draw.cpp"
 	"${CMAKE_CURRENT_LIST_DIR}/ext/imgui/imgui_tables.cpp"
 	"${CMAKE_CURRENT_LIST_DIR}/ext/imgui/imgui_widgets.cpp"
