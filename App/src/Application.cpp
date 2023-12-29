@@ -11,6 +11,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../../WebgpuLib/vendor/dawn/ext/dawn/third_party/glfw/include/GLFW/glfw3.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_wgpu.h"
 #include "dicom/DcmImpl.h"
 
 
@@ -47,6 +49,7 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
+		InitializeImGui();
 	}
 
 	void Application::OnUpdate(base::Timestep ts)
@@ -155,6 +158,13 @@ namespace med {
 		wgpuRenderPassEncoderEnd(pass);
 		BindGroup::ResetBindSlotsIndices();
 
+		// --------------- START OF IMGUI PASS ------------------------------
+		renderPassDesc.depthStencilAttachment = nullptr;
+		colorAttachments.loadOp = WGPULoadOp_Load;
+		pass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
+		ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), pass);
+		wgpuRenderPassEncoderEnd(pass);
+		// --------------- END OF IMGUI PASS --------------------------
 
 		const WGPUCommandBuffer cmd_buffer = wgpuCommandEncoderFinish(encoder, nullptr);
 		wgpuQueueSubmit(base::GraphicsContext::GetQueue(), 1, &cmd_buffer);
@@ -171,6 +181,18 @@ namespace med {
 
 	void Application::OnImGuiRender()
 	{
+		ImGui_ImplWGPU_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		// My code
+		ImGui::Begin("Fragment Mode");
+		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
+		ImGui::End();
+
+		//
+
+		ImGui::Render();
 	}
 
 	void Application::OnEnd()
@@ -255,6 +277,7 @@ namespace med {
 
 		if (m_Window->GetWidth() != 0 && m_Window->GetHeight() != 0)
 		{
+			OnImGuiRender();
 			OnRender();
 		}
 
@@ -403,5 +426,19 @@ namespace med {
 		default:
 			break;
 		}
+	}
+
+	void Application::InitializeImGui() const
+	{
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
+		io.IniFilename = nullptr;
+
+		// Setup Dear ImGui style
+		ImGui::StyleColorsDark();
+
+		ImGui_ImplGlfw_InitForOther(m_Window->GetWindowHandle(), true);
+		ImGui_ImplWGPU_Init(base::GraphicsContext::GetDevice(), 3, base::GraphicsContext::GetDefaultTextureFormat());
 	}
 }
