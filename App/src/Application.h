@@ -61,7 +61,6 @@ namespace med {
 		void InitializeIndexBuffers();
 		void InitializeBindGroups();
 		void InitializeRenderPipelines();
-		void InitializeImGui() const;
 		/*Event helpers*/
 		void ToggleMouse(int key, bool toggle);
 

@@ -7,7 +7,9 @@ add_executable(App
 	"src/Camera.h"
 	"src/Camera.cpp"
 	"src/Shader.h"
-	
+	"src/ImGuiLayer.h"
+	"src/ImGuiLayer.cpp"
+		
 	"src/renderer/Texture.h"
 	"src/renderer/Texture.cpp"
 	"src/renderer/VertexBuffer.h"
