@@ -1,20 +1,19 @@
 #include "Application.h"
 
+#include <GLFW/glfw3.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <imgui/imgui.h>
+#include <webgpu/webgpu_cpp.h>
+
 #include "Base/Base.h"
 #include "Base/Filesystem.h"
 #include "Base/Timer.h"
-#include "dicom/FileReader.h"
-#include "Shader.h"
 #include "Base/GraphicsContext.h"
-#include <webgpu/webgpu_cpp.h>
 
-#include <glm/gtc/type_ptr.hpp>
-#include <imgui/imgui.h>
-
-#include "../../WebgpuLib/vendor/dawn/ext/dawn/third_party/glfw/include/GLFW/glfw3.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_wgpu.h"
+#include "dicom/FileReader.h"
 #include "dicom/DcmImpl.h"
+
+#include "Shader.h"
 #include "ImGuiLayer.h"
 
 #if defined(PLATFORM_WEB)
