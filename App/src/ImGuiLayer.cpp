@@ -10,6 +10,10 @@ namespace med
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
+
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+
 		io.IniFilename = nullptr;
 
 		// Setup Dear ImGui style
