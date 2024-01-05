@@ -58,10 +58,11 @@ namespace med
 
 	void ImGuiLayer::Destroy()
 	{
-		ImGui::DestroyContext();
-		ImPlot::DestroyContext();
 		// ifndef web
 		ImGui_ImplWGPU_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
+
+		ImPlot::DestroyContext();
+		ImGui::DestroyContext();
 	}
 }
