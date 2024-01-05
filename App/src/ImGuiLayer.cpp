@@ -3,12 +3,16 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_wgpu.h>
 
+#include <implot/implot.h>
+
 namespace med
 {
 	void ImGuiLayer::InitializeContext(GLFWwindow* windowHandle)
 	{
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
+		ImPlot::CreateContext();
+
 		ImGuiIO& io = ImGui::GetIO();
 
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
@@ -54,6 +58,8 @@ namespace med
 
 	void ImGuiLayer::Destroy()
 	{
+		ImGui::DestroyContext();
+		ImPlot::DestroyContext();
 		// ifndef web
 		ImGui_ImplWGPU_Shutdown();
 		ImGui_ImplGlfw_Shutdown();

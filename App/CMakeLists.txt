@@ -54,11 +54,12 @@ set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/)
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/imgui "vendor/imgui")
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/glm "vendor/glm")
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/dcm "vendor/dcm")
+add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/implot "vendor/implot")
 
 set(BOOST_ROOT "C:\\dev\\boost_1_83_0")
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 
-target_link_libraries(App PUBLIC IMGUI_LIB GLM_LIB DCM_LIB ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(App PUBLIC IMGUI_LIB IMPLOT_LIB GLM_LIB DCM_LIB ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
 ConfigureProject()
 
