@@ -15,6 +15,7 @@
 
 #include "Shader.h"
 #include "ImGuiLayer.h"
+#include "implot.h"
 
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
@@ -181,7 +182,7 @@ namespace med {
 	{
 		// My code
 		ImGui::Begin("Fragment Mode");
-		ImGui::ShowDemoWindow();
+		ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::End();
 	}
