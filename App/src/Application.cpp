@@ -186,6 +186,65 @@ namespace med {
 		ImGui::End();
 	}
 
+	void Application::OnResize(uint32_t width, uint32_t height)
+	{
+		std::stringstream ss;
+		ss << "Application resize\n" <<
+			"Updating dimensions\n" <<
+			"Width: " << std::to_string(width) <<
+			"\nHeight: " << std::to_string(height);
+		LOG_INFO(ss.str().c_str());
+
+		m_Width = width;
+		m_Height = height;
+
+		// Reinitialize swapchain
+		base::GraphicsContext::OnWindowResize(width, height);
+
+		// Reinitialize first pass render attachments
+		p_TexStart = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
+		p_TexEnd = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
+
+		// Reinitialize bind group
+		m_BGroupTextures = BindGroup();
+		m_BGroupTextures.AddTexture(*p_TexData, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddSampler(*p_Sampler);
+		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+
+		// Reinitialize pipelines
+		FileReader shaderReader;
+		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");
+		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("simple.wgsl"));
+
+		PipelineBuilder builder;
+		builder.DepthTexMagic(width, height);
+		builder.AddBuffer(*p_VBCube);
+		builder.AddBindGroup(m_BGroupCamera);
+		builder.AddBindGroup(m_BGroupTextures);
+		builder.AddBindGroup(m_BGroupImGui);
+		builder.AddShaderModule(shaderModule);
+		builder.SetFrontFace(WGPUFrontFace_CCW);
+		builder.SetCullFace(WGPUCullMode_Back);
+		p_RenderPipeline = builder.BuildPipeline();
+
+
+		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
+
+		PipelineBuilder builderAtt;
+		builderAtt.AddBuffer(*p_VBCube);
+		builderAtt.AddBindGroup(m_BGroupCamera);
+		builderAtt.AddShaderModule(shaderModuleAtt);
+		builderAtt.SetFrontFace(WGPUFrontFace_CCW);
+
+		builderAtt.SetCullFace(WGPUCullMode_Back);
+		p_RenderPipelineStart = builderAtt.BuildPipeline();
+
+		builderAtt.SetCullFace(WGPUCullMode_Front);
+		p_RenderPipelineEnd = builderAtt.BuildPipeline();
+	}
+
 	void Application::OnEnd()
 	{
 		LOG_INFO("On end");
@@ -261,8 +320,8 @@ namespace med {
 
 		if (lastWindowResizeEvent)
 		{
-			// do something
-			LOG_WARN("Resizing has not been properly set up yet");
+			LOG_TRACE("Resizing window to: ", lastWindowResizeEvent->width, "x", lastWindowResizeEvent->height);
+			OnResize(lastWindowResizeEvent->width, lastWindowResizeEvent->height);
 		}
 
 		OnUpdate(ts);
@@ -376,8 +435,9 @@ namespace med {
 		//Hardcode for now
 		FileReader shaderReader;
 		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");
+
 		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("simple.wgsl"));
-		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
+
 
 		PipelineBuilder builder;
 		builder.DepthTexMagic(m_Width, m_Height);
@@ -389,6 +449,8 @@ namespace med {
 		builder.SetFrontFace(WGPUFrontFace_CCW);
 		builder.SetCullFace(WGPUCullMode_Back);
 		p_RenderPipeline = builder.BuildPipeline();
+
+		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
 
 		PipelineBuilder builderAtt;
 		builderAtt.AddBuffer(*p_VBCube);

@@ -41,6 +41,10 @@ namespace med {
 		 */
 		void OnImGuiRender();
 		/*
+		 * Recreates main pipeline.
+		 */
+		void OnResize(uint32_t width, uint32_t height);
+		/*
 		 * Called when application is closed (not in ems for now)
 		 */
 		void OnEnd();
