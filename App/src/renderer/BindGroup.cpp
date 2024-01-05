@@ -8,8 +8,14 @@ namespace med
 
 	BindGroup::BindGroup()
 	{
-		m_GroupNumber = s_NumberOfBindGroups++;
-		m_Name = "BindGroup " + std::to_string(m_GroupNumber);
+		// Used in debug message
+		m_Name = "[]";
+		++s_NumberOfBindGroups;
+	}
+
+	BindGroup::~BindGroup()
+	{
+		--s_NumberOfBindGroups;
 	}
 
 	void BindGroup::ResetBindSlotsIndices()
@@ -91,7 +97,8 @@ namespace med
 	{
 		for (int i = 0; i < m_BindingsName.size(); ++i)
 		{
-			std::cout << "@group(" << m_GroupNumber << ") @binding(" << i << ")" << " " << m_BindingsName[i] << "\n";
+			// group index depends on the binding order, therefore debug outputs name of the bindgroup
+			std::cout << "@group(" << m_Name << ") @binding(" << i << ")" << " " << m_BindingsName[i] << "\n";
 		}
 	}
 

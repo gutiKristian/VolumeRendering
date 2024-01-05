@@ -19,6 +19,7 @@ namespace med
 	public:
 		//TODO: Pass context ?
 		BindGroup();
+		~BindGroup();
 	public:
 		/*
 		 * This static method resets the counter of currently bound bind-groups.
@@ -114,7 +115,6 @@ namespace med
 
 		bool m_IsInitialized = false;
 		int m_BindingsCount = 0;
-		int m_GroupNumber = 0;
 		std::string m_Name;
 		std::vector<std::string> m_BindingsName;
 	};
