@@ -25,7 +25,7 @@ namespace med
 	}
 
 
-	void PipelineBuilder::DepthTexMagic(int width, int height)
+	void PipelineBuilder::DepthTexMagic(uint32_t width, uint32_t height)
 	{
 		//! CREATE TEXTURE OBJECT, SEND THIS TO RENDERPIPELINE
 		//! THIS WILL BE UPDATED THERE, THE VIEW MUST BE SEND THERE NEVERTHELESS
@@ -48,7 +48,7 @@ namespace med
 		depthTextureDesc.format = depthTexFormat;
 		depthTextureDesc.mipLevelCount = 1;
 		depthTextureDesc.sampleCount = 1;
-		depthTextureDesc.size = { (uint32_t)width, (uint32_t)height, 1 };
+		depthTextureDesc.size = { width, height, 1 };
 		depthTextureDesc.usage = WGPUTextureUsage_RenderAttachment;
 		depthTextureDesc.viewFormatCount = 1;
 		depthTextureDesc.viewFormats = &depthTexFormat;

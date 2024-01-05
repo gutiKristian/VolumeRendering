@@ -28,7 +28,7 @@ namespace med
 		/*
 		* Setting up depth attachment.
 		*/
-		void DepthTexMagic(int width, int height);
+		void DepthTexMagic(uint32_t width, uint32_t height);
 
 		/*
 		 * Set the cull face.
