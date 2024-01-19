@@ -170,4 +170,21 @@ namespace base {
 		std::string result = log.str();
 		LOG_TRACE(result.c_str());
 	}
+
+	void GraphicsContext::ListPickedAdapter(WGPUAdapter adapter)
+	{
+		std::stringstream log;
+		log << "Picked adapter:\n";
+
+		WGPUAdapterProperties prop{};
+		wgpuAdapterGetProperties(adapter, &prop);
+
+		log << "\n";
+		log << "Adapter type: " << ResolveAdapterType(static_cast<wgpu::AdapterType>(prop.adapterType)) << "\n";
+		log << "Name: " << prop.name << "\n" << "Architecture: " << prop.architecture << "\n";
+		log << "Vendor: " << prop.vendorName << "\n" << "Driver description: " << prop.driverDescription << "\n";
+		log << "Backend: " << ResolveBackendType(static_cast<wgpu::BackendType>(prop.backendType)) << "\n";
+		std::string result = log.str();
+		LOG_TRACE(result.c_str());
+	}
 }

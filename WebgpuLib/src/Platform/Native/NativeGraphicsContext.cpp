@@ -90,6 +90,8 @@ namespace base {
 
 		s_DeviceC = RequestDevice(s_AdapterC, &devDesc);
 
+		ListPickedAdapter(s_AdapterC);
+
 		wgpuDeviceSetDeviceLostCallback(s_DeviceC, [](WGPUDeviceLostReason reason, char const* message, void* userdata)
 		{
 			LOG_ERROR("WGPU-Device-Lost: {0}", message);

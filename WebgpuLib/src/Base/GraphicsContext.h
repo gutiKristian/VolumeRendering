@@ -18,6 +18,8 @@ namespace base {
 
 		static void ListAvailableAdapters();
 
+		static void ListPickedAdapter(WGPUAdapter adapter);
+
 		static WGPUDevice GetDevice() { return s_DeviceC; }
 		static WGPUSurface GetSurface() { return s_SurfaceC; }
 		static WGPUQueue GetQueue() { return s_QueueC; }
