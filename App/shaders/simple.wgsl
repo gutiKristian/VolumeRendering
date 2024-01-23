@@ -1,7 +1,7 @@
 struct Fragment
 {
 	@builtin(position) position: vec4f,
-	@location(0) pos: vec4f,
+	@location(0) raw_pos: vec4f,
 	@location(1) tex_coord: vec3f
 }
 
@@ -32,67 +32,50 @@ fn vs_main(@builtin(vertex_index) v_id: u32, @location(0) vertex_coord: vec3f, @
 	var vs_out: Fragment;
 	
 	vs_out.position = out_position;
-	vs_out.pos = out_position;
+	vs_out.raw_pos = out_position;
 	vs_out.tex_coord = tex_coord;
 
 	return vs_out;
 }
 
+/*
+* Helper for change of base
+* For now UNUSED
+*/
 fn view_to_world(pixel: vec2<f32>) -> vec3<f32>
 {
-	//TODO: pass width and height as uniforms or whatever
-	var coordNdc: vec2f =  vec2f((pixel.x / 800.0), (pixel.y / 600.0)) * 2.0 - 1.0;
+	//! pass width and height as uniforms or whatever
+	var coordNdc: vec2f =  vec2f((pixel.x / 1280.0), (pixel.y / 720.0)) * 2.0 - 1.0;
 	var temp: vec4<f32> = camera.projection_inverse * vec4f(coordNdc.x, coordNdc.y, 1, 1);
 	var coordWorld: vec4f = camera.view_inverse * (temp / temp.w);
 	return coordWorld.xyz;
 }
 
-// fn rayAABBIntersect(direction: vec3<f32>) -> f32 {
-//     var tNear: vec3<f32> = (vec3(-1.0, -1.0, -1.0) - camera_pos) / direction;
-//     var tFar: vec3<f32> = (vec3(1.0, 1.0, 1.0) - camera_pos) / direction;
+/*
+* Checks whether the position is within out bbox basically,
+* but our bbox coordinates are basically 3D tex. coordinates
+*/
+fn is_in_sample_coords(position: vec3<f32>) -> bool
+{
+	var b_min: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
+	var b_max: vec3<f32> = vec3<f32>(1.0, 1.0, 1.0);
 
-//     // Swap values if necessary to ensure tNear is the minimum
-//     tNear = min(tNear, tFar);
-//     tFar = max(tNear, tFar);
-
-//     // Find the maximum t value among the components
-//     var t1: f32 = max(tNear.x, max(tNear.y, tNear.z));
-//     var t2: f32 = min(tFar.x, min(tFar.y, tFar.z));
-
-//     // Check if the intervals are valid
-//     if (t1 > t2 || t2 < 0.0) {
-//         // No intersection
-//         return -1.0;
-//     }
-
-//     // The ray intersects the AABB; t1 gives the entry point
-//     return t1;
-// }
+	return	position.x >= b_min.x && position.x <= b_max.x &&
+			position.y >= b_min.y && position.y <= b_max.y &&
+			position.z >= b_min.z && position.z <= b_max.z;
+}
 
 
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 {
 
-	// var ndc: vec4f = vec4f(
-	//     (in.position.x / 800.0 - 0.5) * 2.0,
-	//     (in.position.y / 600.0 - 0.5) * 2.0,
-	//     (in.position.z - 0.5) * 2.0,
-	//     1.0);
-
-	// // Convert NDC throuch inverse clip coordinates to view coordinates
-	// var clip: vec4f =  (camera.view_inverse * camera.projection_inverse) * ndc;
-	// var vertex: vec3f = (clip / clip.w).xyz;
-
-	// var coordWorld: vec3<f32> = view_to_world(in.position.xy);
-
-	var texC: vec2f = in.pos.xy / in.pos.w;
+	// If we would like to sample the texture with a sampler, this transforms the coordinates in ndc to texture
+	// and as we rendered the cube to the texture of size of screen this gives us the coords, Y IS FLIPPED
+	var texC: vec2f = in.raw_pos.xy / in.raw_pos.w;
 	texC.x =  0.5*texC.x + 0.5;
 	texC.y = -0.5*texC.y + 0.5;
-
-	//var ray_start: vec4<f32> = textureSample(tex_ray_start, texture_sampler, texC);
-	//var ray_end: vec4<f32> = textureSample(tex_ray_end, texture_sampler, texC);
-
+	
 	var ray_start: vec4<f32> = textureLoad(tex_ray_start, vec2<i32>(i32(in.position.x), i32(in.position.y)), 0);
 	var ray_end: vec4<f32> = textureLoad(tex_ray_end, vec2<i32>(i32(in.position.x), i32(in.position.y)), 0);
 
@@ -100,7 +83,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 	switch fragment_mode {
 	  case 1: {
-		return vec4<f32>(ray_direction, 1.0);
+		return vec4<f32>(abs(ray_direction), 1.0);
 	  }
 	  case 2: {
 		return vec4<f32>(ray_start.xyz, 1.0);
@@ -131,11 +114,11 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	var src: vec4<f32> = vec4<f32>(0.0);
  
 	var value: f32 = 0.0;
- 
+
 	for (var i: i32 = 0; i < iterations; i++)
 	{
 		value = textureSample(tex, texture_sampler, current_position).r;
-		if dst.a <= 0.95
+		if is_in_sample_coords(current_position) && dst.a <= 0.95
 		{     
 			src = vec4<f32>(value);
 			src.a *= 0.5; //reduce the alpha to have a more transparent result 
@@ -148,7 +131,6 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 			src.b *= src.a; 
 			dst = (1.0 - dst.a) * src + dst;
 		}
-
 		// Advance ray
 		current_position = current_position + step;
 	}
