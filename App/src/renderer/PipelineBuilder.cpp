@@ -77,6 +77,11 @@ namespace med
 		m_PipelineDesc.primitive.frontFace = order;
 	}
 
+	void PipelineBuilder::SetColorTargetFormat(WGPUTextureFormat format)
+	{
+		m_ColorTarget.format = format;
+	}
+
 	std::shared_ptr<RenderPipeline> PipelineBuilder::BuildPipeline()
 	{
 		// Finalize vertex buffers and bindgroups creation
