@@ -51,6 +51,7 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
+		InitializeTransferFunction();
 	}
 
 	void Application::OnUpdate(base::Timestep ts)
@@ -419,8 +420,8 @@ namespace med {
 		builder.AddBindGroup(m_BGroupImGui);
 		builder.AddShaderModule(shaderModule);
 		builder.SetFrontFace(WGPUFrontFace_CCW);
-		//builder.SetCullFace(WGPUCullMode_Back);
-		builder.SetCullFace(WGPUCullMode_Front);
+		builder.SetCullFace(WGPUCullMode_Back);
+		//builder.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipeline = builder.BuildPipeline();
 
 		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
@@ -438,6 +439,22 @@ namespace med {
 		builderAtt.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipelineEnd = builderAtt.BuildPipeline();
 
+	}
+
+	void Application::InitializeTransferFunction()
+	{
+		LOG_INFO("Initializing transfer function");
+
+		size_t maxValue = 4095; // hardcoded for now
+		m_Tf.resize(maxValue + 1, 0.0f);
+		for (size_t i = 1; i <= maxValue; ++i)
+		{
+			// Alpha values are from 0-1
+			m_Tf[i] = static_cast<float>(i) / maxValue;
+		}
+
+		p_TexTf = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_Tf.data(), WGPUTextureDimension_1D, {m_Tf.size(), 1, 1},
+			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Transfer function");
 	}
 
 	void Application::ToggleMouse(int key, bool toggle)

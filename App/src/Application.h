@@ -64,7 +64,16 @@ namespace med {
 		void InitializeVertexBuffers();
 		void InitializeIndexBuffers();
 		void InitializeBindGroups();
+		/*
+		* Initializes pipelines that are used during the runtime
+		* This function is called also on resize when pipelines need to be rebuilt
+		*/
 		void InitializeRenderPipelines();
+		/*
+		* Initializes simple TF based on max value
+		* [0, maxValue] -> for each value within this interval alpha is generated (linearly)
+		*/
+		void InitializeTransferFunction();
 		/*Event helpers*/
 		void ToggleMouse(int key, bool toggle);
 
@@ -96,6 +105,7 @@ namespace med {
 		std::shared_ptr<Texture> p_TexData = nullptr;
 		std::shared_ptr<Texture> p_TexStart = nullptr;
 		std::shared_ptr<Texture> p_TexEnd = nullptr;
+		std::shared_ptr<Texture> p_TexTf = nullptr;
 
 
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
@@ -137,6 +147,9 @@ namespace med {
 		bool m_IsRightClicked = false;
 		float m_LastX = 0.0f;
 		float m_LastY = 0.0f;
+		
+		// TF
+		std::vector<float> m_Tf;
 
 		// ImGui
 		int m_FragmentMode = 0;
