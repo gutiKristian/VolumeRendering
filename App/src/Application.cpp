@@ -67,7 +67,6 @@ namespace med {
 		p_UCameraPos->UpdateBuffer(queue, 0, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
-
 	}
 
 	void Application::OnRender()
@@ -213,37 +212,9 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
-
-		// Reinitialize pipelines
-		FileReader shaderReader;
-		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");
-		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("simple.wgsl"));
-
-		PipelineBuilder builder;
-		builder.DepthTexMagic(width, height);
-		builder.AddBuffer(*p_VBCube);
-		builder.AddBindGroup(m_BGroupCamera);
-		builder.AddBindGroup(m_BGroupTextures);
-		builder.AddBindGroup(m_BGroupImGui);
-		builder.AddShaderModule(shaderModule);
-		builder.SetFrontFace(WGPUFrontFace_CCW);
-		builder.SetCullFace(WGPUCullMode_Back);
-		p_RenderPipeline = builder.BuildPipeline();
-
-
-		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
-
-		PipelineBuilder builderAtt;
-		builderAtt.AddBuffer(*p_VBCube);
-		builderAtt.AddBindGroup(m_BGroupCamera);
-		builderAtt.AddShaderModule(shaderModuleAtt);
-		builderAtt.SetFrontFace(WGPUFrontFace_CCW);
-
-		builderAtt.SetCullFace(WGPUCullMode_Back);
-		p_RenderPipelineStart = builderAtt.BuildPipeline();
-
-		builderAtt.SetCullFace(WGPUCullMode_Front);
-		p_RenderPipelineEnd = builderAtt.BuildPipeline();
+		
+		// Reinit pipelines
+		InitializeRenderPipelines();
 	}
 
 	void Application::OnEnd()
@@ -448,7 +419,8 @@ namespace med {
 		builder.AddBindGroup(m_BGroupImGui);
 		builder.AddShaderModule(shaderModule);
 		builder.SetFrontFace(WGPUFrontFace_CCW);
-		builder.SetCullFace(WGPUCullMode_Back);
+		//builder.SetCullFace(WGPUCullMode_Back);
+		builder.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipeline = builder.BuildPipeline();
 
 		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
@@ -458,6 +430,7 @@ namespace med {
 		builderAtt.AddBindGroup(m_BGroupCamera);
 		builderAtt.AddShaderModule(shaderModuleAtt);
 		builderAtt.SetFrontFace(WGPUFrontFace_CCW);
+		builderAtt.SetColorTargetFormat(WGPUTextureFormat_RGBA32Float);
 
 		builderAtt.SetCullFace(WGPUCullMode_Back);
 		p_RenderPipelineStart = builderAtt.BuildPipeline();
