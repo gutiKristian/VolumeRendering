@@ -79,7 +79,7 @@ namespace med
 
 		texDesc.dimension = WGPUTextureDimension_2D;
 		texDesc.size = { width, height, 1};
-		texDesc.format = base::GraphicsContext::GetDefaultTextureFormat();
+		texDesc.format = WGPUTextureFormat_RGBA32Float;
 		texDesc.usage = WGPUTextureUsage_RenderAttachment | flags;
 
 		// Default values, will implement setters
@@ -101,7 +101,7 @@ namespace med
 		textureViewDesc.baseMipLevel = 0;
 		textureViewDesc.mipLevelCount = 1;
 		textureViewDesc.dimension = WGPUTextureViewDimension_2D;
-		textureViewDesc.format = base::GraphicsContext::GetDefaultTextureFormat();
+		textureViewDesc.format = WGPUTextureFormat_RGBA32Float;
 
 		WGPUTextureView textureView = wgpuTextureCreateView(texture, &textureViewDesc);
 
