@@ -27,6 +27,8 @@ namespace med
 		WGPUTextureViewDescriptor GetViewDescriptor() const;
 		WGPUTextureView GetTextureView() const;
 		std::string GetName() const;
+	private:
+		static WGPUTextureViewDimension ResolveView(WGPUTextureDimension dim);
 	
 	private:
 		// Instances

@@ -44,7 +44,7 @@ namespace med
 		textureViewDesc.arrayLayerCount = 1;
 		textureViewDesc.baseMipLevel = 0;
 		textureViewDesc.mipLevelCount = 1;
-		textureViewDesc.dimension = WGPUTextureViewDimension_3D;
+		textureViewDesc.dimension = ResolveView(dimension);
 		textureViewDesc.format = format;
 
 
@@ -121,6 +121,28 @@ namespace med
 	std::string Texture::GetName() const
 	{
 		return m_Name;
+	}
+
+	WGPUTextureViewDimension Texture::ResolveView(WGPUTextureDimension dim)
+	{
+		// intentionally ignoring others
+		switch (dim)
+		{
+		case WGPUTextureDimension_1D:
+			return WGPUTextureViewDimension_1D;
+		case WGPUTextureDimension_2D:
+			return WGPUTextureViewDimension_2D;
+		case WGPUTextureDimension_3D:
+			return WGPUTextureViewDimension_3D;
+		case WGPUTextureDimension_Force32:
+			return WGPUTextureViewDimension_Force32;
+		default:
+			break;
+		}
+
+		assert(false && "ResolveView texture received unexpected texture dimension");
+
+		return WGPUTextureViewDimension_Force32;
 	}
 
 }
