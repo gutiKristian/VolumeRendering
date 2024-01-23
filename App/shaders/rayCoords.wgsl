@@ -17,7 +17,8 @@ struct CameraData
 @group(0) @binding(1) var<uniform> camera_pos: vec3f;
 
 @vertex
-fn vs_main(@builtin(vertex_index) v_id: u32, @location(0) vertex_coord: vec3f, @location(1) tex_coord: vec3f) -> Fragment {
+fn vs_main(@builtin(vertex_index) v_id: u32, @location(0) vertex_coord: vec3f, @location(1) tex_coord: vec3f) -> Fragment
+{
 	
 	var vs_out: Fragment;
 	let out_position: vec4f = camera.projection * camera.view * camera.model * vec4f(vertex_coord, 1.0);
