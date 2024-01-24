@@ -70,6 +70,12 @@ namespace med {
 		p_UCameraPos->UpdateBuffer(queue, 0, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
+
+		if (m_ShouldUpdateTf)
+		{
+			m_ShouldUpdateTf = false;
+			LOG_INFO("TF has been updated");
+		}
 	}
 
 	void Application::OnRender()
@@ -244,6 +250,7 @@ namespace med {
 						m_TfY[i + x0] = result[i];
 					}
 				}
+				m_ShouldUpdateTf = true;
 			}
 
 			ImPlot::EndPlot();

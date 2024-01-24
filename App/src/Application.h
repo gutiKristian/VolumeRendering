@@ -153,6 +153,7 @@ namespace med {
 		float m_TfX[4096];
 		float m_TfY[4096];
 		std::vector<int> m_TfControlPoints{};
+		bool m_ShouldUpdateTf = false;
 
 		// ImGui
 		int m_FragmentMode = 0;
