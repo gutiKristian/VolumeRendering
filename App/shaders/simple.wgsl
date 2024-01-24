@@ -21,6 +21,7 @@ struct CameraData
 @group(1) @binding(1) var tex_ray_start: texture_2d<f32>;
 @group(1) @binding(2) var tex_ray_end: texture_2d<f32>;
 @group(1) @binding(3) var texture_sampler: sampler;
+@group(1) @binding(4) var tex_tf: texture_1d<f32>;
 
 @group(2) @binding(0) var<uniform> fragment_mode: i32;
 
@@ -118,9 +119,12 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	for (var i: i32 = 0; i < iterations; i++)
 	{
 		value = textureSample(tex, texture_sampler, current_position).r;
+		var al: f32 = textureSample(tex_tf, texture_sampler, value).r;
+		
 		if is_in_sample_coords(current_position) && dst.a <= 0.95
-		{     
-			src = vec4<f32>(value);
+		{
+
+			src = vec4<f32>(al);
 			src.a *= 0.5; //reduce the alpha to have a more transparent result 
 			
 			//Front to back blending
