@@ -49,11 +49,11 @@ namespace med {
 		InitializeSamplers();
 		InitializeUniforms();
 		InitializeTextures();
+		InitializeTransferFunction();
 		InitializeVertexBuffers();
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
-		InitializeTransferFunction();
 	}
 
 	void Application::OnUpdate(base::Timestep ts)
