@@ -74,6 +74,7 @@ namespace med {
 		* [0, maxValue] -> for each value within this interval alpha is generated (linearly)
 		*/
 		void InitializeTransferFunction();
+
 		/*Event helpers*/
 		void ToggleMouse(int key, bool toggle);
 
@@ -149,7 +150,9 @@ namespace med {
 		float m_LastY = 0.0f;
 		
 		// TF
-		std::vector<float> m_Tf;
+		float m_TfX[4096];
+		float m_TfY[4096];
+		std::vector<int> m_TfControlPoints{};
 
 		// ImGui
 		int m_FragmentMode = 0;

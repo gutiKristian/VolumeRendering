@@ -17,6 +17,8 @@
 #include "ImGuiLayer.h"
 #include "implot.h"
 
+#include "tf/LinearInterpolation.h"
+
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
 	#include <emscripten/html5.h>
@@ -185,6 +187,68 @@ namespace med {
 		ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::End();
+
+		if (ImPlot::BeginPlot("Transfer function"))
+		{
+			ImPlot::SetupAxes("Voxel value", "Alpha");
+			//ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
+			ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
+
+			if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(0))
+			{
+				ImPlotPoint mousePos = ImPlot::GetPlotMousePos();
+				std::stringstream ss;
+				ss << "Clicked in plot:" << "\tx: " << static_cast<int>(mousePos.x) << " | y: " << mousePos.y;
+				LOG_TRACE(ss.str().c_str());
+
+				int x = static_cast<int>(mousePos.x);
+				float y = mousePos.y;
+
+				if (std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x) == m_TfControlPoints.end())
+				{
+					// Not there
+					m_TfControlPoints.push_back(x);
+					std::sort(m_TfControlPoints.begin(), m_TfControlPoints.end());
+				}
+
+				size_t id = std::distance(m_TfControlPoints.begin(), std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x));
+
+				// Updates
+				if (id - 1 >= 0)
+				{
+					int x0 = m_TfControlPoints[id - 1];
+					int x1 = m_TfControlPoints[id];
+
+					// Recalculate for interval [contorlPoint-1, controlPoint]
+					std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, m_TfY[x0], y, 1);
+					assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
+
+					for (size_t i = 0; i < std::abs(x1 - x0); ++i)
+					{
+						m_TfY[i + x0] = result[i];
+					}
+				}
+
+				if (id + 1 < m_TfControlPoints.size())
+				{
+					// Recalculate for interval [controlPoint, controlPoint+1]
+					int x0 = m_TfControlPoints[id];
+					int x1 = m_TfControlPoints[id+1];
+
+					// Recalculate for interval [contorlPoint-1, controlPoint]
+					std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, y, m_TfY[x1], 1);
+					assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
+
+					for (size_t i = 0; i < std::abs(x1 - x0); ++i)
+					{
+						m_TfY[i + x0] = result[i];
+					}
+				}
+			}
+
+			ImPlot::EndPlot();
+		
+		}
 	}
 
 	void Application::OnResize(uint32_t width, uint32_t height)
@@ -445,16 +509,24 @@ namespace med {
 	{
 		LOG_INFO("Initializing transfer function");
 
-		size_t maxValue = 4095; // hardcoded for now
-		m_Tf.resize(maxValue + 1, 0.0f);
-		for (size_t i = 1; i <= maxValue; ++i)
+		// We are working with 12bit data
+		m_TfControlPoints.push_back(0);
+		m_TfControlPoints.push_back(4095);
+
+		std::vector<float> result = LinearInterpolation::Generate<float>(m_TfControlPoints[0], m_TfControlPoints[1], 0.0f, 1.0f, 1);
+
+		assert(result.size() == 4096 && "Size of generated TF does not match");
+
+		// Fill for plotting
+		for (size_t i = 0; i < 4096; ++i)
 		{
-			// Alpha values are from 0-1
-			m_Tf[i] = static_cast<float>(i) / maxValue;
+			m_TfX[i] = i;
+			m_TfY[i] = result[i];
 		}
 
-		p_TexTf = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_Tf.data(), WGPUTextureDimension_1D, {m_Tf.size(), 1, 1},
+		p_TexTf = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_TfY, WGPUTextureDimension_1D, {4096, 1, 1},
 			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Transfer function");
+	
 	}
 
 	void Application::ToggleMouse(int key, bool toggle)
