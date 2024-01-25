@@ -191,7 +191,7 @@ namespace med {
 	{
 		// My code
 		ImGui::Begin("Fragment Mode");
-		ImPlot::ShowDemoWindow();
+		//ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::End();
 
@@ -284,6 +284,7 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
+		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 		
 		// Reinit pipelines
