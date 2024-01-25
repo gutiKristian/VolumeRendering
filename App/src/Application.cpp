@@ -74,7 +74,8 @@ namespace med {
 		if (m_ShouldUpdateTf)
 		{
 			m_ShouldUpdateTf = false;
-			LOG_INFO("TF has been updated");
+			LOG_INFO("TF update initiated");
+			p_TexTf->UpdateTexture(base::GraphicsContext::GetQueue(), m_TfY);
 		}
 	}
 
