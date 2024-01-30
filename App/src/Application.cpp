@@ -353,7 +353,7 @@ namespace med {
 				}
 			case base::EventType::MousePressed:
 				{
-					if (!ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemFocused())
+					if (!ImGui::GetIO().WantCaptureMouse)
 					{
 						ToggleMouse(ev.as.mousePressedEvent.button, true);
 					}
