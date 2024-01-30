@@ -143,31 +143,22 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	var step: vec3<f32> = ray.direction * step_size;
 
 	var dst: vec4<f32> = vec4<f32>(0.0);
-	var src: vec4<f32> = vec4<f32>(0.0);
 
 	for (var i: i32 = 0; i < steps_count; i++)
 	{
 		var raw_intensity: f32 = textureSample(tex, texture_sampler, current_position).r;
-		var value: f32 = raw_intensity / 4095.0;
-		var al: f32 = textureSample(tex_tf, texture_sampler, value).r;
+		var normalized_intensity: f32 = raw_intensity / 4095.0;
+		var tf: f32 = textureSample(tex_tf, texture_sampler, normalized_intensity).r;
 		
-		if is_in_sample_coords(current_position) && dst.a <= 1.00
-		{
-			if al > dst.x
-			{
-				dst = vec4f(al);
-			}
+		var src: vec4<f32> = vec4<f32>(tf);
 
-			// src = vec4<f32>(al);
-			// src.a *= 0.5; //reduce the alpha to have a more transparent result 
-			
-			// //Front to back blending
-			// // dst.rgb = dst.rgb + (1 - dst.a) * src.a * src.rgb
-			// // dst.a   = dst.a   + (1 - dst.a) * src.a    
-			// src.r *= src.a;
-			// src.g *= src.a; 
-			// src.b *= src.a; 
-			// dst = (1.0 - dst.a) * src + dst;
+		if is_in_sample_coords(current_position) && dst.a < 1.0
+		{
+			dst.r = src.a * src.r + (1 - src.a) * dst.a * dst.r;
+			dst.g = src.a * src.g + (1 - src.a) * dst.a * dst.g;
+			dst.b = src.a * src.b + (1 - src.a) * dst.a * dst.b;
+    		
+			dst.a = src.a + (1 - src.a) * dst.a;
 		}
 
 		// Advance ray
