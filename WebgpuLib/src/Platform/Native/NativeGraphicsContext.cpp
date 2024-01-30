@@ -75,7 +75,7 @@ namespace base {
 		 * disable_symbol_renaming: As much as possible, disable renaming of symbols (variables, function names, etc.) This can make dumped shaders more readable
 		 * use_user_defined_labels_in_backend: Forward object labels to the backend so that they can be seen in native debugging tools like RenderDoc, PIX, or Mac Instruments
 		 */
-		const char* const enabledToggles[] = { "disable_symbol_renaming", "use_user_defined_labels_in_backend"};
+		const char* const enabledToggles[] = { "disable_symbol_renaming", "use_user_defined_labels_in_backend", "emit_hlsl_debug_symbols" };
 		WGPUDawnTogglesDescriptor deviceToggleDesc{};
 		deviceToggleDesc.enabledToggles = enabledToggles;
 		deviceToggleDesc.enabledToggleCount = sizeof(enabledToggles) / sizeof(char*);
