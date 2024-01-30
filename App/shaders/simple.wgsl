@@ -32,6 +32,7 @@ struct Ray
 @group(1) @binding(4) var tex_tf: texture_1d<f32>;
 
 @group(2) @binding(0) var<uniform> fragment_mode: i32;
+@group(2) @binding(1) var<uniform> steps_count: i32;
 
 @vertex
 fn vs_main(@builtin(vertex_index) v_id: u32, @location(0) vertex_coord: vec3f, @location(1) tex_coord: vec3f) -> Fragment {
@@ -135,20 +136,16 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	}
 
 	// Iteration params -- Default
-	var step_size: f32 = 0.01;
-	var steps: i32 = 300;
-	step_size = get_step_size(ray.length, steps);
+	var step_size: f32 = get_step_size(ray.length, steps_count);
 
  	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
 	var current_position: vec3<f32> = ray.start.xyz;
 	var step: vec3<f32> = ray.direction * step_size;
 
-
 	var dst: vec4<f32> = vec4<f32>(0.0);
 	var src: vec4<f32> = vec4<f32>(0.0);
 
-
-	for (var i: i32 = 0; i < steps; i++)
+	for (var i: i32 = 0; i < steps_count; i++)
 	{
 		var raw_intensity: f32 = textureSample(tex, texture_sampler, current_position).r;
 		var value: f32 = raw_intensity / 4095.0;

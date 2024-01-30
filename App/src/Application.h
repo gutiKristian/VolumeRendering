@@ -102,6 +102,7 @@ namespace med {
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
 		std::shared_ptr<UniformBuffer> p_UCameraPos = nullptr;
 		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
+		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
 
 		std::shared_ptr<Texture> p_TexData = nullptr;
 		std::shared_ptr<Texture> p_TexStart = nullptr;
@@ -157,6 +158,8 @@ namespace med {
 
 		// ImGui
 		int m_FragmentMode = 0;
+		int m_StepsCount = 100;
+
 		const char* m_FragModes[5] =
 		{
 			"Volume",

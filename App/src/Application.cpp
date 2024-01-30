@@ -70,6 +70,7 @@ namespace med {
 		p_UCameraPos->UpdateBuffer(queue, 0, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
+		p_UStepsCount->UpdateBuffer(queue, 0, &m_StepsCount, sizeOfInt);
 
 		if (m_ShouldUpdateTf)
 		{
@@ -193,6 +194,7 @@ namespace med {
 		ImGui::Begin("Fragment Mode");
 		//ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
+		ImGui::SliderInt("Number of steps", &m_StepsCount, 50, 1500);
 		ImGui::End();
 
 		if (ImPlot::BeginPlot("Transfer function"))
@@ -418,6 +420,7 @@ namespace med {
 
 		p_UCameraPos = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 		p_UFragmentMode = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), &m_FragmentMode, sizeof(int));
+		p_UStepsCount = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), &m_StepsCount, sizeof(int));
 	}
 
 	void Application::InitializeTextures()
@@ -473,6 +476,7 @@ namespace med {
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
+		m_BGroupImGui.AddBuffer(*p_UStepsCount, WGPUShaderStage_Fragment);
 		m_BGroupImGui.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 	}
 
