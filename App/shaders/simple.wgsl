@@ -14,6 +14,14 @@ struct CameraData
 	projection_inverse: mat4x4<f32>
 };
 
+struct Ray
+{
+	start: vec3<f32>,
+	end: vec3<f32>,
+	direction: vec3<f32>,
+	length: f32
+}
+
 @group(0) @binding(0) var<uniform> camera: CameraData;
 @group(0) @binding(1) var<uniform> camera_pos: vec3f;
 
@@ -66,6 +74,35 @@ fn is_in_sample_coords(position: vec3<f32>) -> bool
 			position.z >= b_min.z && position.z <= b_max.z;
 }
 
+/*
+* Fixed sample size
+* Based on step_size, it returns number of samples/steps on a ray
+* PROBLEM WITH NON UNIFORM FLOW...
+*/
+// fn get_number_of_samples(ray_length: f32, step_size: f32) -> i32
+// {
+// 	return i32(ray_length / step_size);
+// }
+
+/*
+* Based on number of samples, it returns the size of the step to fit desired number of samples/steps
+*/
+fn get_step_size(ray_length: f32, samples: i32) -> f32
+{
+	return ray_length / f32(samples);
+}
+
+
+fn setup_ray(tex_pos: vec2<i32>) -> Ray
+{
+	var ray: Ray;
+	// Ray setup
+	ray.start = textureLoad(tex_ray_start, tex_pos, 0).xyz;
+	ray.end = textureLoad(tex_ray_end, tex_pos, 0).xyz;
+	ray.direction = normalize(ray.end.xyz - ray.start.xyz);
+	ray.length = length(ray.end.xyz - ray.start.xyz);
+	return ray;
+}
 
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
@@ -77,20 +114,18 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	texC.x =  0.5*texC.x + 0.5;
 	texC.y = -0.5*texC.y + 0.5;
 	
-	var ray_start: vec4<f32> = textureLoad(tex_ray_start, vec2<i32>(i32(in.position.x), i32(in.position.y)), 0);
-	var ray_end: vec4<f32> = textureLoad(tex_ray_end, vec2<i32>(i32(in.position.x), i32(in.position.y)), 0);
-
-	var ray_direction: vec3<f32> = normalize(ray_end.xyz - ray_start.xyz);
+	// Ray setup
+	let ray: Ray = setup_ray(vec2<i32>(i32(in.position.x), i32(in.position.y)));
 
 	switch fragment_mode {
 	  case 1: {
-		return vec4<f32>(abs(ray_direction), 1.0);
+		return vec4<f32>(abs(ray.direction), 1.0);
 	  }
 	  case 2: {
-		return vec4<f32>(ray_start.xyz, 1.0);
+		return vec4<f32>(ray.start.xyz, 1.0);
 	  }
 	  case 3: {
-		return vec4<f32>(ray_end.xyz, 1.0);
+		return vec4<f32>(ray.end.xyz, 1.0);
 	  }
 	  case 4: {
 		return vec4<f32>(texC, 0.0, 1.0);
@@ -99,42 +134,45 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	  }
 	}
 
-
-	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
-	var current_position: vec3<f32> = ray_start.xyz;
-
-	// Iteration params
+	// Iteration params -- Default
 	var step_size: f32 = 0.01;
-	var step: vec3<f32> = ray_direction * step_size;
-	var iterations: i32 = 200;
+	var steps: i32 = 300;
+	step_size = get_step_size(ray.length, steps);
 
-	var final_value: f32 = 0.0;
+ 	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
+	var current_position: vec3<f32> = ray.start.xyz;
+	var step: vec3<f32> = ray.direction * step_size;
 
 
 	var dst: vec4<f32> = vec4<f32>(0.0);
 	var src: vec4<f32> = vec4<f32>(0.0);
- 
-	var value: f32 = 0.0;
 
-	for (var i: i32 = 0; i < iterations; i++)
+
+	for (var i: i32 = 0; i < steps; i++)
 	{
-		value = textureSample(tex, texture_sampler, current_position).r;
+		var raw_intensity: f32 = textureSample(tex, texture_sampler, current_position).r;
+		var value: f32 = raw_intensity / 4095.0;
 		var al: f32 = textureSample(tex_tf, texture_sampler, value).r;
 		
-		if is_in_sample_coords(current_position) && dst.a <= 0.95
+		if is_in_sample_coords(current_position) && dst.a <= 1.00
 		{
+			if al > dst.x
+			{
+				dst = vec4f(al);
+			}
 
-			src = vec4<f32>(al);
-			src.a *= 0.5; //reduce the alpha to have a more transparent result 
+			// src = vec4<f32>(al);
+			// src.a *= 0.5; //reduce the alpha to have a more transparent result 
 			
-			//Front to back blending
-			// dst.rgb = dst.rgb + (1 - dst.a) * src.a * src.rgb
-			// dst.a   = dst.a   + (1 - dst.a) * src.a    
-			src.r *= src.a;
-			src.g *= src.a; 
-			src.b *= src.a; 
-			dst = (1.0 - dst.a) * src + dst;
+			// //Front to back blending
+			// // dst.rgb = dst.rgb + (1 - dst.a) * src.a * src.rgb
+			// // dst.a   = dst.a   + (1 - dst.a) * src.a    
+			// src.r *= src.a;
+			// src.g *= src.a; 
+			// src.b *= src.a; 
+			// dst = (1.0 - dst.a) * src + dst;
 		}
+
 		// Advance ray
 		current_position = current_position + step;
 	}
