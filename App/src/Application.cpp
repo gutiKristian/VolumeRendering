@@ -194,7 +194,7 @@ namespace med {
 		ImGui::Begin("Fragment Mode");
 		//ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
-		ImGui::SliderInt("Number of steps", &m_StepsCount, 50, 1500);
+		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
 		ImGui::End();
 
 		if (ImPlot::BeginPlot("Transfer function"))
