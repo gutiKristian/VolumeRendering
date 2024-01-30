@@ -136,7 +136,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	}
 
 	// Iteration params -- Default
-	var step_size: f32 = get_step_size(ray.length, steps_count);
+	var step_size: f32 = 0.01;
 
  	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
 	var current_position: vec3<f32> = ray.start.xyz;

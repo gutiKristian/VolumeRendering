@@ -93,7 +93,7 @@ namespace med {
 		uint32_t m_Height = 720;
 
 		// Camera utils
-		Camera m_Camera = Camera::CreatePerspective(glm::radians(60.0f), static_cast<float>(m_Width) / static_cast<float>(m_Height), 0.1f, 100.0f);
+		Camera m_Camera = Camera::CreatePerspective(glm::radians(60.0f), static_cast<float>(m_Width) / static_cast<float>(m_Height), 0.01f, 100.0f);
 		glm::vec2 m_MousePos{};
 		bool m_ShouldRotate = false;
 		bool m_ShouldZoom = false;
