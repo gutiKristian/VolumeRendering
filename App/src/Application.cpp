@@ -353,13 +353,16 @@ namespace med {
 				}
 			case base::EventType::MousePressed:
 				{
-				ToggleMouse(ev.as.mousePressedEvent.button, true);
+					if (!ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemFocused())
+					{
+						ToggleMouse(ev.as.mousePressedEvent.button, true);
+					}
 				break;
 				}
 			case base::EventType::MouseReleased:
 				{
-				ToggleMouse(ev.as.mouseReleasedEvent.button, false);
-				break;
+					ToggleMouse(ev.as.mouseReleasedEvent.button, false);
+					break;
 				}
 			default:
 				break;
