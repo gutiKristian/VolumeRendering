@@ -66,7 +66,7 @@ namespace med
 
 			for (std::uint32_t i = 0; i < size; ++i)
 			{
-				fData[i] = static_cast<float>(data[i]) / 4095.0f;
+				fData[i] = static_cast<float>(data[i]);
 			}
 			p_DataFloat = std::shared_ptr<void>(fData);
 		}
