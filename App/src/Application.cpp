@@ -433,9 +433,9 @@ namespace med {
 		DcmImpl reader;
 		DatImpl reader2;
 		VolumeFile file = reader.readFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
-		VolumeFile file2 = reader2.readFile("assets\\stagbeetle277x277x164.dat", false);
+		//VolumeFile file2 = reader2.readFile("assets\\stagbeetle277x277x164.dat", false);
 
-		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file2.get4BPtr(), WGPUTextureDimension_3D, file2.getSize(),
+		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.get4BPtr(), WGPUTextureDimension_3D, file.getSize(),
 			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Data texture");
 
 		p_TexStart = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
