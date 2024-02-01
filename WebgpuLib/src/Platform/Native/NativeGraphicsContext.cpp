@@ -64,7 +64,7 @@ namespace base {
 
 		WGPURequestAdapterOptions options{};
 		options.compatibleSurface = s_SurfaceC;
-		options.backendType = WGPUBackendType_Vulkan;
+		options.backendType = WGPUBackendType_D3D12;
 		options.powerPreference = WGPUPowerPreference_HighPerformance;
 
 		s_AdapterC = RequestAdapter(s_InstanceC, &options);
