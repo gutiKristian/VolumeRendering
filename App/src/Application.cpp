@@ -207,8 +207,9 @@ namespace med {
 
 
 			ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
-
-			if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(0))
+            auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.1f);
+			if (ImPlot::IsPlotHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && dragDelta.x == 0.0
+                && dragDelta.y == 0.0)
 			{
 				ImPlotPoint mousePos = ImPlot::GetPlotMousePos();
 				std::stringstream ss;
