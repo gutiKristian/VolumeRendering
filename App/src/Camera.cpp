@@ -53,17 +53,17 @@ namespace med
 	{
 		if (m_Type == CameraType::Perspective)
 		{
-			m_Distance = glm::clamp(m_Distance + delta * m_Speed, 0.1f, 10.0f);
+			m_Distance = glm::clamp(m_Distance + delta * m_ZoomSpeed, 0.1f, 10.0f);
 			RecalculateViewMatrix();
 		}
 		else
 		{
 			const float sign = (delta < 0.0f) ? -1.0f : 1.0f;
 			const float aspect = m_Right / m_Top;
-			m_Left -= (m_Speed * sign) * aspect;
-			m_Right += (m_Speed * sign) * aspect;
-			m_Bottom -= m_Speed * sign;
-			m_Top += m_Speed * sign;
+			m_Left -= (m_ZoomSpeed * sign) * aspect;
+			m_Right += (m_ZoomSpeed * sign) * aspect;
+			m_Bottom -= m_ZoomSpeed * sign;
+			m_Top += m_ZoomSpeed * sign;
 			RecalculateProjectionMatrix();
 		}
 			

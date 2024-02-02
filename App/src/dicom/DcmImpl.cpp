@@ -12,7 +12,7 @@ namespace med
 		std::vector<std::filesystem::path> paths;
 		if (isDir)
 		{
-			paths = listDirFiles(name, /*extension=*/".dcm");
+			paths = SortDicomSlices(listDirFiles(name, /*extension=*/".dcm"));
 		}
 		else
 		{
@@ -174,4 +174,40 @@ namespace med
 		}
 	}
 
+	std::vector<std::filesystem::path> DcmImpl::SortDicomSlices(const std::vector<std::filesystem::path>& paths) const
+	{
+		std::vector< std::pair<int, std::filesystem::path> > pairs;
+		std::vector<std::filesystem::path> result;
+
+		// Assigns passed reference slice number, returns false when fails
+		auto retrieveOrder = [&](const std::filesystem::path& path) -> void
+		{
+			std::string value;
+			dcm::DicomFile f(path.c_str());
+			if (f.Load() && !f.GetString(dcm::tags::kInstanceNumber, &value))
+			{
+				LOG_ERROR("Error missing instnace number in dicom file");
+				return;
+			}
+			int order = std::stoi(value);
+			pairs.emplace_back(order, path);
+		};
+
+		// Initialize each file with its relative position within the directory
+		std::ranges::for_each(paths, retrieveOrder);
+
+		if (paths.size() != pairs.size())
+		{
+			LOG_WARN("Default order of path is going to be used.");
+			return paths;
+		}
+
+		// Sort them in ascending order
+		std::ranges::sort(pairs, [](const auto& pair1, const auto& pair2) { return pair1.first < pair2.first; });
+		// Transform it to the final result
+		std::ranges::transform(pairs, std::back_inserter(result), [](const auto& pair) {return pair.second; });
+
+		LOG_TRACE("DICOM sorting success");
+		return result;
+	}
 }

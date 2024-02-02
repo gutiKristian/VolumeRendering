@@ -77,6 +77,11 @@ namespace med
 		m_PipelineDesc.primitive.frontFace = order;
 	}
 
+	void PipelineBuilder::SetColorTargetFormat(WGPUTextureFormat format)
+	{
+		m_ColorTarget.format = format;
+	}
+
 	std::shared_ptr<RenderPipeline> PipelineBuilder::BuildPipeline()
 	{
 		// Finalize vertex buffers and bindgroups creation
@@ -137,8 +142,8 @@ namespace med
 		m_BlendState.color.srcFactor = WGPUBlendFactor_SrcAlpha;
 		m_BlendState.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
 		m_BlendState.color.operation = WGPUBlendOperation_Add;
-		m_BlendState.alpha.srcFactor = WGPUBlendFactor_Zero;
-		m_BlendState.alpha.dstFactor = WGPUBlendFactor_One;
+		m_BlendState.alpha.srcFactor = WGPUBlendFactor_Src;
+		m_BlendState.alpha.dstFactor = WGPUBlendFactor_OneMinusSrc;
 		m_BlendState.alpha.operation = WGPUBlendOperation_Add;
 
 		m_ColorTarget.nextInChain = nullptr;

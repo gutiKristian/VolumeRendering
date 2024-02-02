@@ -12,10 +12,13 @@
 
 #include "dicom/FileReader.h"
 #include "dicom/DcmImpl.h"
+#include "dicom/DatImpl.h"
 
 #include "Shader.h"
 #include "ImGuiLayer.h"
 #include "implot.h"
+
+#include "tf/LinearInterpolation.h"
 
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
@@ -47,6 +50,7 @@ namespace med {
 		InitializeSamplers();
 		InitializeUniforms();
 		InitializeTextures();
+		InitializeTransferFunction();
 		InitializeVertexBuffers();
 		InitializeIndexBuffers();
 		InitializeBindGroups();
@@ -67,7 +71,14 @@ namespace med {
 		p_UCameraPos->UpdateBuffer(queue, 0, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
+		p_UStepsCount->UpdateBuffer(queue, 0, &m_StepsCount, sizeOfInt);
 
+		if (m_ShouldUpdateTf)
+		{
+			m_ShouldUpdateTf = false;
+			LOG_INFO("TF update initiated");
+			p_TexTf->UpdateTexture(base::GraphicsContext::GetQueue(), m_TfY);
+		}
 	}
 
 	void Application::OnRender()
@@ -180,11 +191,80 @@ namespace med {
 
 	void Application::OnImGuiRender()
 	{
-		// My code
 		ImGui::Begin("Fragment Mode");
 		ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
+		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
 		ImGui::End();
+
+		if (ImPlot::BeginPlot("Transfer function"))
+		{
+			ImPlot::SetupAxes("Voxel value", "Alpha");
+
+            // Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, 4095.0);
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1,0.0, 1.0);
+
+
+			ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
+            auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.1f);
+			if (ImPlot::IsPlotHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && dragDelta.x == 0.0
+                && dragDelta.y == 0.0)
+			{
+				ImPlotPoint mousePos = ImPlot::GetPlotMousePos();
+				std::stringstream ss;
+				ss << "Clicked in plot:" << "\tx: " << static_cast<int>(mousePos.x) << " | y: " << mousePos.y;
+				LOG_TRACE(ss.str().c_str());
+
+				int x = static_cast<int>(mousePos.x);
+				float y = mousePos.y;
+
+				if (std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x) == m_TfControlPoints.end())
+				{
+					// Not there
+					m_TfControlPoints.push_back(x);
+					std::sort(m_TfControlPoints.begin(), m_TfControlPoints.end());
+				}
+
+				size_t id = std::distance(m_TfControlPoints.begin(), std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x));
+
+				// Updates
+				if (id - 1 >= 0)
+				{
+					int x0 = m_TfControlPoints[id - 1];
+					int x1 = m_TfControlPoints[id];
+
+					// Recalculate for interval [contorlPoint-1, controlPoint]
+					std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, m_TfY[x0], y, 1);
+					assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
+
+					for (size_t i = 0; i < std::abs(x1 - x0); ++i)
+					{
+						m_TfY[i + x0] = result[i];
+					}
+				}
+
+				if (id + 1 < m_TfControlPoints.size())
+				{
+					// Recalculate for interval [controlPoint, controlPoint+1]
+					int x0 = m_TfControlPoints[id];
+					int x1 = m_TfControlPoints[id+1];
+
+					// Recalculate for interval [contorlPoint-1, controlPoint]
+					std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, y, m_TfY[x1], 1);
+					assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
+
+					for (size_t i = 0; i < std::abs(x1 - x0); ++i)
+					{
+						m_TfY[i + x0] = result[i];
+					}
+				}
+				m_ShouldUpdateTf = true;
+			}
+
+			ImPlot::EndPlot();
+		
+		}
 	}
 
 	void Application::OnResize(uint32_t width, uint32_t height)
@@ -212,38 +292,11 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
+		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
-
-		// Reinitialize pipelines
-		FileReader shaderReader;
-		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");
-		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("simple.wgsl"));
-
-		PipelineBuilder builder;
-		builder.DepthTexMagic(width, height);
-		builder.AddBuffer(*p_VBCube);
-		builder.AddBindGroup(m_BGroupCamera);
-		builder.AddBindGroup(m_BGroupTextures);
-		builder.AddBindGroup(m_BGroupImGui);
-		builder.AddShaderModule(shaderModule);
-		builder.SetFrontFace(WGPUFrontFace_CCW);
-		builder.SetCullFace(WGPUCullMode_Back);
-		p_RenderPipeline = builder.BuildPipeline();
-
-
-		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
-
-		PipelineBuilder builderAtt;
-		builderAtt.AddBuffer(*p_VBCube);
-		builderAtt.AddBindGroup(m_BGroupCamera);
-		builderAtt.AddShaderModule(shaderModuleAtt);
-		builderAtt.SetFrontFace(WGPUFrontFace_CCW);
-
-		builderAtt.SetCullFace(WGPUCullMode_Back);
-		p_RenderPipelineStart = builderAtt.BuildPipeline();
-
-		builderAtt.SetCullFace(WGPUCullMode_Front);
-		p_RenderPipelineEnd = builderAtt.BuildPipeline();
+		
+		// Reinit pipelines
+		InitializeRenderPipelines();
 	}
 
 	void Application::OnEnd()
@@ -306,13 +359,16 @@ namespace med {
 				}
 			case base::EventType::MousePressed:
 				{
-				ToggleMouse(ev.as.mousePressedEvent.button, true);
+					if (!ImGui::GetIO().WantCaptureMouse)
+					{
+						ToggleMouse(ev.as.mousePressedEvent.button, true);
+					}
 				break;
 				}
 			case base::EventType::MouseReleased:
 				{
-				ToggleMouse(ev.as.mouseReleasedEvent.button, false);
-				break;
+					ToggleMouse(ev.as.mouseReleasedEvent.button, false);
+					break;
 				}
 			default:
 				break;
@@ -373,13 +429,16 @@ namespace med {
 
 		p_UCameraPos = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 		p_UFragmentMode = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), &m_FragmentMode, sizeof(int));
+		p_UStepsCount = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), &m_StepsCount, sizeof(int));
 	}
 
 	void Application::InitializeTextures()
 	{
 		LOG_INFO("Initializing textures");
 		DcmImpl reader;
+		DatImpl reader2;
 		VolumeFile file = reader.readFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
+		//VolumeFile file2 = reader2.readFile("assets\\stagbeetle277x277x164.dat", false);
 
 		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.get4BPtr(), WGPUTextureDimension_3D, file.getSize(),
 			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Data texture");
@@ -424,9 +483,11 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
+		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
+		m_BGroupImGui.AddBuffer(*p_UStepsCount, WGPUShaderStage_Fragment);
 		m_BGroupImGui.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 	}
 
@@ -449,6 +510,7 @@ namespace med {
 		builder.AddShaderModule(shaderModule);
 		builder.SetFrontFace(WGPUFrontFace_CCW);
 		builder.SetCullFace(WGPUCullMode_Back);
+		//builder.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipeline = builder.BuildPipeline();
 
 		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
@@ -458,6 +520,7 @@ namespace med {
 		builderAtt.AddBindGroup(m_BGroupCamera);
 		builderAtt.AddShaderModule(shaderModuleAtt);
 		builderAtt.SetFrontFace(WGPUFrontFace_CCW);
+		builderAtt.SetColorTargetFormat(WGPUTextureFormat_RGBA32Float);
 
 		builderAtt.SetCullFace(WGPUCullMode_Back);
 		p_RenderPipelineStart = builderAtt.BuildPipeline();
@@ -465,6 +528,30 @@ namespace med {
 		builderAtt.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipelineEnd = builderAtt.BuildPipeline();
 
+	}
+
+	void Application::InitializeTransferFunction()
+	{
+		LOG_INFO("Initializing transfer function");
+
+		// We are working with 12bit data
+		m_TfControlPoints.push_back(0);
+		m_TfControlPoints.push_back(4095);
+
+		std::vector<float> result = LinearInterpolation::Generate<float>(m_TfControlPoints[0], m_TfControlPoints[1], 0.0f, 1.0f, 1);
+
+		assert(result.size() == 4096 && "Size of generated TF does not match");
+
+		// Fill for plotting
+		for (size_t i = 0; i < 4096; ++i)
+		{
+			m_TfX[i] = i;
+			m_TfY[i] = result[i];
+		}
+
+		p_TexTf = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_TfY, WGPUTextureDimension_1D, {4096, 1, 1},
+			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Transfer function");
+	
 	}
 
 	void Application::ToggleMouse(int key, bool toggle)

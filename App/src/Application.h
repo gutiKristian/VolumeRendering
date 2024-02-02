@@ -64,7 +64,17 @@ namespace med {
 		void InitializeVertexBuffers();
 		void InitializeIndexBuffers();
 		void InitializeBindGroups();
+		/*
+		* Initializes pipelines that are used during the runtime
+		* This function is called also on resize when pipelines need to be rebuilt
+		*/
 		void InitializeRenderPipelines();
+		/*
+		* Initializes simple TF based on max value
+		* [0, maxValue] -> for each value within this interval alpha is generated (linearly)
+		*/
+		void InitializeTransferFunction();
+
 		/*Event helpers*/
 		void ToggleMouse(int key, bool toggle);
 
@@ -83,7 +93,7 @@ namespace med {
 		uint32_t m_Height = 720;
 
 		// Camera utils
-		Camera m_Camera = Camera::CreatePerspective(glm::radians(60.0f), static_cast<float>(m_Width) / static_cast<float>(m_Height), 0.1f, 100.0f);
+		Camera m_Camera = Camera::CreatePerspective(glm::radians(60.0f), static_cast<float>(m_Width) / static_cast<float>(m_Height), 0.01f, 100.0f);
 		glm::vec2 m_MousePos{};
 		bool m_ShouldRotate = false;
 		bool m_ShouldZoom = false;
@@ -92,10 +102,12 @@ namespace med {
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
 		std::shared_ptr<UniformBuffer> p_UCameraPos = nullptr;
 		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
+		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
 
 		std::shared_ptr<Texture> p_TexData = nullptr;
 		std::shared_ptr<Texture> p_TexStart = nullptr;
 		std::shared_ptr<Texture> p_TexEnd = nullptr;
+		std::shared_ptr<Texture> p_TexTf = nullptr;
 
 
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
@@ -113,14 +125,14 @@ namespace med {
 		// ----------------------------------------- 
 		float m_CubeVertexData[48] = {
 			/*,	   x     y      z     u	  v	   w */
-				 -1.0, -1.0,  0.5,	0.0, 0.0, 0.0,
-				  1.0, -1.0,  0.5,	1.0, 0.0, 0.0,
-				 -1.0,  1.0,  0.5,  0.0, 1.0, 0.0,
-				  1.0,  1.0,  0.5,  1.0, 1.0, 0.0,
-				 -1.0, -1.0, -0.5,  0.0, 0.0, 1.0,
-				  1.0, -1.0, -0.5,  1.0, 0.0, 1.0,
-				 -1.0,  1.0, -0.5,  0.0, 1.0, 1.0,
-				  1.0,  1.0, -0.5,  1.0, 1.0, 1.0
+				 -0.5f, -0.5f,  0.25f,	0.0f, 0.0f, 0.0f,
+				  0.5f, -0.5f,  0.25f,	1.0f, 0.0f, 0.0f,
+				 -0.5f,  0.5f,  0.25f,	0.0f, 1.0f, 0.0f,
+				  0.5f,  0.5f,  0.25f,	1.0f, 1.0f, 0.0f,
+				 -0.5f, -0.5f, -0.25f,	0.0f, 0.0f, 1.0f,
+				  0.5f, -0.5f, -0.25f,	1.0f, 0.0f, 1.0f,
+				 -0.5f,  0.5f, -0.25f,	0.0f, 1.0f, 1.0f,
+				  0.5f,  0.5f, -0.25f,	1.0f, 1.0f, 1.0f
 		};
 
 		uint16_t m_CubeIndexData[36] = {
@@ -137,9 +149,17 @@ namespace med {
 		bool m_IsRightClicked = false;
 		float m_LastX = 0.0f;
 		float m_LastY = 0.0f;
+		
+		// TF
+		float m_TfX[4096];
+		float m_TfY[4096];
+		std::vector<int> m_TfControlPoints{};
+		bool m_ShouldUpdateTf = false;
 
 		// ImGui
 		int m_FragmentMode = 0;
+		int m_StepsCount = 100;
+
 		const char* m_FragModes[5] =
 		{
 			"Volume",

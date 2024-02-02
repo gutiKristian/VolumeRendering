@@ -41,6 +41,12 @@ namespace med
 		 * Default: CCW
 		 */
 		void SetFrontFace(WGPUFrontFace order);
+
+		/*
+		* What format should pipeline output.
+		* If this method was not called, format provided by graphics context is used.
+		*/
+		void SetColorTargetFormat(WGPUTextureFormat format);
 	
 		/*
 		* Creating instance of pipeline. Buffers 
