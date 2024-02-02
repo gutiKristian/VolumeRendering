@@ -191,9 +191,8 @@ namespace med {
 
 	void Application::OnImGuiRender()
 	{
-		// My code
 		ImGui::Begin("Fragment Mode");
-		//ImPlot::ShowDemoWindow();
+		ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
 		ImGui::End();
@@ -201,7 +200,12 @@ namespace med {
 		if (ImPlot::BeginPlot("Transfer function"))
 		{
 			ImPlot::SetupAxes("Voxel value", "Alpha");
-			//ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
+
+            // Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, 4095.0);
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1,0.0, 1.0);
+
+
 			ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
 
 			if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(0))
