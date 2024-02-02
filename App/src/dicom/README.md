@@ -4,6 +4,18 @@ to read data it doesn't update the tag and length is set to zero druing the read
 Workaround is to inside data_element.h on line 224 make VR mutable and then call vr_.set_code(vr.code()); 
 inside bool GetNumberArray(VR vr, std::vector<T>* values) const function (line 195 cca).
 
+## Tags
+These tags are not present in this lib.
+Add it in defs.h
+const Tag kSliceLocation              = 0x00201041;  // DS
+const Tag kInstanceNumber             = 0x00200013;  // IS
+
+### Instance number
+- indicates the relative position of the image slice within a series.
+
+### Slice location
+- provides the location of the image slice along the patient's body.
+
 # About DICOM
 
 Sourced from ChatGPT

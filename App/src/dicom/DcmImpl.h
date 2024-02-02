@@ -43,6 +43,11 @@ namespace med
 		* we for every write operation we offset pointer by offset * res e.g. fifth image -> (4 * res)
 		*/
 		void setResolution(std::uint32_t res) { m_Res = res; }
+		/*
+		 * Called during the loading phase to ensure the files are in the correct order.
+		 * If one of the file does not have the slice number, files are returned in default order.
+		 */
+		std::vector<std::filesystem::path> SortDicomSlices(const std::vector<std::filesystem::path>& paths) const;
 	private:
 		std::uint16_t m_Rows = 0, m_Cols = 0,
 			m_BitsStored = 0, m_BitsAllocated = 0;
