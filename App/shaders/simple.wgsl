@@ -149,16 +149,14 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var raw_intensity: f32 = textureSample(tex, texture_sampler, current_position).r;
 		var normalized_intensity: f32 = raw_intensity / 4095.0;
 		var tf: f32 = textureSample(tex_tf, texture_sampler, normalized_intensity).r;
-		
-		var src: vec4<f32> = vec4<f32>(tf);
+		var src: vec4<f32> = vec4f(tf);
 
 		if is_in_sample_coords(current_position) && dst.a < 1.0
 		{
-			dst.r = src.a * src.r + (1 - src.a) * dst.a * dst.r;
-			dst.g = src.a * src.g + (1 - src.a) * dst.a * dst.g;
-			dst.b = src.a * src.b + (1 - src.a) * dst.a * dst.b;
-    		
-			dst.a = src.a + (1 - src.a) * dst.a;
+			src.r *= src.a;
+			src.g *= src.a;
+			src.b *= src.a;
+			dst = (1.0f - dst.a)*src + dst;  
 		}
 
 		// Advance ray
