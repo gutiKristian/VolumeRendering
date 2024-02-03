@@ -224,41 +224,42 @@ namespace med {
 					// Not there
 					m_TfControlPoints.push_back(x);
 					std::sort(m_TfControlPoints.begin(), m_TfControlPoints.end());
-				}
+				    LOG_TRACE("Added new point");
+                }
+                else
+                {
+                    LOG_TRACE("Updating existing control point");
+                }
 
-				size_t id = std::distance(m_TfControlPoints.begin(), std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x));
+				size_t index = std::distance(m_TfControlPoints.begin(), std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x));
 
-				// Updates
-				if (id - 1 >= 0)
+                // Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
+                auto updateIntervalValues = [&](size_t cx1, size_t cx2, float cy1, float cy2)
+                {
+                    int x0 = m_TfControlPoints[cx1];
+                    int x1 = m_TfControlPoints[cx2];
+
+                    std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, cy1, cy2, 1);
+                    assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
+
+                    for (size_t i = 0; i < std::abs(x1 - x0); ++i)
+                    {
+                        m_TfY[i + x0] = result[i];
+                    }
+                };
+
+				// Update control interval between control point below and current
+				if (index - 1 >= 0)
 				{
-					int x0 = m_TfControlPoints[id - 1];
-					int x1 = m_TfControlPoints[id];
-
-					// Recalculate for interval [contorlPoint-1, controlPoint]
-					std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, m_TfY[x0], y, 1);
-					assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
-
-					for (size_t i = 0; i < std::abs(x1 - x0); ++i)
-					{
-						m_TfY[i + x0] = result[i];
-					}
+                    updateIntervalValues(index - 1, index, m_TfY[m_TfControlPoints[index-1]], y);
 				}
 
-				if (id + 1 < m_TfControlPoints.size())
+                // Update control interval between current control point and control point above
+				if (index + 1 < m_TfControlPoints.size())
 				{
-					// Recalculate for interval [controlPoint, controlPoint+1]
-					int x0 = m_TfControlPoints[id];
-					int x1 = m_TfControlPoints[id+1];
-
-					// Recalculate for interval [contorlPoint-1, controlPoint]
-					std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, y, m_TfY[x1], 1);
-					assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
-
-					for (size_t i = 0; i < std::abs(x1 - x0); ++i)
-					{
-						m_TfY[i + x0] = result[i];
-					}
+                    updateIntervalValues(index, index + 1, y, m_TfY[m_TfControlPoints[index+1]]);
 				}
+
 				m_ShouldUpdateTf = true;
 			}
 
