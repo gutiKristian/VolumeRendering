@@ -9,7 +9,8 @@ namespace med
 		template<typename T>
 		static std::vector<T> Generate(auto x0, auto x1, auto fx0, auto fx1, auto step)
 		{
-			std::vector<T> result{};
+            static_assert(std::is_arithmetic<T>::value);
+            std::vector<T> result{};
 
 			auto c1 = (fx1 - fx0) / (x1 - x0);
 
