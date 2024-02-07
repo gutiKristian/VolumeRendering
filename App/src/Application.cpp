@@ -585,7 +585,7 @@ namespace med {
                 {
                     // This point is being dragged and we will work with it below
                     draggedId = id;
-                    m_TfContrPHandle[id].x = std::round(m_TfContrPHandle[id].x);
+                    CheckDragBounds(draggedId);
                 }
             }
 
@@ -623,5 +623,31 @@ namespace med {
             ImPlot::EndPlot();
 
         }
+    }
+
+    void Application::CheckDragBounds(size_t index)
+    {
+        constexpr double X_MAX = 4095.0; // Depends on input data depth
+        constexpr double X_MIN = 0.0;
+
+        // We must use floor in order to have at least one unit padding between two cps
+        auto& cp = m_TfContrPHandle[index];
+        const auto cpSize = m_TfContrPHandle.size();
+
+        // Within max y coords
+        cp.y = std::clamp(cp.y, 0.0, 1.0);
+        cp.x = std::clamp(cp.x, X_MIN, X_MAX);
+
+        // is bounded from left
+        if (index - 1 >= 0 && m_TfContrPHandle[index - 1].x >= cp.x)
+        {
+            cp.x = std::round(m_TfContrPHandle[index - 1].x + 1.0);
+        }
+        // is bounded from right
+        if (index + 1 < cpSize && m_TfContrPHandle[index + 1].x <= cp.x)
+        {
+            cp.x = std::round(m_TfContrPHandle[index + 1].x - 1.0);
+        }
+
     }
 }

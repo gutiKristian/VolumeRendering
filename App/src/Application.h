@@ -86,7 +86,11 @@ namespace med {
          *  If CP already exists, does nothing and returns -1
          */
         size_t AddControlPoint(double x, double y);
+        /*
+         * Updates the y values between control points based on interpolation method.
+         */
         void UpdateTfDataIntervals(size_t controlPointIndex);
+        void CheckDragBounds(size_t index);
         void OnTfRender();
 
 	private:
