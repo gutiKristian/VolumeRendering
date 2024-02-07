@@ -418,6 +418,7 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+        m_BGroupTextures.AddSampler(*p_SamplerNN);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
