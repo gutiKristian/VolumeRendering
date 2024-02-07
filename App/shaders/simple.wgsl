@@ -149,7 +149,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	{
 		var raw_intensity: f32 = textureSample(tex, texture_sampler, current_position).r;
 		var normalized_intensity: f32 = raw_intensity / 4095.0;
-		var tf: f32 = textureSample(tex_tf, texture_sampler, normalized_intensity).r;
+		var tf: f32 = textureSample(tex_tf, tex_sampler_nn, normalized_intensity).r;
 		var src: vec4<f32> = vec4f(tf);
 
 		if is_in_sample_coords(current_position) && dst.a < 1.0
