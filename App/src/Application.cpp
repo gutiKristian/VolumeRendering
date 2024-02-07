@@ -579,7 +579,7 @@ namespace med {
             for (int id = 0; id < m_TfContrPHandle.size(); ++id)
             {
                 isDragging |= ImPlot::DragPoint(id, &m_TfContrPHandle[id].x, &m_TfContrPHandle[id].y,
-                        ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_None, nullptr, nullptr, nullptr);
+                        ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_Delayed, nullptr, nullptr, nullptr);
 
                 if (isDragging && draggedId == -1)
                 {
@@ -639,14 +639,14 @@ namespace med {
         cp.x = std::clamp(cp.x, X_MIN, X_MAX);
 
         // is bounded from left
-        if (index - 1 >= 0 && m_TfContrPHandle[index - 1].x >= cp.x)
+        if (index - 1 >= 0 && m_TfContrPHandle[index - 1].x >= (cp.x - 1.0))
         {
-            cp.x = std::round(m_TfContrPHandle[index - 1].x + 1.0);
+            cp.x = std::ceil(m_TfContrPHandle[index - 1].x + 1.0);
         }
         // is bounded from right
-        if (index + 1 < cpSize && m_TfContrPHandle[index + 1].x <= cp.x)
+        if (index + 1 < cpSize && m_TfContrPHandle[index + 1].x <= (cp.x + 1.0))
         {
-            cp.x = std::round(m_TfContrPHandle[index + 1].x - 1.0);
+            cp.x = std::floor(m_TfContrPHandle[index + 1].x - 1.0);
         }
 
     }
