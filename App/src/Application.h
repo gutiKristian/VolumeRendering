@@ -69,14 +69,25 @@ namespace med {
 		* This function is called also on resize when pipelines need to be rebuilt
 		*/
 		void InitializeRenderPipelines();
-		/*
-		* Initializes simple TF based on max value
-		* [0, maxValue] -> for each value within this interval alpha is generated (linearly)
-		*/
-		void InitializeTransferFunction();
 
 		/*Event helpers*/
 		void ToggleMouse(int key, bool toggle);
+
+        /*Transfer function helpers -- will be abstracted*/
+
+        /*
+		* Initializes simple TF based on max value
+		* [0, maxValue] -> for each value within this interval alpha is generated (linearly)
+		*/
+        void InitializeTransferFunction();
+        /*
+         *  Adds control point to the TF.
+         *  Returns index of this point in the cp vector,
+         *  If CP already exists, does nothing and returns -1
+         */
+        size_t AddControlPoint(double x, double y);
+        void UpdateTfDataIntervals(size_t controlPointIndex);
+        void OnTfRender();
 
 	private:
 #if defined(PLATFORM_WEB)

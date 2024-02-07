@@ -197,86 +197,7 @@ namespace med {
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
 		ImGui::End();
 
-		if (ImPlot::BeginPlot("Transfer function"))
-		{
-			ImPlot::SetupAxes("Voxel value", "Alpha");
-
-            // Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
-            ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, 4095.0);
-            ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1,0.0, 1.0);
-
-            // Handle drag points
-            for (int id = 0; id < m_TfContrPHandle.size(); ++id)
-            {
-                ImPlot::DragPoint(id, &m_TfContrPHandle[id].x, &m_TfContrPHandle[id].y,
-                                  ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_None,
-                                  nullptr, nullptr, nullptr);
-            }
-
-            ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
-            auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.1f);
-			if (ImPlot::IsPlotHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && dragDelta.x == 0.0
-                && dragDelta.y == 0.0)
-			{
-				ImPlotPoint mousePos = ImPlot::GetPlotMousePos();
-				std::stringstream ss;
-				ss << "Clicked in plot:" << "\tx: " << static_cast<int>(mousePos.x) << " | y: " << mousePos.y;
-				LOG_TRACE(ss.str().c_str());
-
-				int x = static_cast<int>(mousePos.x);
-
-                if (std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x) == m_TfControlPoints.end())
-                {
-                    // Not there
-                    m_TfControlPoints.push_back(x);
-                    // Create Implot handles for control points
-                    m_TfContrPHandle.emplace_back(x, mousePos.y);
-                    // Helps us recalculate data between the neighbourhood points
-                    std::ranges::sort(m_TfControlPoints);
-                    std::ranges::sort(m_TfContrPHandle, [](const auto& a, const auto& b) {return a.x < b.x; });
-                    LOG_TRACE("Added new point");
-                }
-                else
-                {
-                    LOG_TRACE("Updating existing control point");
-                }
-
-
-                size_t index = std::distance(m_TfControlPoints.begin(), std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x));
-
-                // Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
-                auto updateIntervalValues = [&](size_t cx1, size_t cx2, float cy1, float cy2)
-                {
-                    int x0 = m_TfControlPoints[cx1];
-                    int x1 = m_TfControlPoints[cx2];
-
-                    std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, cy1, cy2, 1);
-                    assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
-
-                    for (size_t i = 0; i < std::abs(x1 - x0); ++i)
-                    {
-                        m_TfY[i + x0] = result[i];
-                    }
-                };
-
-				// Update control interval between control point below and current
-				if (index - 1 >= 0)
-				{
-                    updateIntervalValues(index - 1, index, m_TfY[m_TfControlPoints[index-1]], static_cast<float>(mousePos.y));
-				}
-
-                // Update control interval between current control point and control point above
-				if (index + 1 < m_TfControlPoints.size())
-				{
-                    updateIntervalValues(index, index + 1, static_cast<float>(mousePos.y), m_TfY[m_TfControlPoints[index+1]]);
-				}
-
-				m_ShouldUpdateTf = true;
-			}
-
-			ImPlot::EndPlot();
-		
-		}
+        OnTfRender();
 	}
 
 	void Application::OnResize(uint32_t width, uint32_t height)
@@ -547,10 +468,10 @@ namespace med {
 		LOG_INFO("Initializing transfer function");
 
 		// We are working with 12bit data
-		m_TfControlPoints.push_back(0);
-		m_TfControlPoints.push_back(4095);
+        m_TfContrPHandle.emplace_back(0.0, 0.0);
+        m_TfContrPHandle.emplace_back(4095.0, 1.0);
 
-		std::vector<float> result = LinearInterpolation::Generate<float>(m_TfControlPoints[0], m_TfControlPoints[1], 0.0f, 1.0f, 1);
+		std::vector<float> result = LinearInterpolation::Generate<float>(0, 4095, 0.0f, 1.0f, 1);
 
 		assert(result.size() == 4096 && "Size of generated TF does not match");
 
@@ -580,4 +501,134 @@ namespace med {
 			break;
 		}
 	}
+
+    size_t Application::AddControlPoint(double x, double y)
+    {
+        // On x-axis we always work with nearest integer values -- from 0 to 'bit depth of the voxel data'
+        x = std::round(x);
+
+        // Retrieve the index of this point if already exist
+        auto iter = std::find_if(m_TfContrPHandle.begin(), m_TfContrPHandle.end(), [x] (const auto& obj){ return obj.x == x; });
+        if (iter != m_TfContrPHandle.end())
+        {
+            LOG_TRACE("Control point already exists, drag it to edit its value");
+            return -1;
+        }
+
+        // Create Implot handles for control points
+        m_TfContrPHandle.emplace_back(x, y);
+        // Helps us recalculate data between the neighbourhood points
+        std::ranges::sort(m_TfContrPHandle, [](const auto& a, const auto& b) {return a.x < b.x; });
+
+        //TODO: what the distance returns when two end matches
+        iter = std::find_if(m_TfContrPHandle.begin(), m_TfContrPHandle.end(), [x] (const auto& obj){ return obj.x == x; });
+
+        LOG_TRACE("Added new point");
+        return std::distance(m_TfContrPHandle.begin(), iter);
+    }
+
+    void Application::UpdateTfDataIntervals(size_t controlPointIndex)
+    {
+        // Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
+        auto updateIntervalValues = [&](double cx1, double cx2, float cy1, float cy2)
+        {
+            int x0 = static_cast<int>(cx1);
+            int x1 = static_cast<int>(cx2);
+
+            std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, cy1, cy2, 1);
+            assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
+
+            for (size_t i = 0; i < std::abs(x1 - x0); ++i)
+            {
+                m_TfY[i + x0] = result[i];
+            }
+        };
+
+        // Update control interval between control point below and current
+        if (controlPointIndex - 1 >= 0)
+        {
+            auto predecessorIndex = static_cast<size_t>(m_TfContrPHandle[controlPointIndex-1].x);
+            updateIntervalValues(m_TfContrPHandle[controlPointIndex - 1].x, m_TfContrPHandle[controlPointIndex].x,
+                                 m_TfY[predecessorIndex], static_cast<float>(m_TfContrPHandle[controlPointIndex].y));
+        }
+
+        // Update control interval between current control point and control point above
+        if (controlPointIndex + 1 < m_TfContrPHandle.size())
+        {
+            auto successorIndex = static_cast<size_t>(m_TfContrPHandle[controlPointIndex+1].x);
+            updateIntervalValues(m_TfContrPHandle[controlPointIndex].x, m_TfContrPHandle[controlPointIndex + 1].x,
+                                 static_cast<float>(m_TfContrPHandle[controlPointIndex].y), m_TfY[successorIndex]);
+        }
+    }
+
+    void Application::OnTfRender()
+    {
+        if (ImPlot::BeginPlot("Transfer function"))
+        {
+            ImPlot::SetupAxes("Voxel value", "Alpha");
+
+            // Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, 4095.0);
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1,0.0, 1.0);
+
+            bool isDragging = false;
+            bool hasClicked = false;
+            int draggedId = -1;
+
+            // Create drag points
+            for (int id = 0; id < m_TfContrPHandle.size(); ++id)
+            {
+                isDragging |= ImPlot::DragPoint(id, &m_TfContrPHandle[id].x, &m_TfContrPHandle[id].y,
+                        ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_None, nullptr, nullptr, nullptr);
+
+                if (isDragging && draggedId == -1)
+                {
+                    // This point is being dragged and we will work with it below
+                    draggedId = id;
+                    m_TfContrPHandle[id].x = std::round(m_TfContrPHandle[id].x);
+                }
+            }
+
+            ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
+
+            // No event
+            if (isDragging != hasClicked)
+            {
+                // both false, both true --> invalid state
+                ImPlot::EndPlot();
+                return;
+            }
+
+            // Drag event
+            if (isDragging)
+            {
+                m_ShouldUpdateTf = true;
+                ImPlot::EndPlot();
+                return;
+            }
+
+            auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.1f);
+            hasClicked = ImPlot::IsPlotHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)
+                         && dragDelta.x == 0.0 && dragDelta.y == 0.0;
+
+            // Click event
+            if (hasClicked)
+            {
+                ImPlotPoint mousePos = ImPlot::GetPlotMousePos();
+
+                std::stringstream ss;
+                ss << "Clicked in plot:" << "\tx: " << static_cast<int>(mousePos.x) << " | y: " << mousePos.y;
+                LOG_TRACE(ss.str().c_str());
+
+                size_t index = AddControlPoint(mousePos.x, mousePos.y);
+                UpdateTfDataIntervals(index);
+                ImPlot::EndPlot();
+                m_ShouldUpdateTf = true;
+                return;
+            }
+
+            ImPlot::EndPlot();
+
+        }
+    }
 }
