@@ -1,4 +1,4 @@
-#include "Application.h"
+#include"Application.h"
 
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -205,8 +205,15 @@ namespace med {
             ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, 4095.0);
             ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1,0.0, 1.0);
 
+            // Handle drag points
+            for (int id = 0; id < m_TfContrPHandle.size(); ++id)
+            {
+                ImPlot::DragPoint(id, &m_TfContrPHandle[id].x, &m_TfContrPHandle[id].y,
+                                  ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_None,
+                                  nullptr, nullptr, nullptr);
+            }
 
-			ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
+            ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
             auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.1f);
 			if (ImPlot::IsPlotHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && dragDelta.x == 0.0
                 && dragDelta.y == 0.0)
@@ -219,19 +226,24 @@ namespace med {
 				int x = static_cast<int>(mousePos.x);
 				float y = mousePos.y;
 
-				if (std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x) == m_TfControlPoints.end())
-				{
-					// Not there
-					m_TfControlPoints.push_back(x);
-					std::sort(m_TfControlPoints.begin(), m_TfControlPoints.end());
-				    LOG_TRACE("Added new point");
+                if (std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x) == m_TfControlPoints.end())
+                {
+                    // Not there
+                    m_TfControlPoints.push_back(x);
+                    // Create implot handles for control points
+                    m_TfContrPHandle.emplace_back(x, y);
+                    // Helps us recalculate data between the neighbourhood points
+                    std::ranges::sort(m_TfControlPoints);
+                    std::ranges::sort(m_TfContrPHandle, [](const auto& a, const auto& b) {return a.x < b.x; });
+                    LOG_TRACE("Added new point");
                 }
                 else
                 {
                     LOG_TRACE("Updating existing control point");
                 }
 
-				size_t index = std::distance(m_TfControlPoints.begin(), std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x));
+
+                size_t index = std::distance(m_TfControlPoints.begin(), std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x));
 
                 // Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
                 auto updateIntervalValues = [&](size_t cx1, size_t cx2, float cy1, float cy2)

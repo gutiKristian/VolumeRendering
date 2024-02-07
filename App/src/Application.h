@@ -154,6 +154,7 @@ namespace med {
 		float m_TfX[4096];
 		float m_TfY[4096];
 		std::vector<int> m_TfControlPoints{};
+        std::vector<glm::dvec2> m_TfContrPHandle{};
 		bool m_ShouldUpdateTf = false;
 
 		// ImGui
