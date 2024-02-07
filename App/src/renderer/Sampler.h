@@ -8,9 +8,9 @@ namespace med
 	public:
 		explicit Sampler(WGPUSampler sampler);
 	public:
-		static std::shared_ptr<Sampler> CreateSampler(const WGPUDevice& device);
+		static std::shared_ptr<Sampler> CreateSampler(const WGPUDevice& device, WGPUFilterMode filterMode, WGPUMipmapFilterMode mipmapFilterMode);
 
-		WGPUSampler GetSampler() const;
+		[[nodiscard]] WGPUSampler GetSampler() const;
 	private:
 		WGPUSampler m_Sampler;
 	};

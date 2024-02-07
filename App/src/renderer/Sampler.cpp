@@ -6,15 +6,15 @@ namespace med
 	{
 	}
 
-	std::shared_ptr<Sampler> Sampler::CreateSampler(const WGPUDevice& device)
+	std::shared_ptr<Sampler> Sampler::CreateSampler(const WGPUDevice& device, WGPUFilterMode filterMode, WGPUMipmapFilterMode mipmapFilterMode)
 	{
 		WGPUSamplerDescriptor samplerDesc{};
 		samplerDesc.addressModeU = WGPUAddressMode_ClampToEdge;
 		samplerDesc.addressModeV = WGPUAddressMode_ClampToEdge;
 		samplerDesc.addressModeW = WGPUAddressMode_ClampToEdge;
-		samplerDesc.magFilter = WGPUFilterMode_Linear;
-		samplerDesc.minFilter = WGPUFilterMode_Linear;
-		samplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
+		samplerDesc.magFilter = filterMode;
+		samplerDesc.minFilter = filterMode;
+		samplerDesc.mipmapFilter = mipmapFilterMode;
 		samplerDesc.lodMinClamp = 0.0f;
 		samplerDesc.lodMaxClamp = 1.0f;
 		samplerDesc.compare = WGPUCompareFunction_Undefined;

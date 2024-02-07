@@ -137,7 +137,9 @@ namespace med {
 		std::shared_ptr<IndexBuffer> p_IBCube = nullptr;
 
 		std::shared_ptr<Sampler> p_Sampler = nullptr;
-		// ----------------------------------------- 
+        std::shared_ptr<Sampler> p_SamplerNN = nullptr;
+
+		// -----------------------------------------
 		float m_CubeVertexData[48] = {
 			/*,	   x     y      z     u	  v	   w */
 				 -0.5f, -0.5f,  0.25f,	0.0f, 0.0f, 0.0f,

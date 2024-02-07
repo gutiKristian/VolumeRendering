@@ -344,7 +344,8 @@ namespace med {
 	void Application::InitializeSamplers()
 	{
 		LOG_INFO("Initializing samplers");
-		p_Sampler = Sampler::CreateSampler(base::GraphicsContext::GetDevice());
+		p_Sampler = Sampler::CreateSampler(base::GraphicsContext::GetDevice(), WGPUFilterMode_Linear, WGPUMipmapFilterMode_Linear);
+        p_SamplerNN = Sampler::CreateSampler(base::GraphicsContext::GetDevice(), WGPUFilterMode_Nearest, WGPUMipmapFilterMode_Nearest);
 	}
 
 	void Application::InitializeUniforms()
