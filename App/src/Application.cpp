@@ -591,17 +591,10 @@ namespace med {
 
             ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
 
-            // No event
-            if (isDragging != hasClicked)
-            {
-                // both false, both true --> invalid state
-                ImPlot::EndPlot();
-                return;
-            }
-
             // Drag event
             if (isDragging)
             {
+                UpdateTfDataIntervals(draggedId);
                 m_ShouldUpdateTf = true;
                 ImPlot::EndPlot();
                 return;
