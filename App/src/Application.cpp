@@ -224,14 +224,13 @@ namespace med {
 				LOG_TRACE(ss.str().c_str());
 
 				int x = static_cast<int>(mousePos.x);
-				float y = mousePos.y;
 
                 if (std::find(m_TfControlPoints.begin(), m_TfControlPoints.end(), x) == m_TfControlPoints.end())
                 {
                     // Not there
                     m_TfControlPoints.push_back(x);
-                    // Create implot handles for control points
-                    m_TfContrPHandle.emplace_back(x, y);
+                    // Create Implot handles for control points
+                    m_TfContrPHandle.emplace_back(x, mousePos.y);
                     // Helps us recalculate data between the neighbourhood points
                     std::ranges::sort(m_TfControlPoints);
                     std::ranges::sort(m_TfContrPHandle, [](const auto& a, const auto& b) {return a.x < b.x; });
@@ -263,13 +262,13 @@ namespace med {
 				// Update control interval between control point below and current
 				if (index - 1 >= 0)
 				{
-                    updateIntervalValues(index - 1, index, m_TfY[m_TfControlPoints[index-1]], y);
+                    updateIntervalValues(index - 1, index, m_TfY[m_TfControlPoints[index-1]], static_cast<float>(mousePos.y));
 				}
 
                 // Update control interval between current control point and control point above
 				if (index + 1 < m_TfControlPoints.size())
 				{
-                    updateIntervalValues(index, index + 1, y, m_TfY[m_TfControlPoints[index+1]]);
+                    updateIntervalValues(index, index + 1, static_cast<float>(mousePos.y), m_TfY[m_TfControlPoints[index+1]]);
 				}
 
 				m_ShouldUpdateTf = true;
