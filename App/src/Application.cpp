@@ -591,7 +591,6 @@ namespace med {
                     CheckDragBounds(draggedId);
                 }
             }
-
             ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
 
             // Drag event
@@ -599,8 +598,6 @@ namespace med {
             {
                 UpdateTfDataIntervals(draggedId);
                 m_ShouldUpdateTf = true;
-                ImPlot::EndPlot();
-                return;
             }
 
             auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.1f);
@@ -618,13 +615,10 @@ namespace med {
 
                 size_t index = AddControlPoint(mousePos.x, mousePos.y);
                 UpdateTfDataIntervals(index);
-                ImPlot::EndPlot();
                 m_ShouldUpdateTf = true;
-                return;
             }
 
             ImPlot::EndPlot();
-
         }
     }
 
