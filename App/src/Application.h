@@ -107,6 +107,7 @@ namespace med {
 		// data
 		uint32_t m_Width = 1280;
 		uint32_t m_Height = 720;
+        static constexpr int DATA_DEPTH = 4096;
 
 		// Camera utils
 		Camera m_Camera = Camera::CreatePerspective(glm::radians(60.0f), static_cast<float>(m_Width) / static_cast<float>(m_Height), 0.01f, 100.0f);
@@ -169,11 +170,12 @@ namespace med {
 		float m_LastY = 0.0f;
 		
 		// TF
-		float m_TfX[4096];
-		float m_TfY[4096];
-        float m_Histogram[4096] = {0.0f };
+		float m_TfX[DATA_DEPTH];
+		float m_TfY[DATA_DEPTH];
+        float m_Histogram[DATA_DEPTH] = {0.0f};
         std::vector<glm::dvec2> m_TfContrPHandle{};
 		bool m_ShouldUpdateTf = false;
+
 
 		// ImGui
 		int m_FragmentMode = 0;

@@ -472,20 +472,20 @@ namespace med {
 
 		// We are working with 12bit data
         m_TfContrPHandle.emplace_back(0.0, 0.0);
-        m_TfContrPHandle.emplace_back(4095.0, 1.0);
+        m_TfContrPHandle.emplace_back(DATA_DEPTH - 1.0, 1.0);
 
-		std::vector<float> result = LinearInterpolation::Generate<float>(0, 4095, 0.0f, 1.0f, 1);
+		std::vector<float> result = LinearInterpolation::Generate<float>(0, DATA_DEPTH - 1, 0.0f, 1.0f, 1);
 
-		assert(result.size() == 4096 && "Size of generated TF does not match");
+		assert(result.size() == DATA_DEPTH && "Size of generated TF does not match");
 
 		// Fill for plotting
-		for (size_t i = 0; i < 4096; ++i)
+		for (size_t i = 0; i < DATA_DEPTH; ++i)
 		{
 			m_TfX[i] = i;
 			m_TfY[i] = result[i];
 		}
 
-		p_TexTf = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_TfY, WGPUTextureDimension_1D, {4096, 1, 1},
+		p_TexTf = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_TfY, WGPUTextureDimension_1D, {DATA_DEPTH, 1, 1},
 			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Transfer function");
 	
 	}
@@ -572,11 +572,11 @@ namespace med {
             ImPlot::SetupAxes("Voxel value", "Alpha");
 
             // Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
-            ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, 4095.0);
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, DATA_DEPTH - 1.0);
             ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1,0.0, 1.0);
 
             ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, .25f);
-            ImPlot::PlotShaded("##Histogram", m_TfX, m_Histogram, 4096);
+            ImPlot::PlotShaded("##Histogram", m_TfX, m_Histogram, DATA_DEPTH);
             ImPlot::PopStyleVar();
 
             bool isDragging = false;
@@ -596,7 +596,7 @@ namespace med {
                     CheckDragBounds(draggedId);
                 }
             }
-            ImPlot::PlotLine("Tf", m_TfX, m_TfY, 4096);
+            ImPlot::PlotLine("Tf", m_TfX, m_TfY, DATA_DEPTH);
 
             // Drag event
             if (isDragging)
@@ -629,7 +629,7 @@ namespace med {
 
     void Application::CheckDragBounds(size_t index)
     {
-        constexpr double X_MAX = 4095.0; // Depends on input data depth
+        constexpr double X_MAX = DATA_DEPTH - 1.0; // Depends on input data depth
         constexpr double X_MIN = 0.0;
 
         // We must use floor in order to have at least one unit padding between two cps
