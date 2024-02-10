@@ -92,6 +92,7 @@ namespace med {
         void UpdateTfDataIntervals(size_t controlPointIndex);
         void CheckDragBounds(size_t index);
         void OnTfRender();
+        void CalculateHistogram(VolumeFile& file);
 
 	private:
 #if defined(PLATFORM_WEB)
@@ -170,6 +171,7 @@ namespace med {
 		// TF
 		float m_TfX[4096];
 		float m_TfY[4096];
+        float m_Histogram[4096] = {0.0f };
         std::vector<glm::dvec2> m_TfContrPHandle{};
 		bool m_ShouldUpdateTf = false;
 

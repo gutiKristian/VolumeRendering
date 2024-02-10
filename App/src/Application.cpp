@@ -374,7 +374,7 @@ namespace med {
 		DatImpl reader2;
 		VolumeFile file = reader.readFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
 		//VolumeFile file2 = reader2.readFile("assets\\stagbeetle277x277x164.dat", false);
-
+        CalculateHistogram(file);
 		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.get4BPtr(), WGPUTextureDimension_3D, file.getSize(),
 			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Data texture");
 
@@ -568,11 +568,16 @@ namespace med {
     {
         if (ImPlot::BeginPlot("Transfer function"))
         {
+            // This sets up axes 1
             ImPlot::SetupAxes("Voxel value", "Alpha");
 
             // Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
             ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, 4095.0);
             ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1,0.0, 1.0);
+
+            ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, .25f);
+            ImPlot::PlotShaded("##Histogram", m_TfX, m_Histogram, 4096);
+            ImPlot::PopStyleVar();
 
             bool isDragging = false;
             bool hasClicked = false;
@@ -646,5 +651,26 @@ namespace med {
             cp.x = std::floor(m_TfContrPHandle[index + 1].x - 1.0);
         }
 
+    }
+
+    void Application::CalculateHistogram(VolumeFile& file)
+    {
+        auto* data = static_cast<const float*>(file.get4BPtr());
+        auto[xSize,ySize,slices] = file.getSize();
+        size_t size = xSize * ySize * slices;
+        float maxVal = 0.0f;
+        for (std::uint32_t i = 0; i < size; ++i)
+        {
+            auto value = static_cast<int>(data[i]);
+            ++m_Histogram[value];
+        }
+        maxVal = std::log10(size);
+        for (float & i : m_Histogram)
+        {
+            if (i != 0.0f)
+            {
+                i = std::log10(i) / maxVal;
+            }
+        }
     }
 }
