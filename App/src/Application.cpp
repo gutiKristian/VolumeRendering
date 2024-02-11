@@ -651,6 +651,19 @@ namespace med {
 
         MED_END_TAB_ITEM
 
+        MED_BEGIN_TAB_ITEM("Colormaps")
+        auto numberOfCm = ImPlot::GetColormapCount();
+        // On purpose skipping those first 4
+        for (auto i = 4; i < numberOfCm; ++i)
+        {
+
+            ImGui::Text("%s", ImPlot::GetColormapName(i));
+            ImGui::SameLine(75.0f);
+            ImPlot::ColormapButton("##", ImVec2(-1, 0), i);
+        }
+
+        MED_END_TAB_ITEM
+
         MED_END_TAB_BAR
 
 
