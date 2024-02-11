@@ -20,6 +20,22 @@
 
 #include "tf/LinearInterpolation.h"
 
+#define MED_BEGIN_TAB_BAR(name) \
+    if (ImGui::BeginTabBar(name)) \
+    {
+
+#define MED_END_TAB_BAR \
+        ImGui::EndTabBar(); \
+    }
+
+#define MED_BEGIN_TAB_ITEM(name) \
+    if (ImGui::BeginTabItem(name)) \
+    {
+
+#define MED_END_TAB_ITEM \
+        ImGui::EndTabItem(); \
+    }
+
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
 	#include <emscripten/html5.h>
@@ -191,13 +207,16 @@ namespace med {
 
 	void Application::OnImGuiRender()
 	{
-		ImGui::Begin("Fragment Mode");
+		ImGui::Begin("Debug settings");
 		ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
-		ImGui::End();
+        ImGui::End();
 
+        ImGui::Begin("Transfer function");
         OnTfRender();
+        ImGui::End();
+
 	}
 
 	void Application::OnResize(uint32_t width, uint32_t height)
@@ -566,7 +585,11 @@ namespace med {
 
     void Application::OnTfRender()
     {
-        if (ImPlot::BeginPlot("Transfer function"))
+        MED_BEGIN_TAB_BAR("Tf settings")
+
+        MED_BEGIN_TAB_ITEM("TF Plot")
+
+        if (ImPlot::BeginPlot("##tfplot"))
         {
             // This sets up axes 1
             ImPlot::SetupAxes("Voxel value", "Alpha");
@@ -587,7 +610,7 @@ namespace med {
             for (int id = 0; id < m_TfContrPHandle.size(); ++id)
             {
                 isDragging |= ImPlot::DragPoint(id, &m_TfContrPHandle[id].x, &m_TfContrPHandle[id].y,
-                        ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_Delayed, nullptr, nullptr, nullptr);
+                                                ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_Delayed, nullptr, nullptr, nullptr);
 
                 if (isDragging && draggedId == -1)
                 {
@@ -625,6 +648,12 @@ namespace med {
 
             ImPlot::EndPlot();
         }
+
+        MED_END_TAB_ITEM
+
+        MED_END_TAB_BAR
+
+
     }
 
     void Application::CheckDragBounds(size_t index)

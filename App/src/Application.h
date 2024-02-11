@@ -175,6 +175,7 @@ namespace med {
         float m_Histogram[DATA_DEPTH] = {0.0f};
         std::vector<glm::dvec2> m_TfContrPHandle{};
 		bool m_ShouldUpdateTf = false;
+        std::vector<glm::vec3> m_TfColorMap{};
 
 
 		// ImGui
