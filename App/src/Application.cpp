@@ -17,6 +17,7 @@
 #include "Shader.h"
 #include "ImGuiLayer.h"
 #include "implot.h"
+#include "implot_internal.h"
 
 #include "tf/LinearInterpolation.h"
 
@@ -659,7 +660,13 @@ namespace med {
 
             ImGui::Text("%s", ImPlot::GetColormapName(i));
             ImGui::SameLine(75.0f);
-            ImPlot::ColormapButton("##", ImVec2(-1, 0), i);
+            std::string id = "##" + std::to_string(i);
+            if (ImPlot::ColormapButton(id.c_str(), ImVec2(-1, 0), i))
+            {
+                // context expected to exist
+                ImPlot::GetCurrentContext()->Style.Colormap = i;
+                ImPlot::BustColorCache();
+            }
         }
 
         MED_END_TAB_ITEM
