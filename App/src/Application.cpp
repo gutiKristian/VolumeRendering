@@ -490,6 +490,8 @@ namespace med {
 	{
 		LOG_INFO("Initializing transfer function");
 
+		m_GradientCreator.Init();
+
 		// We are working with 12bit data
         m_TfContrPHandle.emplace_back(0.0, 0.0);
         m_TfContrPHandle.emplace_back(DATA_DEPTH - 1.0, 1.0);
@@ -621,6 +623,8 @@ namespace med {
                 }
             }
             ImPlot::PlotLine("Tf", m_TfX, m_TfY, DATA_DEPTH);
+
+        	m_GradientCreator.Render();
 
             // Drag event
             if (isDragging)

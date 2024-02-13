@@ -36,7 +36,8 @@ add_executable(App
 	 "src/dicom/FileReader.h"
 	 "src/dicom/VolumeFile.cpp"
 	 "src/dicom/VolumeFile.h"
- "src/tf/LinearInterpolation.h" "src/dicom/DatImpl.h" "src/dicom/DatImpl.cpp")
+ "src/tf/LinearInterpolation.h" "src/dicom/DatImpl.h" "src/dicom/DatImpl.cpp"
+		"src/tf/GradientCreator.h" "src/tf/GradientCreator.cpp")
 
 target_compile_definitions(App
 	PRIVATE
