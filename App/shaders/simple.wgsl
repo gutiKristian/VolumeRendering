@@ -106,6 +106,14 @@ fn setup_ray(tex_pos: vec2<i32>) -> Ray
 	return ray;
 }
 
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32>
+{
+	var src_ = src * src.a;
+	src_.a = src.a; // don't want .a * .a
+
+	return  (1.0f - dst.a) * src_ + dst;
+}
+
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 {
@@ -149,15 +157,13 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	{
 		var raw_intensity: f32 = textureSample(tex, texture_sampler, current_position).r;
 		var normalized_intensity: f32 = raw_intensity / 4095.0;
+
 		var tf: f32 = textureSample(tex_tf, tex_sampler_nn, normalized_intensity).r;
 		var src: vec4<f32> = vec4f(tf);
 
 		if is_in_sample_coords(current_position) && dst.a < 1.0
 		{
-			src.r *= src.a;
-			src.g *= src.a;
-			src.b *= src.a;
-			dst = (1.0f - dst.a)*src + dst;  
+			dst = blend(src, dst); 
 		}
 
 		// Advance ray
