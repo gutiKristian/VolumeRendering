@@ -108,10 +108,10 @@ fn setup_ray(tex_pos: vec2<i32>) -> Ray
 
 fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32>
 {
-	var src_ = src * src.a;
+	var src_ = src * src.a; // we do not have pre-multiplied alphas
 	src_.a = src.a; // don't want .a * .a
 
-	return  (1.0f - dst.a) * src_ + dst;
+	return  (1.0 - dst.a) * src_ + dst;
 }
 
 @fragment
