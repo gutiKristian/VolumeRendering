@@ -106,10 +106,35 @@ fn setup_ray(tex_pos: vec2<i32>) -> Ray
 	return ray;
 }
 
+fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32>
+{
+	var src_ = src * src.a; // we do not have pre-multiplied alphas
+	src_.a = src.a; // don't want .a * .a
+
+	return  (1.0 - dst.a) * src_ + dst;
+}
+
+fn computeGradient(position: vec3<f32>, step: f32) -> vec3f
+{
+	var result = vec3f(0.0, 0.0, 0.0);
+	var dirs = array<vec3f, 3>(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
+	result.x = textureSample(tex, texture_sampler, position + dirs[0] * step).r - textureSample(tex, texture_sampler, position - dirs[0] * step).r;
+	result.y = textureSample(tex, texture_sampler, position + dirs[1] * step).r - textureSample(tex, texture_sampler, position - dirs[1] * step).r;
+	result.z = textureSample(tex, texture_sampler, position + dirs[2] * step).r - textureSample(tex, texture_sampler, position - dirs[2] * step).r;
+	let l = length(result);
+	if l == 0.0
+	{
+		return vec3f(0.0);
+	}
+
+	return -result/l;
+}
+
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 {
-
+	var lightPos = vec3f(1.011180, 1.610562, -0.551364);
+	
 	// If we would like to sample the texture with a sampler, this transforms the coordinates in ndc to texture
 	// and as we rendered the cube to the texture of size of screen this gives us the coords, Y IS FLIPPED
 	var texC: vec2f = in.raw_pos.xy / in.raw_pos.w;
@@ -149,15 +174,22 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	{
 		var raw_intensity: f32 = textureSample(tex, texture_sampler, current_position).r;
 		var normalized_intensity: f32 = raw_intensity / 4095.0;
-		var tf: f32 = textureSample(tex_tf, tex_sampler_nn, normalized_intensity).r;
+
+		var gradient: vec3<f32> = computeGradient(current_position, step_size);
+		
+
+		var tf: f32 = textureSample(tex_tf, texture_sampler, normalized_intensity).r;
 		var src: vec4<f32> = vec4f(tf);
+		
+		var ll = clamp(dot(gradient, lightPos), 0.0, 1.0);
+		// diffuse
+		src.r = ll * src.r + 0.1 * src.r;
+		src.g = ll * src.g + 0.1 * src.g;
+		src.b = ll * src.b + 0.1 * src.b;
 
 		if is_in_sample_coords(current_position) && dst.a < 1.0
 		{
-			src.r *= src.a;
-			src.g *= src.a;
-			src.b *= src.a;
-			dst = (1.0f - dst.a)*src + dst;  
+			dst = blend(src, dst); 
 		}
 
 		// Advance ray

@@ -10,6 +10,7 @@
 #include "renderer/RenderPipeline.h"
 #include "renderer/Texture.h"
 #include "renderer/IndexBuffer.h"
+#include "tf/GradientCreator.h"
 
 #include <memory>
 
@@ -175,6 +176,8 @@ namespace med {
         float m_Histogram[DATA_DEPTH] = {0.0f};
         std::vector<glm::dvec2> m_TfContrPHandle{};
 		bool m_ShouldUpdateTf = false;
+        std::vector<glm::vec3> m_TfColorMap{};
+		GradientCreator m_GradientCreator;
 
 
 		// ImGui

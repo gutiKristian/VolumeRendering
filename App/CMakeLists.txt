@@ -36,7 +36,8 @@ add_executable(App
 	 "src/dicom/FileReader.h"
 	 "src/dicom/VolumeFile.cpp"
 	 "src/dicom/VolumeFile.h"
- "src/tf/LinearInterpolation.h" "src/dicom/DatImpl.h" "src/dicom/DatImpl.cpp")
+ "src/tf/LinearInterpolation.h" "src/dicom/DatImpl.h" "src/dicom/DatImpl.cpp"
+		"src/tf/GradientCreator.h" "src/tf/GradientCreator.cpp")
 
 target_compile_definitions(App
 	PRIVATE
@@ -56,7 +57,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/glm "vendor/glm")
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/dcm "vendor/dcm")
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/implot "vendor/implot")
 
-set(BOOST_ROOT "C:\\dev\\boost_1_83_0")
+set(BOOST_ROOT "C:\\dev\\Boost\\boost_1_83_0")
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 target_link_libraries(App PUBLIC IMGUI_LIB IMPLOT_LIB GLM_LIB DCM_LIB ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})

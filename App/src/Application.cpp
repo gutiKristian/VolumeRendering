@@ -17,8 +17,25 @@
 #include "Shader.h"
 #include "ImGuiLayer.h"
 #include "implot.h"
+#include "implot_internal.h"
 
 #include "tf/LinearInterpolation.h"
+
+#define MED_BEGIN_TAB_BAR(name) \
+    if (ImGui::BeginTabBar(name)) \
+    {
+
+#define MED_END_TAB_BAR \
+        ImGui::EndTabBar(); \
+    }
+
+#define MED_BEGIN_TAB_ITEM(name) \
+    if (ImGui::BeginTabItem(name)) \
+    {
+
+#define MED_END_TAB_ITEM \
+        ImGui::EndTabItem(); \
+    }
 
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
@@ -191,13 +208,16 @@ namespace med {
 
 	void Application::OnImGuiRender()
 	{
-		ImGui::Begin("Fragment Mode");
+		ImGui::Begin("Debug settings");
 		ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
-		ImGui::End();
+        ImGui::End();
 
+        ImGui::Begin("Transfer function");
         OnTfRender();
+        ImGui::End();
+
 	}
 
 	void Application::OnResize(uint32_t width, uint32_t height)
@@ -470,6 +490,8 @@ namespace med {
 	{
 		LOG_INFO("Initializing transfer function");
 
+		m_GradientCreator.Init();
+
 		// We are working with 12bit data
         m_TfContrPHandle.emplace_back(0.0, 0.0);
         m_TfContrPHandle.emplace_back(DATA_DEPTH - 1.0, 1.0);
@@ -566,7 +588,11 @@ namespace med {
 
     void Application::OnTfRender()
     {
-        if (ImPlot::BeginPlot("Transfer function"))
+        MED_BEGIN_TAB_BAR("Tf settings")
+
+        MED_BEGIN_TAB_ITEM("TF Plot")
+
+        if (ImPlot::BeginPlot("##tfplot"))
         {
             // This sets up axes 1
             ImPlot::SetupAxes("Voxel value", "Alpha");
@@ -587,7 +613,7 @@ namespace med {
             for (int id = 0; id < m_TfContrPHandle.size(); ++id)
             {
                 isDragging |= ImPlot::DragPoint(id, &m_TfContrPHandle[id].x, &m_TfContrPHandle[id].y,
-                        ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_Delayed, nullptr, nullptr, nullptr);
+                                                ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_Delayed, nullptr, nullptr, nullptr);
 
                 if (isDragging && draggedId == -1)
                 {
@@ -597,6 +623,8 @@ namespace med {
                 }
             }
             ImPlot::PlotLine("Tf", m_TfX, m_TfY, DATA_DEPTH);
+
+        	m_GradientCreator.Render();
 
             // Drag event
             if (isDragging)
@@ -625,6 +653,31 @@ namespace med {
 
             ImPlot::EndPlot();
         }
+
+        MED_END_TAB_ITEM
+
+        MED_BEGIN_TAB_ITEM("Colormaps")
+        auto numberOfCm = ImPlot::GetColormapCount();
+        // On purpose skipping those first 4
+        for (auto i = 4; i < numberOfCm; ++i)
+        {
+
+            ImGui::Text("%s", ImPlot::GetColormapName(i));
+            ImGui::SameLine(75.0f);
+            std::string id = "##" + std::to_string(i);
+            if (ImPlot::ColormapButton(id.c_str(), ImVec2(-1, 0), i))
+            {
+                // context expected to exist
+                ImPlot::GetCurrentContext()->Style.Colormap = i;
+                ImPlot::BustColorCache();
+            }
+        }
+
+        MED_END_TAB_ITEM
+
+        MED_END_TAB_BAR
+
+
     }
 
     void Application::CheckDragBounds(size_t index)
