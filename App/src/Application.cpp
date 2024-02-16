@@ -391,13 +391,11 @@ namespace med {
 	{
 		LOG_INFO("Initializing textures");
 		DcmImpl reader;
-		DatImpl reader2;
-		VolumeFile file = reader.readFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
-		//VolumeFile file2 = reader2.readFile("assets\\stagbeetle277x277x164.dat", false);
-        CalculateHistogram(file);
-		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.get4BPtr(), WGPUTextureDimension_3D, file.getSize(),
-			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Data texture");
+		VolumeFile file = std::move(reader.readFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true));
 
+        CalculateHistogram(file);
+		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.GetVoidPtr(), WGPUTextureDimension_3D, file.GetSize(),
+			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Data texture");
 		p_TexStart = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEnd = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 	}
@@ -708,9 +706,9 @@ namespace med {
 
     void Application::CalculateHistogram(VolumeFile& file)
     {
-        auto* data = static_cast<const float*>(file.get4BPtr());
-        auto[xSize,ySize,slices] = file.getSize();
-        size_t size = xSize * ySize * slices;
+        const auto& data = file.GetVecReference();
+        auto[xSize,ySize,slices] = file.GetSize();
+        const size_t size = xSize * ySize * slices;
         float maxVal = 0.0f;
         for (std::uint32_t i = 0; i < size; ++i)
         {

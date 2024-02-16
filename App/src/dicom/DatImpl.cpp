@@ -22,22 +22,30 @@ namespace med
 		// Header is 6bytes long
 		static_assert(sizeof(ushort) == 2);
 
+		constexpr int HEADER_SIZE = 6;
 		ushort dims[3];
-		file.read(reinterpret_cast<char*>(dims), 6);
-		LOG_INFO("Dat File");
+		file.read(reinterpret_cast<char*>(dims), HEADER_SIZE);
+
 		std::stringstream dimsStr;
 		dimsStr << dims[0] << " x " << dims[1] << " x " << dims[2] << "\n";
+
+		LOG_INFO("Dat File");
 		LOG_INFO(dimsStr.str().c_str());
 
 		const unsigned int res = dims[0] * dims[1] * dims[2];
-		ushort* img = new ushort[res];
-		file.read(reinterpret_cast<char*>(img), res * 2); // times two since one number is two bytes
+		assert(res != 0 && "File is empty");
+
+		std::vector<ushort> rawImg(res);
+		std::vector<float> data(res);
+
+		file.read(reinterpret_cast<char*>(rawImg.data()), res * 2); // times two since one number is two bytes
+		std::ranges::copy(rawImg, std::back_inserter(data));
 
 		// Create new Volume file (more like data class)
 		VolumeFile volFile(m_Path / name, isDir);
-		volFile.setDataPtr(img);
-		volFile.setFileDataType(FileDataType::Uint16);
-		volFile.setSize({ dims[0], dims[1], dims[2]});
+		volFile.SetData(data);
+		volFile.SetFileDataType(FileDataType::Uint16);
+		volFile.SetDataSize({ dims[0], dims[1], dims[2]});
 		return volFile;
 
 	}

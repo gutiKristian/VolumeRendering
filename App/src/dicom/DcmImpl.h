@@ -22,21 +22,22 @@ namespace med
 		/*
 		* Reads variables from Dicom file.
 		* Number of rows, columns, frames, allocated and stored bits.
+		* Checks are done within call of this function (in  CompareAndUpadateValue).
 		*/
-		void initDicomVariables(const dcm::DicomFile&);
+		void ReadDicomVariables(const dcm::DicomFile&);
 		/*
 		* When loading dir, this method make sure all files are the same width, height,
 		* type and so on.
 		*/
-		void updateValue(auto& originalVal, auto& newVal, std::string&& tag);
+		void CompareAndUpdateValue(auto& originalVal, auto& newVal, std::string&& tag);
 		/*
 		* Based on detected type prepares memory for entire Volume.
 		*/
-		bool allocateMemory(std::size_t frames, bool isDir);
+		bool PreAllocateMemory(std::size_t frames, bool isDir);
 		/*
 		* Reads data into allocated memory.
 		*/
-		void readData(const dcm::DicomFile& f, int offset);
+		void readData(const dcm::DicomFile& f);
 		/*
 		* Helper, set resolution is used for offsetting data in the memory,
 		* if we are trying to load eighty 512x512 images, res = 512x512, and
@@ -48,6 +49,12 @@ namespace med
 		 * If one of the file does not have the slice number, files are returned in default order.
 		 */
 		std::vector<std::filesystem::path> SortDicomSlices(const std::vector<std::filesystem::path>& paths) const;
+
+		/*
+		 * Initiliazes file type based on allocated bits tag in dicom file.
+		 */
+		void ResolveFileType();
+
 	private:
 		std::uint16_t m_Rows = 0, m_Cols = 0,
 			m_BitsStored = 0, m_BitsAllocated = 0;
@@ -58,5 +65,6 @@ namespace med
 		// Data is transfered to the VolumeFile, which deallocates it
 		// Maybe in the future make this already a shared_ptr
 		void* p_Data = nullptr;
+		std::vector<float> m_Data{};
 	};
 }
