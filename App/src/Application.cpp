@@ -12,7 +12,6 @@
 
 #include "dicom/FileReader.h"
 #include "dicom/DcmImpl.h"
-#include "dicom/DatImpl.h"
 
 #include "Shader.h"
 #include "ImGuiLayer.h"
