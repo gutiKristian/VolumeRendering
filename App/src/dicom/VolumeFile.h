@@ -51,6 +51,15 @@ namespace med
 		 */
 		[[nodiscard]] int GetIndexFrom3D(int x, int y, int z) const;
 
+		/**
+		 * \brief Returns the density value at position (x, y,z)
+		 * \param x coordinate
+		 * \param y coordinate
+		 * \param z coordinate
+		 * \return density, if coords are outside of the volume returns vec4(0.0f)
+		 */
+		[[nodiscard]] glm::vec4 GetVoxelData(int x, int y, int z) const;
+
 	protected:
 		std::filesystem::path m_Path{};
 		bool m_IsDir = false;

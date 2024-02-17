@@ -391,8 +391,9 @@ namespace med {
 		LOG_INFO("Initializing textures");
 		DcmImpl reader;
 		VolumeFile file = std::move(reader.ReadFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true));
-
-        CalculateHistogram(file);
+		// Calculates on raw intensities
+		CalculateHistogram(file);
+		file.PreComputeGradient();
 		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.GetVoidPtr(), WGPUTextureDimension_3D, file.GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Data texture");
 		p_TexStart = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");

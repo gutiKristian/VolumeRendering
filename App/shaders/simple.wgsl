@@ -118,23 +118,23 @@ fn computeGradient(position: vec3<f32>, step: f32) -> vec3f
 {
 	var result = vec3f(0.0, 0.0, 0.0);
 	var dirs = array<vec3f, 3>(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
-	result.x = textureSample(tex, texture_sampler, position + dirs[0] * step).r - textureSample(tex, texture_sampler, position - dirs[0] * step).r;
-	result.y = textureSample(tex, texture_sampler, position + dirs[1] * step).r - textureSample(tex, texture_sampler, position - dirs[1] * step).r;
-	result.z = textureSample(tex, texture_sampler, position + dirs[2] * step).r - textureSample(tex, texture_sampler, position - dirs[2] * step).r;
+	result.x = textureSample(tex, texture_sampler, position + dirs[0] * step).a - textureSample(tex, texture_sampler, position - dirs[0] * step).a;
+	result.y = textureSample(tex, texture_sampler, position + dirs[1] * step).a - textureSample(tex, texture_sampler, position - dirs[1] * step).a;
+	result.z = textureSample(tex, texture_sampler, position + dirs[2] * step).a - textureSample(tex, texture_sampler, position - dirs[2] * step).a;
 	let l = length(result);
 	if l == 0.0
 	{
 		return vec3f(0.0);
 	}
 
-	return -result/l;
+	return -result;
 }
 
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 {
 	var lightPos = vec3f(1.011180, 1.610562, -0.551364);
-	
+
 	// If we would like to sample the texture with a sampler, this transforms the coordinates in ndc to texture
 	// and as we rendered the cube to the texture of size of screen this gives us the coords, Y IS FLIPPED
 	var texC: vec2f = in.raw_pos.xy / in.raw_pos.w;
@@ -172,11 +172,12 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 	for (var i: i32 = 0; i < steps_count; i++)
 	{
-		var raw_intensity: f32 = textureSample(tex, texture_sampler, current_position).r;
-		var normalized_intensity: f32 = raw_intensity / 4095.0;
-
-		var gradient: vec3<f32> = computeGradient(current_position, step_size);
+		var sampledVolume: vec4f = textureSample(tex, texture_sampler, current_position);
 		
+		var raw_intensity: f32 = sampledVolume.a;
+		var normalized_intensity: f32 = raw_intensity / 4095.0;
+		
+		var gradient: vec3f = sampledVolume.rgb;
 
 		var tf: f32 = textureSample(tex_tf, texture_sampler, normalized_intensity).r;
 		var src: vec4<f32> = vec4f(tf);
