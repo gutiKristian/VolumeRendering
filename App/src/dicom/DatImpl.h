@@ -9,12 +9,12 @@ namespace med
 	{
 	public:
 		DatImpl() = default;
-		~DatImpl() = default;
+		~DatImpl() override = default;
 	public:
 
 		/**
 		 * Reads file into memory, inside defaultPath / name
 		 */
-		VolumeFile readFile(const std::filesystem::path& name, bool isDir) override;
+		[[nodiscard]] VolumeFile ReadFile(const std::filesystem::path& name, bool isDir) override;
 	};
 }

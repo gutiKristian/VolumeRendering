@@ -8,7 +8,7 @@
 
 namespace med
 {
-	VolumeFile DatImpl::readFile(const std::filesystem::path& name, bool isDir)
+	VolumeFile DatImpl::ReadFile(const std::filesystem::path& name, bool isDir)
 	{
 		using ushort = unsigned short;
 
@@ -36,10 +36,10 @@ namespace med
 		assert(res != 0 && "File is empty");
 
 		std::vector<ushort> rawImg(res);
-		std::vector<float> data(res);
+		std::vector<glm::vec4> data(res);
 
 		file.read(reinterpret_cast<char*>(rawImg.data()), res * 2); // times two since one number is two bytes
-		std::ranges::copy(rawImg, std::back_inserter(data));
+		std::ranges::transform(rawImg, std::back_inserter(data), [](auto& value) { return glm::vec4(value); });
 
 		// Create new Volume file (more like data class)
 		VolumeFile volFile(m_Path / name, isDir);

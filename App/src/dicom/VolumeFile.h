@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <utility>
 
+#include "glm/glm.hpp"
+
 namespace med
 {
 	class VolumeFile
@@ -13,7 +15,7 @@ namespace med
 		VolumeFile(std::filesystem::path  path, bool isDir) : m_Path(std::move(path)), m_IsDir(isDir) {}
 		
 	public:
-		void SetData(std::vector<float>& src);
+		void SetData(std::vector<glm::vec4>& src);
 
 		void SetFileDataType(FileDataType type);
 
@@ -35,7 +37,7 @@ namespace med
 		*/
 		[[nodiscard]] const void* GetVoidPtr() const;
 
-		[[nodiscard]] const std::vector<float>& GetVecReference() const;
+		[[nodiscard]] const std::vector<glm::vec4>& GetVecReference() const;
 
 	protected:
 		std::filesystem::path m_Path{};
@@ -43,6 +45,6 @@ namespace med
 
 		FileDataType m_FileDataType = FileDataType::Undefined;
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> m_Size{ 0, 0, 0 };
-		std::vector<float> m_Data{};
+		std::vector<glm::vec4> m_Data{};
 	};
 }

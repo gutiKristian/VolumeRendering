@@ -1,7 +1,7 @@
 #include "VolumeFile.h"
 namespace med
 {
-    void VolumeFile::SetData(std::vector<float> &src)
+    void VolumeFile::SetData(std::vector<glm::vec4> &src)
     {
         m_Data = std::move(src);
     }
@@ -31,7 +31,7 @@ namespace med
         return m_Data.data();
     }
 
-    const std::vector<float>& VolumeFile::GetVecReference() const
+    const std::vector<glm::vec4>& VolumeFile::GetVecReference() const
     {
         return m_Data;
     }

@@ -390,11 +390,11 @@ namespace med {
 	{
 		LOG_INFO("Initializing textures");
 		DcmImpl reader;
-		VolumeFile file = std::move(reader.readFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true));
+		VolumeFile file = std::move(reader.ReadFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true));
 
         CalculateHistogram(file);
 		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.GetVoidPtr(), WGPUTextureDimension_3D, file.GetSize(),
-			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Data texture");
+			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Data texture");
 		p_TexStart = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEnd = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 	}
@@ -451,7 +451,7 @@ namespace med {
 		FileReader shaderReader;
 		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");
 
-		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("simple.wgsl"));
+		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.ReadFile("simple.wgsl"));
 
 
 		PipelineBuilder builder;
@@ -466,7 +466,7 @@ namespace med {
 		//builder.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipeline = builder.BuildPipeline();
 
-		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.readFile("rayCoords.wgsl"));
+		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.ReadFile("rayCoords.wgsl"));
 
 		PipelineBuilder builderAtt;
 		builderAtt.AddBuffer(*p_VBCube);
@@ -711,7 +711,8 @@ namespace med {
         float maxVal = 0.0f;
         for (std::uint32_t i = 0; i < size; ++i)
         {
-            auto value = static_cast<int>(data[i]);
+        	// glm::vec4().a -> density (rgb are reserved for gradient)
+            auto value = static_cast<int>(data[i].a);
             ++m_Histogram[value];
         }
         maxVal = std::log10(size);
