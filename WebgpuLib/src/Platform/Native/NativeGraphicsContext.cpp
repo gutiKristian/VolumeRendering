@@ -87,10 +87,13 @@ namespace base {
 		devDesc.requiredFeatures = &feature;
 		devDesc.requiredFeatureCount = 1;
 
-		auto nextInChain = reinterpret_cast<WGPUChainedStruct*>(&deviceToggleDesc);
+		auto* nextInChain = reinterpret_cast<WGPUChainedStruct*>(&deviceToggleDesc);
 		nextInChain->sType = WGPUSType_DawnTogglesDescriptor;
-
 		devDesc.nextInChain = nextInChain;
+
+		WGPURequiredLimits requiredLimits{};
+		requiredLimits.limits = s_LimitsC;
+		devDesc.requiredLimits = &requiredLimits;
 
 		s_DeviceC = RequestDevice(s_AdapterC, &devDesc);
 
