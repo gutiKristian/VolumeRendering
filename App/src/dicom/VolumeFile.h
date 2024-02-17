@@ -21,6 +21,8 @@ namespace med
 
 		void SetDataSize(std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size);
 
+		void PreComputeGradient();
+
 		/*
 		* Get size/dimension of the input data.
 		*/
@@ -40,9 +42,19 @@ namespace med
 		[[nodiscard]] const std::vector<glm::vec4>& GetVecReference() const;
 
 	protected:
+		/**
+		 * @brief Maps 3D coordinate to the 1D data.
+		 * @param x coordinate
+		 * @param y coordinate
+		 * @param z coordinate
+		 * @return index within 1D array
+		 */
+		[[nodiscard]] int GetIndexFrom3D(int x, int y, int z) const;
+
+	protected:
 		std::filesystem::path m_Path{};
 		bool m_IsDir = false;
-
+		bool m_HasGradient = false;
 		FileDataType m_FileDataType = FileDataType::Undefined;
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> m_Size{ 0, 0, 0 };
 		std::vector<glm::vec4> m_Data{};
