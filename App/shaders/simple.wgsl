@@ -127,7 +127,7 @@ fn computeGradient(position: vec3<f32>, step: f32) -> vec3f
 		return vec3f(0.0);
 	}
 
-	return -result;
+	return -result/l;
 }
 
 @fragment
