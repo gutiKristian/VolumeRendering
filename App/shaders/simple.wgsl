@@ -130,10 +130,12 @@ fn computeGradient(position: vec3<f32>, step: f32) -> vec3f
 	return -result/l;
 }
 
+const DENSITY_FACTOR = 1/4095.0;
+
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 {
-	var lightPos = vec3f(1.011180, 1.610562, -0.551364);
+	var lightPos = vec3f(-10.0 , -10.0 , 0.6267);
 
 	// If we would like to sample the texture with a sampler, this transforms the coordinates in ndc to texture
 	// and as we rendered the cube to the texture of size of screen this gives us the coords, Y IS FLIPPED
@@ -174,19 +176,18 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	{
 		var sampledVolume: vec4f = textureSample(tex, texture_sampler, current_position);
 		
-		var raw_intensity: f32 = sampledVolume.a;
-		var normalized_intensity: f32 = raw_intensity / 4095.0;
-		
-		var gradient: vec3f = sampledVolume.rgb;
+		// for now, the values of gradient and density are untouched on cpu side
+		var gradient: vec3f = normalize(sampledVolume.rgb);
+		var density: f32 = sampledVolume.a * DENSITY_FACTOR;
 
-		var tf: f32 = textureSample(tex_tf, texture_sampler, normalized_intensity).r;
+		var tf: f32 = textureSample(tex_tf, texture_sampler, density).r;
 		var src: vec4<f32> = vec4f(tf);
 		
 		var ll = clamp(dot(gradient, lightPos), 0.0, 1.0);
-		// diffuse
-		src.r = ll * src.r + 0.1 * src.r;
-		src.g = ll * src.g + 0.1 * src.g;
-		src.b = ll * src.b + 0.1 * src.b;
+		// diffuse			ambient
+		src.r = ll * src.r; // + 0.3 * src.r;
+		src.g = ll * src.g; // + 0.3 * src.g;
+		src.b = ll * src.b; // + 0.3 * src.b;
 
 		if is_in_sample_coords(current_position) && dst.a < 1.0
 		{
