@@ -21,6 +21,9 @@ namespace med
 
 		void SetDataSize(std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size);
 
+		/**
+		 * @brief Computes gradient using finite differences.
+		 */
 		void PreComputeGradient();
 
 		/*

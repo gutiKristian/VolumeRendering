@@ -20,6 +20,12 @@ namespace med
 
     void VolumeFile::PreComputeGradient()
     {
+        if (m_HasGradient)
+        {
+            LOG_WARN("Gradient has been already computed, skipping...");
+            return;
+        }
+
         LOG_INFO("Computing gradients");
         auto[xS,yS,zS] = m_Size;
 
@@ -49,6 +55,7 @@ namespace med
                 }
             }
         }
+        m_HasGradient = true;
         LOG_INFO("Done");
     }
 
