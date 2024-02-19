@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <utility>
 
+#include "glm/glm.hpp"
+
 namespace med
 {
 	class VolumeFile
@@ -13,11 +15,16 @@ namespace med
 		VolumeFile(std::filesystem::path  path, bool isDir) : m_Path(std::move(path)), m_IsDir(isDir) {}
 		
 	public:
-		void SetData(std::vector<float>& src);
+		void SetData(std::vector<glm::vec4>& src);
 
 		void SetFileDataType(FileDataType type);
 
 		void SetDataSize(std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size);
+
+		/**
+		 * @brief Computes gradient using finite differences.
+		 */
+		void PreComputeGradient();
 
 		/*
 		* Get size/dimension of the input data.
@@ -35,14 +42,33 @@ namespace med
 		*/
 		[[nodiscard]] const void* GetVoidPtr() const;
 
-		[[nodiscard]] const std::vector<float>& GetVecReference() const;
+		[[nodiscard]] const std::vector<glm::vec4>& GetVecReference() const;
+
+	protected:
+		/**
+		 * @brief Maps 3D coordinate to the 1D data.
+		 * @param x coordinate
+		 * @param y coordinate
+		 * @param z coordinate
+		 * @return index within 1D array
+		 */
+		[[nodiscard]] int GetIndexFrom3D(int x, int y, int z) const;
+
+		/**
+		 * \brief Returns the density value at position (x, y,z)
+		 * \param x coordinate
+		 * \param y coordinate
+		 * \param z coordinate
+		 * \return density, if coords are outside of the volume returns vec4(0.0f)
+		 */
+		[[nodiscard]] glm::vec4 GetVoxelData(int x, int y, int z) const;
 
 	protected:
 		std::filesystem::path m_Path{};
 		bool m_IsDir = false;
-
+		bool m_HasGradient = false;
 		FileDataType m_FileDataType = FileDataType::Undefined;
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> m_Size{ 0, 0, 0 };
-		std::vector<float> m_Data{};
+		std::vector<glm::vec4> m_Data{};
 	};
 }

@@ -18,19 +18,19 @@ namespace med
 		/*
 		* Basic util, reads file and returns string. Could be used for shaders.
 		*/
-		std::string readFile(const std::filesystem::path& name);
+		std::string ReadFile(const std::filesystem::path& name);
 
 	protected:
 
 		/*
 		* Reads file or directory of files into memory. Path: defaultPath / name
 		*/
-		virtual VolumeFile readFile(const std::filesystem::path& name, bool isDir) { throw std::exception("Volume file reading is not implemented in basic FileReader!\n"); };
+		virtual VolumeFile ReadFile(const std::filesystem::path& name, bool isDir) { throw std::exception("Volume file reading is not implemented in basic FileReader!\n"); };
 
 		/*
 		* List files with extension, inside the dir.
 		*/
-		std::vector<std::filesystem::path> listDirFiles(const std::filesystem::path& path, const std::string& extension)
+		[[nodiscard]] std::vector<std::filesystem::path> ListDirFiles(const std::filesystem::path& path, const std::string& extension) const
 		{
 			assert(extension.starts_with("."));
 			

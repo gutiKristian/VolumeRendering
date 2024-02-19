@@ -4,7 +4,7 @@
 
 namespace med
 {
-	std::string FileReader::readFile(const std::filesystem::path& name)
+	std::string FileReader::ReadFile(const std::filesystem::path& name)
 	{
 		std::string buffer;
 		std::ifstream file(m_Path / name);

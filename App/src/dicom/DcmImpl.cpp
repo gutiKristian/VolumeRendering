@@ -6,13 +6,13 @@
 
 namespace med
 {
-	VolumeFile DcmImpl::readFile(const std::filesystem::path& name, bool isDir)
+	VolumeFile DcmImpl::ReadFile(const std::filesystem::path& name, bool isDir)
 	{
 		// Init
 		std::vector<std::filesystem::path> paths;
 		if (isDir)
 		{
-			paths = SortDicomSlices(listDirFiles(name, /*extension=*/".dcm"));
+			paths = SortDicomSlices(ListDirFiles(name, /*extension=*/".dcm"));
 		}
 		else
 		{
@@ -43,7 +43,7 @@ namespace med
 				}
 				firstRun = false;
 
-				readData(f);
+				ReadData(f);
 			}
 			else
 			{
@@ -100,12 +100,12 @@ namespace med
 		m_Data.reserve(m_Rows * m_Cols * m_Depth);
 
 		// When reading a directory, we expect this to be list of dicom files with one frame
-		setResolution(m_Rows * m_Cols * (isDir ? 1 : m_Depth));
+		SetResolution(m_Rows * m_Cols * (isDir ? 1 : m_Depth));
 
 		return true;
 	}
 
-	void DcmImpl::readData(const dcm::DicomFile& f)
+	void DcmImpl::ReadData(const dcm::DicomFile& f)
 	{
 		switch (m_FileDataType)
 		{
@@ -114,7 +114,7 @@ namespace med
 			std::vector<std::uint16_t> vec;
 			f.GetUint16Array(dcm::tags::kPixelData, &vec);
 			assert(vec.size() == m_Res && "Expected resolution of image does not match with loaded one");
-			std::ranges::copy(vec, std::back_inserter(m_Data));
+			std::ranges::transform(vec, std::back_inserter(m_Data), [](auto& value) { return glm::vec4(value); });
 			break;
 		}
 		case FileDataType::Float32:
