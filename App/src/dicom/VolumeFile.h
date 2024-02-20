@@ -12,8 +12,8 @@ namespace med
 	{
 	public:
 		VolumeFile() = default;
-		VolumeFile(std::filesystem::path  path, bool isDir) : m_Path(std::move(path)), m_IsDir(isDir) {}
-		
+		explicit VolumeFile(std::filesystem::path  path) : m_Path(std::move(path)) {}
+
 	public:
 		void SetData(std::vector<glm::vec4>& src);
 
@@ -65,7 +65,6 @@ namespace med
 
 	protected:
 		std::filesystem::path m_Path{};
-		bool m_IsDir = false;
 		bool m_HasGradient = false;
 		FileDataType m_FileDataType = FileDataType::Undefined;
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> m_Size{ 0, 0, 0 };

@@ -53,7 +53,7 @@ namespace med
 		}
 
 		// Create new Volume file (data class)
-		VolumeFile file(m_Path / name, isDir);
+		VolumeFile file(m_Path / name);
 		file.SetData(m_Data);
 		file.SetFileDataType(m_FileDataType);
 		file.SetDataSize({ m_Rows, m_Cols, m_Depth });
