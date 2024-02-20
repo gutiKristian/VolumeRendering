@@ -1,9 +1,7 @@
 #pragma once
-#include "FileDataType.h"
 #include "VolumeFile.h"
 #include <filesystem>
 #include <cassert>
-#include <iostream>
 #include <string>
 
 namespace med
@@ -45,23 +43,9 @@ namespace med
 			return paths;
 		}
 
-		void log(const std::string& s)
-		{
-			std::cout << "\033[1;32m" + m_LogPrefix + ":\033[0m " << (s == "" ? LOG_EMPTY_PLACEHOLDER : s) << "\n";
-		}
-
-		void log(std::stringstream& stream)
-		{
-			std::string line;
-			while (std::getline(stream, line, '\n'))
-			{
-				log(line);
-			}
-		}
-
 	public:
 
-		const std::filesystem::path& getDefaultPath() const
+		[[nodiscard]] const std::filesystem::path& getDefaultPath() const
 		{
 			return m_Path;
 		}
