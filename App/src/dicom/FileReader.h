@@ -22,6 +22,7 @@ namespace med
 
 		/*
 		* Reads file or directory of files into memory. Path: defaultPath / name
+		* TODO: Reconsider usage of isDir, let the function decide what has been given
 		*/
 		virtual VolumeFile ReadFile(const std::filesystem::path& name, bool isDir) { throw std::exception("Volume file reading is not implemented in basic FileReader!\n"); };
 

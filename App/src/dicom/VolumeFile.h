@@ -69,5 +69,7 @@ namespace med
 		FileDataType m_FileDataType = FileDataType::Undefined;
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> m_Size{ 0, 0, 0 };
 		std::vector<glm::vec4> m_Data{};
+		//TODO: Uploads to the gpu are 4x bigger rn, in the future use templates or when really needed use squeezed arr
+		std::vector<float> m_DataSqueezed{};
 	};
 }
