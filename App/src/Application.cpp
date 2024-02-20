@@ -388,14 +388,23 @@ namespace med {
 
 	void Application::InitializeTextures()
 	{
-		LOG_INFO("Initializing textures");
+		LOG_INFO("Loading files...");
 		DcmImpl reader;
 		VolumeFile ctFile = std::move(reader.ReadFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true));
+		VolumeFile rtDoseFile = std::move(reader.ReadFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\2.16.840.1.114362.1.6.5.9.16309.10765415608.432686722.485.282.dcm"
+			, false));
+		LOG_INFO("Done");
+
 		// Calculates on raw intensities
 		CalculateHistogram(ctFile);
 		ctFile.PreComputeGradient();
+
+		LOG_INFO("Initializing textures");
 		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile.GetVoidPtr(), WGPUTextureDimension_3D, ctFile.GetSize(),
-			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Data texture");
+			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");
+		p_TexDataAcom = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), rtDoseFile.GetVoidPtr(), WGPUTextureDimension_3D, rtDoseFile.GetSize(),
+			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "RTDose data texture");
+
 		p_TexStartPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEndPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 	}
@@ -438,6 +447,7 @@ namespace med {
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);
+        m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
@@ -706,6 +716,7 @@ namespace med {
 
     void Application::CalculateHistogram(VolumeFile& file)
     {
+		LOG_INFO("Caclculating histogram");
         const auto& data = file.GetVecReference();
         auto[xSize,ySize,slices] = file.GetSize();
         const size_t size = xSize * ySize * slices;
@@ -724,5 +735,6 @@ namespace med {
                 i = std::log10(i) / maxVal;
             }
         }
+		LOG_INFO("Done");
     }
 }
