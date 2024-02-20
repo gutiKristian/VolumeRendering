@@ -62,9 +62,6 @@ namespace med
 		std::uint32_t m_Res = 0;
 		std::uint16_t m_Depth = 0;
 		FileDataType m_FileDataType = FileDataType::Undefined;
-		// Data is transfered to the VolumeFile, which deallocates it
-		// Maybe in the future make this already a shared_ptr
-		void* p_Data = nullptr;
 		std::vector<glm::vec4> m_Data{};
 	};
 }
