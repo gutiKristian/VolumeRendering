@@ -104,7 +104,7 @@ namespace med {
 		// Ray entrance
 
 		WGPURenderPassColorAttachment colorAttachmentsRay = {
-			.view = p_TexStart->GetTextureView(),
+			.view = p_TexStartPos->GetTextureView(),
 			.loadOp = WGPULoadOp_Clear,
 			.storeOp = WGPUStoreOp_Store,
 			.clearValue = {0.0, 0.0, 0.0, 1.0}
@@ -128,7 +128,7 @@ namespace med {
 		BindGroup::ResetBindSlotsIndices();
 
 		// Ray End
-		colorAttachmentsRay.view = p_TexEnd->GetTextureView();
+		colorAttachmentsRay.view = p_TexEndPos->GetTextureView();
 		renderPassDescRay.label = "Ray end render pass";
 
 		const WGPURenderPassEncoder passRayEnd = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescRay);
@@ -235,14 +235,14 @@ namespace med {
 		base::GraphicsContext::OnWindowResize(width, height);
 
 		// Reinitialize first pass render attachments
-		p_TexStart = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
-		p_TexEnd = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
+		p_TexStartPos = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
+		p_TexEndPos = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 
 		// Reinitialize bind group
 		m_BGroupTextures = BindGroup();
-		m_BGroupTextures.AddTexture(*p_TexData, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexDataMain, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);
@@ -394,10 +394,10 @@ namespace med {
 		// Calculates on raw intensities
 		CalculateHistogram(file);
 		file.PreComputeGradient();
-		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.GetVoidPtr(), WGPUTextureDimension_3D, file.GetSize(),
+		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.GetVoidPtr(), WGPUTextureDimension_3D, file.GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Data texture");
-		p_TexStart = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
-		p_TexEnd = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
+		p_TexStartPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
+		p_TexEndPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 	}
 
 	void Application::InitializeVertexBuffers()
@@ -432,9 +432,9 @@ namespace med {
 		m_BGroupCamera.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupCamera.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
-		m_BGroupTextures.AddTexture(*p_TexData, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexDataMain, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);

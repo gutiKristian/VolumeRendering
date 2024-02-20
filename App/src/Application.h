@@ -122,9 +122,9 @@ namespace med {
 		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
 		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
 
-		std::shared_ptr<Texture> p_TexData = nullptr;
-		std::shared_ptr<Texture> p_TexStart = nullptr;
-		std::shared_ptr<Texture> p_TexEnd = nullptr;
+		std::shared_ptr<Texture> p_TexDataMain = nullptr;
+		std::shared_ptr<Texture> p_TexStartPos = nullptr;
+		std::shared_ptr<Texture> p_TexEndPos = nullptr;
 		std::shared_ptr<Texture> p_TexTf = nullptr;
 
 
