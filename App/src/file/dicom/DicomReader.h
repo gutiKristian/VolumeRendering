@@ -75,12 +75,8 @@ namespace med
         std::array<double, N> DS(std::string& str)
         {
             // the string is in this format "1\\0\\0\\0\\1\\0"
-
             std::array<double, N> numbers{ 0.0 };
-            // get rid of the square brackets at the beginning and end (if they are present)
-            if (str.front() == '[') str.erase(str.begin());
-            if (str.back() == ']') str.pop_back();
-
+           
             // then parse the string expected number of numbers is specified by N
             std::stringstream ss(str);
             std::string temp;

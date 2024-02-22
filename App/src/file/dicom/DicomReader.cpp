@@ -120,7 +120,7 @@ namespace med
 		f.GetUint16(dcm::tags::kBitsAllocated, &currentParams.BitsAllocated);
 		
 		f.GetString(dcm::tags::kImageOrientationPatient, &str);
-		currentParams.ImageOrientationPatient = DS<3>(str);
+		currentParams.ImageOrientationPatient = DS<6>(str);
 
 		//TODO: We have to keep only the position from the first slice
 		f.GetString(dcm::tags::kImagePositionPatient, &str);

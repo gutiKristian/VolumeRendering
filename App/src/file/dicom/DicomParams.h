@@ -10,7 +10,7 @@ namespace med
 		std::int16_t NumberOfFrames = 0; // IS
 		double SliceThickness = 0.0; // DS
 		std::array<double, 3> ImagePositionPatient{ 0.0 };
-		std::array<double, 3> ImageOrientationPatient{ 0.0 };
+		std::array<double, 6> ImageOrientationPatient{ 0.0 };
 		std::array<double, 2> PixelSpacing{ 0.0 };
 	};
 }
