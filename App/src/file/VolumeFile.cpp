@@ -18,6 +18,11 @@ namespace med
         m_Size = size;
     }
 
+    void VolumeFile::SetPath(std::filesystem::path path)
+    {
+        m_Path = std::move(path);
+    }
+
     void VolumeFile::PreComputeGradient()
     {
         if (m_HasGradient)

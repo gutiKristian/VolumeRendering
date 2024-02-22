@@ -3,23 +3,34 @@
 
 #include <filesystem>
 #include <utility>
+#include <vector>
+#include <tuple>
 
 #include "glm/glm.hpp"
 
 namespace med
 {
+	/**
+	 * @brief Class representing a volume file, this class is used to load and store volume data.
+	 * This class is used to store the data in a contiguous memory, so it can be easily uploaded to the GPU.
+	 * Can be templatized to store different types of data, but for now, this is sufficient.
+	 */
 	class VolumeFile
 	{
 	public:
 		VolumeFile() = default;
-		VolumeFile(std::filesystem::path  path, bool isDir) : m_Path(std::move(path)), m_IsDir(isDir) {}
-		
-	public:
-		void SetData(std::vector<glm::vec4>& src);
+		explicit VolumeFile(std::filesystem::path path) : m_Path(std::move(path)) {}
+		virtual ~VolumeFile() = default;
 
+	public:
+
+		void SetData(std::vector<glm::vec4>& src);
+		
 		void SetFileDataType(FileDataType type);
 
 		void SetDataSize(std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size);
+
+		void SetPath(std::filesystem::path path);
 
 		/**
 		 * @brief Computes gradient using finite differences.
@@ -27,18 +38,17 @@ namespace med
 		void PreComputeGradient();
 
 		/*
-		* Get size/dimension of the input data.
+		* @brief Get size/dimension of the input data.
 		*/
 		[[nodiscard]] std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> GetSize() const;
 
-		/*
-		* Data type saved inside of this file, setting this attribute is implemented by the subclass.
+		/**
+		* @brief Data type saved inside of this file, setting this attribute is implemented by the subclass.
 		*/
 		[[nodiscard]] FileDataType GetFileType() const;
-
-		/*
-		* Gets the pointer to the data, this data is saved in
-		* contiguous memory (even 3D), this pointer should be used to upload data into the GPU
+		
+		/**
+		* @brief Pointer to the contiguous memory where the data is stored.
 		*/
 		[[nodiscard]] const void* GetVoidPtr() const;
 
@@ -64,11 +74,15 @@ namespace med
 		[[nodiscard]] glm::vec4 GetVoxelData(int x, int y, int z) const;
 
 	protected:
-		std::filesystem::path m_Path{};
-		bool m_IsDir = false;
 		bool m_HasGradient = false;
+
 		FileDataType m_FileDataType = FileDataType::Undefined;
+		std::filesystem::path m_Path{};
+		
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> m_Size{ 0, 0, 0 };
+		
 		std::vector<glm::vec4> m_Data{};
+		std::vector<float> m_DataSqueezed{};
+		//TODO: Uploads to the gpu are 4x bigger rn, in the future use templates or when really needed use squeezed arr
 	};
 }

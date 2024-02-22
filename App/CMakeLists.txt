@@ -29,15 +29,24 @@ add_executable(App
 	"src/renderer/IndexBuffer.h"
 	"src/renderer/IndexBuffer.cpp"
 	
-	 "src/dicom/DcmImpl.cpp"
-	 "src/dicom/DcmImpl.h"
-	 "src/dicom/FileDataType.h"
-	 "src/dicom/FileReader.cpp"
-	 "src/dicom/FileReader.h"
-	 "src/dicom/VolumeFile.cpp"
-	 "src/dicom/VolumeFile.h"
- "src/tf/LinearInterpolation.h" "src/dicom/DatImpl.h" "src/dicom/DatImpl.cpp"
-		"src/tf/GradientCreator.h" "src/tf/GradientCreator.cpp")
+	"src/file/FileDataType.h"
+	"src/file/FileReader.h"
+	"src/file/FileReader.cpp"
+	"src/file/VolumeFile.cpp"
+	"src/file/VolumeFile.h"
+
+	"src/file/dicom/DicomReader.cpp"
+	"src/file/dicom/DicomReader.h"
+	"src/file/dicom/DicomParams.h"
+	"src/file/dicom/VolumeFileDcm.h"
+	"src/file/dicom/VolumeFileDcm.cpp"
+	
+	"src/file/dat/DatReader.h"
+	"src/file/dat/DatReader.cpp"
+		
+	"src/tf/LinearInterpolation.h" 
+	"src/tf/GradientCreator.h"
+	"src/tf/GradientCreator.cpp")
 
 target_compile_definitions(App
 	PRIVATE

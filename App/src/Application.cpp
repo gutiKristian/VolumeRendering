@@ -10,8 +10,9 @@
 #include "Base/Timer.h"
 #include "Base/GraphicsContext.h"
 
-#include "dicom/FileReader.h"
-#include "dicom/DcmImpl.h"
+#include "file/FileReader.h"
+#include "file/dicom/DicomReader.h"
+#include "file/dicom/VolumeFileDcm.h"
 
 #include "Shader.h"
 #include "ImGuiLayer.h"
@@ -104,7 +105,7 @@ namespace med {
 		// Ray entrance
 
 		WGPURenderPassColorAttachment colorAttachmentsRay = {
-			.view = p_TexStart->GetTextureView(),
+			.view = p_TexStartPos->GetTextureView(),
 			.loadOp = WGPULoadOp_Clear,
 			.storeOp = WGPUStoreOp_Store,
 			.clearValue = {0.0, 0.0, 0.0, 1.0}
@@ -128,7 +129,7 @@ namespace med {
 		BindGroup::ResetBindSlotsIndices();
 
 		// Ray End
-		colorAttachmentsRay.view = p_TexEnd->GetTextureView();
+		colorAttachmentsRay.view = p_TexEndPos->GetTextureView();
 		renderPassDescRay.label = "Ray end render pass";
 
 		const WGPURenderPassEncoder passRayEnd = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescRay);
@@ -235,14 +236,14 @@ namespace med {
 		base::GraphicsContext::OnWindowResize(width, height);
 
 		// Reinitialize first pass render attachments
-		p_TexStart = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
-		p_TexEnd = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
+		p_TexStartPos = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
+		p_TexEndPos = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 
 		// Reinitialize bind group
 		m_BGroupTextures = BindGroup();
-		m_BGroupTextures.AddTexture(*p_TexData, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexDataMain, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);
@@ -388,16 +389,25 @@ namespace med {
 
 	void Application::InitializeTextures()
 	{
-		LOG_INFO("Initializing textures");
-		DcmImpl reader;
-		VolumeFile file = std::move(reader.ReadFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true));
+		LOG_INFO("Loading files...");
+		DicomReader reader;
+		std::unique_ptr<VolumeFileDcm> ctFile = reader.ReadFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
+		std::unique_ptr<VolumeFileDcm> rtDoseFile = reader.ReadFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\2.16.840.1.114362.1.6.5.9.16309.10765415608.432686722.485.282.dcm"
+			, false);
+		LOG_INFO("Done");
+
 		// Calculates on raw intensities
-		CalculateHistogram(file);
-		file.PreComputeGradient();
-		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), file.GetVoidPtr(), WGPUTextureDimension_3D, file.GetSize(),
-			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Data texture");
-		p_TexStart = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
-		p_TexEnd = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
+		CalculateHistogram(*ctFile);
+		ctFile->PreComputeGradient();
+
+		LOG_INFO("Initializing textures");
+		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
+			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");
+		p_TexDataAcom = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), rtDoseFile->GetVoidPtr(), WGPUTextureDimension_3D, rtDoseFile->GetSize(),
+			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "RTDose data texture");
+
+		p_TexStartPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
+		p_TexEndPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 	}
 
 	void Application::InitializeVertexBuffers()
@@ -432,12 +442,13 @@ namespace med {
 		m_BGroupCamera.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupCamera.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
-		m_BGroupTextures.AddTexture(*p_TexData, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_TexStart, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		m_BGroupTextures.AddTexture(*p_TexEnd, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexDataMain, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);
+        m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
@@ -449,10 +460,8 @@ namespace med {
 	{
 		LOG_INFO("Initializing render pipelines");
 		//Hardcode for now
-		FileReader shaderReader;
-		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");
-
-		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.ReadFile("simple.wgsl"));
+		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
+			FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "simple.wgsl"));
 
 
 		PipelineBuilder builder;
@@ -467,7 +476,8 @@ namespace med {
 		//builder.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipeline = builder.BuildPipeline();
 
-		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.ReadFile("rayCoords.wgsl"));
+		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
+			FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "rayCoords.wgsl"));
 
 		PipelineBuilder builderAtt;
 		builderAtt.AddBuffer(*p_VBCube);
@@ -704,8 +714,9 @@ namespace med {
 
     }
 
-    void Application::CalculateHistogram(VolumeFile& file)
+    void Application::CalculateHistogram(const VolumeFile& file)
     {
+		LOG_INFO("Caclculating histogram");
         const auto& data = file.GetVecReference();
         auto[xSize,ySize,slices] = file.GetSize();
         const size_t size = xSize * ySize * slices;
@@ -724,5 +735,6 @@ namespace med {
                 i = std::log10(i) / maxVal;
             }
         }
+		LOG_INFO("Done");
     }
 }
