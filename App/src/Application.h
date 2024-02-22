@@ -11,10 +11,9 @@
 #include "renderer/Texture.h"
 #include "renderer/IndexBuffer.h"
 #include "tf/GradientCreator.h"
+#include "file/VolumeFile.h"
 
 #include <memory>
-
-#include "dicom/VolumeFile.h"
 
 int main(int argc, char* argv[]);
 
@@ -93,7 +92,7 @@ namespace med {
         void UpdateTfDataIntervals(size_t controlPointIndex);
         void CheckDragBounds(size_t index);
         void OnTfRender();
-        void CalculateHistogram(VolumeFile& file);
+        void CalculateHistogram(const VolumeFile& file);
 
 	private:
 #if defined(PLATFORM_WEB)

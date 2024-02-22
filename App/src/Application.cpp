@@ -10,8 +10,9 @@
 #include "Base/Timer.h"
 #include "Base/GraphicsContext.h"
 
-#include "dicom/FileReader.h"
-#include "dicom/DcmImpl.h"
+#include "file/FileReader.h"
+#include "file/dicom/DicomReader.h"
+#include "file/dicom/VolumeFileDcm.h"
 
 #include "Shader.h"
 #include "ImGuiLayer.h"
@@ -389,20 +390,20 @@ namespace med {
 	void Application::InitializeTextures()
 	{
 		LOG_INFO("Loading files...");
-		DcmImpl reader;
-		VolumeFile ctFile = std::move(reader.ReadFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true));
-		VolumeFile rtDoseFile = std::move(reader.ReadFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\2.16.840.1.114362.1.6.5.9.16309.10765415608.432686722.485.282.dcm"
-			, false));
+		DicomReader reader;
+		std::unique_ptr<VolumeFileDcm> ctFile = reader.ReadFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
+		std::unique_ptr<VolumeFileDcm> rtDoseFile = reader.ReadFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\2.16.840.1.114362.1.6.5.9.16309.10765415608.432686722.485.282.dcm"
+			, false);
 		LOG_INFO("Done");
 
 		// Calculates on raw intensities
-		CalculateHistogram(ctFile);
-		ctFile.PreComputeGradient();
+		CalculateHistogram(*ctFile);
+		ctFile->PreComputeGradient();
 
 		LOG_INFO("Initializing textures");
-		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile.GetVoidPtr(), WGPUTextureDimension_3D, ctFile.GetSize(),
+		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");
-		p_TexDataAcom = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), rtDoseFile.GetVoidPtr(), WGPUTextureDimension_3D, rtDoseFile.GetSize(),
+		p_TexDataAcom = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), rtDoseFile->GetVoidPtr(), WGPUTextureDimension_3D, rtDoseFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "RTDose data texture");
 
 		p_TexStartPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
@@ -459,10 +460,8 @@ namespace med {
 	{
 		LOG_INFO("Initializing render pipelines");
 		//Hardcode for now
-		FileReader shaderReader;
-		shaderReader.setDefaultPath(shaderReader.getDefaultPath() / "shaders");
-
-		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.ReadFile("simple.wgsl"));
+		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
+			FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "simple.wgsl"));
 
 
 		PipelineBuilder builder;
@@ -477,7 +476,8 @@ namespace med {
 		//builder.SetCullFace(WGPUCullMode_Front);
 		p_RenderPipeline = builder.BuildPipeline();
 
-		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(), shaderReader.ReadFile("rayCoords.wgsl"));
+		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
+			FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "rayCoords.wgsl"));
 
 		PipelineBuilder builderAtt;
 		builderAtt.AddBuffer(*p_VBCube);
@@ -714,7 +714,7 @@ namespace med {
 
     }
 
-    void Application::CalculateHistogram(VolumeFile& file)
+    void Application::CalculateHistogram(const VolumeFile& file)
     {
 		LOG_INFO("Caclculating histogram");
         const auto& data = file.GetVecReference();

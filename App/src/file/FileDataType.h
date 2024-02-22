@@ -6,7 +6,7 @@ namespace med
 	{
 		Undefined,
 		Uint16,
-		Float32,
+		Uint32,
 		Double
 	};
 }

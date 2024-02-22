@@ -1,5 +1,4 @@
-#include "DatImpl.h"
-
+#include "DatReader.h"
 #include "Base/Base.h"
 
 #include <fstream>
@@ -12,7 +11,7 @@ namespace med
 	{
 		using ushort = unsigned short;
 
-		std::ifstream file(m_Path / name, std::ios_base::binary);
+		std::ifstream file(s_Path / name, std::ios_base::binary);
 
 		if (file.fail() || !file.is_open())
 		{
@@ -42,7 +41,7 @@ namespace med
 		std::ranges::transform(rawImg, std::back_inserter(data), [](auto& value) { return glm::vec4(value); });
 
 		// Create new Volume file (more like data class)
-		VolumeFile volFile(m_Path / name);
+		VolumeFile volFile(s_Path / name);
 		volFile.SetData(data);
 		volFile.SetFileDataType(FileDataType::Uint16);
 		volFile.SetDataSize({ dims[0], dims[1], dims[2]});
