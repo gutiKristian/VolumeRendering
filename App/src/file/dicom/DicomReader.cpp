@@ -11,10 +11,10 @@
 
 namespace med
 {
-	//const dcm::Tag kInstanceNumber = 0x00200013;
-	//const dcm::Tag kImagePositionPatient = 0x00200013;
-	//const dcm::Tag kImageOrientationPatient = 0x00200013;
-	//const dcm::Tag kSliceThickness = 0x00200013;
+	const dcm::Tag kInstanceNumber = 0x00200013;
+	const dcm::Tag kImagePositionPatient = 0x00200013;
+	const dcm::Tag kImageOrientationPatient = 0x00200013;
+	const dcm::Tag kSliceThickness = 0x00200013;
 
 	std::unique_ptr<VolumeFileDcm> DicomReader::ReadFile(const std::filesystem::path& name, bool isDir)
 	{
@@ -119,14 +119,14 @@ namespace med
 		f.GetUint16(dcm::tags::kBitsStored, &currentParams.BitsStored);
 		f.GetUint16(dcm::tags::kBitsAllocated, &currentParams.BitsAllocated);
 		
-		f.GetString(dcm::tags::kImageOrientationPatient, &str);
+		f.GetString(kImageOrientationPatient, &str);
 		currentParams.ImageOrientationPatient = DS<6>(str);
 
 		//TODO: We have to keep only the position from the first slice
-		f.GetString(dcm::tags::kImagePositionPatient, &str);
+		f.GetString(kImagePositionPatient, &str);
 		currentParams.ImagePositionPatient = DS<3>(str);
 
-		f.GetString(dcm::tags::kSliceThickness, &str);
+		f.GetString(kSliceThickness, &str);
 		std::array<double, 1> sT{ 0.0 };
 		sT = DS<1>(str);
 		currentParams.SliceThickness = sT[0];
@@ -192,7 +192,7 @@ namespace med
 		{
 			std::string value;
 			dcm::DicomFile f(path.c_str());
-			if (f.Load() && !f.GetString(dcm::tags::kInstanceNumber, &value))
+			if (f.Load() && !f.GetString(kInstanceNumber, &value))
 			{
 				LOG_ERROR("Error missing instnace number in dicom file");
 				return;
