@@ -66,7 +66,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/glm "vendor/glm")
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/dcm "vendor/dcm")
 add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/implot "vendor/implot")
 
-set(BOOST_ROOT "C:\\dev\\Boost\\boost_1_83_0")
+set(BOOST_ROOT "C:\\dev\\boost_1_83_0")
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 target_link_libraries(App PUBLIC IMGUI_LIB IMPLOT_LIB GLM_LIB DCM_LIB ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
