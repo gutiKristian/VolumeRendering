@@ -568,7 +568,7 @@ namespace med {
             int x0 = static_cast<int>(cx1);
             int x1 = static_cast<int>(cx2);
 
-            std::vector<float> result = LinearInterpolation::Generate<float>(x0, x1, cy1, cy2, 1);
+            std::vector<float> result = LinearInterpolation::Generate<float, int>(x0, x1, cy1, cy2, 1);
             assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
 
             for (size_t i = 0; i < std::abs(x1 - x0); ++i)
