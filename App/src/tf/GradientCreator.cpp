@@ -9,6 +9,8 @@
 #include "Base/Base.h"
 
 #include "implot.h"
+#include "LinearInterpolation.h"
+
 #include <implot_internal.h>
 
 namespace med
@@ -18,10 +20,39 @@ namespace med
         // Default
         m_ControlPoints.emplace_back(0.0f, 0.0f, 0.0f, 0.0f);
         m_ControlPoints.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);
+
+        m_ColorsP = LinearInterpolation::Generate<glm::vec3, int>(0, 4095, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 1);
+
     }
 
     void GradientCreator::Render()
     {
+        if (ImPlot::BeginPlot("##gradient", ImVec2(-1, -1)))
+        {
+            ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_NoDecorations);
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
+            ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, 4095.0);
+            // Out plot is from 0 to 4095 on x axis and 0 to 1 on y axis
+            ImVec2 rmin = ImPlot::PlotToPixels(ImPlotPoint(0.0, 0.0f));
+            ImVec2 rmax = ImPlot::PlotToPixels(ImPlotPoint(1.0f, 1.0f));
+            
+            float xx = 1.0f;
+
+            ImPlot::PushPlotClipRect();
+            for (const auto& rect : m_ColorsP)
+            {
+				ImPlot::GetPlotDrawList()->AddRectFilled(ImPlot::PlotToPixels(ImPlotPoint(xx - 1.0f, 0.0f)), ImPlot::PlotToPixels(ImPlotPoint(xx, 1.0f)),
+                    IM_COL32(255 * rect.r, 255 * rect.g, 255 * rect.b, 255));
+                xx += 1.0f;
+                // ImPlot::GetPlotDrawList()->AddRectFilled(rmin, rmax, ImGui::ColorConvertFloat4ToU32(ImVec4(rect.x, rect.y, rect.z, 1.0f));
+			}
+
+
+            ImPlot::PopPlotClipRect();
+
+            ImPlot::EndPlot();
+        }
+    
         auto *g = ImGui::GetCurrentContext();
 
         if (g == nullptr || g->CurrentWindow->SkipItems)
@@ -39,6 +70,10 @@ namespace med
         ImRect rect = ImRect(pos.x, pos.y, pos.x + maxExt.x, pos.y + h);
 
         RenderColorBar(*ImGui::GetWindowDrawList(), rect, false, true);
+        
+       
+        /*ImPlot::ColormapSlider
+        ImPlot::DragPoint*/
 
         RenderHandlers(rect.GetWidth());
     }

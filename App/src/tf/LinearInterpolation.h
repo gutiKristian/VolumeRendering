@@ -13,7 +13,7 @@ namespace med
 			static_assert(std::is_arithmetic<U>::value);
 			std::vector<T> result{};
 
-			auto slope = (fx1 - fx0) / (x1 - x0);
+			auto slope = (fx1 - fx0) * (1.0f / static_cast<float>(x1 - x0));
 
 			for (auto i = x0; i < x1 + 1; i += step)
 			{

@@ -398,7 +398,7 @@ namespace med {
 
 		// Calculates on raw intensities
 		CalculateHistogram(*ctFile);
-		ctFile->PreComputeGradient();
+		// ctFile->PreComputeGradient();
 
 		LOG_INFO("Initializing textures");
 		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
@@ -632,8 +632,6 @@ namespace med {
             }
             ImPlot::PlotLine("Tf", m_TfX, m_TfY, DATA_DEPTH);
 
-        	m_GradientCreator.Render();
-
             // Drag event
             if (isDragging)
             {
@@ -661,6 +659,8 @@ namespace med {
 
             ImPlot::EndPlot();
         }
+
+		m_GradientCreator.Render();
 
         MED_END_TAB_ITEM
 

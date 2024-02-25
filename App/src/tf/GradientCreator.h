@@ -4,8 +4,7 @@
 
 #include <imgui_internal.h>
 #include "imgui.h"
-
-
+#include "glm/glm.hpp"
 
 namespace med
 {
@@ -29,10 +28,12 @@ private:
     std::vector<ImU32> m_Colors{};
     // RGB color, Alpha represents value within the color ramp [0,1]
     std::vector<ImVec4> m_ControlPoints{};
+    std::vector<glm::vec3> m_ColorsP{};
 private:
     // bit misleading, real width is TRIANGLE_WIDTH * 2, but it is shorter and better when offseting
     const float TRIANGLE_WIDTH = 5.0f;
     const float TRIANGLE_HEIGHT = 5.0f;
+    float m_T = 0.0f;
 };
 
 } // med
