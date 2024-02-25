@@ -16,7 +16,8 @@ public:
     void Render();
 private:
     std::vector<glm::vec3> m_Colors{};
-    std::vector<glm::dvec2> m_ColorMapCPs{}; // 1D would have been enough, but 2D is more flexible for future
+    // RGB and position (only x is used, y is always 0.5)
+    std::vector<glm::dvec4> m_ColorMapCPs{};
 };
 
 } // med

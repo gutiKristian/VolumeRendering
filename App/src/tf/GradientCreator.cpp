@@ -17,10 +17,12 @@ namespace med
 {
     void GradientCreator::Init()
     {
-        m_Colors = LinearInterpolation::Generate<glm::vec3, int>(0, 4095, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), 1);
-        m_ColorMapCPs.emplace_back(0.0, 0.5);
-        m_ColorMapCPs.emplace_back(2000.0, 0.5);
-        m_ColorMapCPs.emplace_back(4095.0, 0.5);
+        glm::vec3 color1 = glm::vec3(0.0, 0.0, 0.0);
+        glm::vec3 color2 = glm::vec3(1.0, 1.0, 1.0);
+
+        m_Colors = LinearInterpolation::Generate<glm::vec3, int>(0, 4095, color1, color2, 1);
+        m_ColorMapCPs.emplace_back(color1.r, color1.g, color1.b, 0.0);
+        m_ColorMapCPs.emplace_back(color2.r, color2.g, color2.b, 4095);
     }
 
     void GradientCreator::Render()
@@ -45,9 +47,14 @@ namespace med
                 // ImPlot::GetPlotDrawList()->AddRectFilled(rmin, rmax, ImGui::ColorConvertFloat4ToU32(ImVec4(rect.x, rect.y, rect.z, 1.0f));
 			}
             
+            int clickedId = -1;
+            bool hasClicked = false;
+            // We don't care about y coordinate, so we can use the same variable
+            double HEIGHT = 0.5;
             for (int id = 0; id < m_ColorMapCPs.size(); ++id)
             {
-                ImPlot::DragPoint(id, &m_ColorMapCPs[id].x, &m_ColorMapCPs[id].y, ImVec4(255, 255, 0, 255));
+                ImPlot::DragPoint(id, &m_ColorMapCPs[id].a, &HEIGHT, ImVec4(255, 255, 0, 255), 4.0f, ImPlotDragToolFlags_Delayed);
+                HEIGHT = 0.5;
             }
 
             ImPlot::PopPlotClipRect();
