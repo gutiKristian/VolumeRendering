@@ -40,19 +40,16 @@ namespace med
             ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_NoDecorations);
             ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
             ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, 4095.0);
-            // Out plot is from 0 to 4095 on x axis and 0 to 1 on y axis
-            ImVec2 rmin = ImPlot::PlotToPixels(ImPlotPoint(0.0, 0.0f));
-            ImVec2 rmax = ImPlot::PlotToPixels(ImPlotPoint(1.0f, 1.0f));
             
+            // Plot is from 0 to 4095 on x axis and 0 to 1 on y axis
             float xx = 1.0f;
-
             ImPlot::PushPlotClipRect();
             for (const auto& rect : m_Colors)
             {
 				ImPlot::GetPlotDrawList()->AddRectFilled(ImPlot::PlotToPixels(ImPlotPoint(xx - 1.0f, 0.0f)), ImPlot::PlotToPixels(ImPlotPoint(xx, 1.0f)),
                     IM_COL32(255 * rect.r, 255 * rect.g, 255 * rect.b, 255));
                 xx += 1.0f;
-                // ImPlot::GetPlotDrawList()->AddRectFilled(rmin, rmax, ImGui::ColorConvertFloat4ToU32(ImVec4(rect.x, rect.y, rect.z, 1.0f));
+                // ImPlot::GetPlotDrawList()->AddRectFilled(ImPlot::PlotToPixels(ImPlotPoint(xx - 1.0f, 0.0f)), ImPlot::PlotToPixels(ImPlotPoint(xx, 1.0f)), ImGui::ColorConvertFloat4ToU32(ImVec4(rect.x, rect.y, rect.z, 1.0f));
 			}
             
             bool isDragging = false;
