@@ -35,12 +35,12 @@ namespace med
         assert(m_CmCpColor.size() == m_CmCpPos.size() && "Number of control points colors don't match with number of positions");
         auto cpSize = m_CmCpColor.size();
 
-        if (ImPlot::BeginPlot("##gradient", ImVec2(-1, -1)))
+        if (ImPlot::BeginPlot("##gradient", ImVec2(-1, -1), ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoFrame))
         {
             ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_NoDecorations);
             ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
             ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, 4095.0);
-            
+           
             // Plot is from 0 to 4095 on x axis and 0 to 1 on y axis
             float xx = 1.0f;
             ImPlot::PushPlotClipRect();
@@ -96,8 +96,18 @@ namespace med
                 m_ClickedCpId = -1;
             }
 
-
             ImPlot::PopPlotClipRect();
+
+            // Add new control point, if right mouse button is clicked, on purpose at the end
+            // of the function, so it's drawn next frame
+            if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+            {
+                // Same procedure as AddPoint at TF, also get the color from m_Colors[int(xClickPos)] this is the starting color
+                // for the new control point
+                LOG_INFO("Added colormap cp");
+            }
+
+
             ImPlot::EndPlot();
         }
     
