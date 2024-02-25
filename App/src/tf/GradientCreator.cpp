@@ -10,8 +10,9 @@
 
 #include "implot.h"
 #include "LinearInterpolation.h"
-
+#include <glm/gtc/type_ptr.hpp>
 #include <implot_internal.h>
+
 
 namespace med
 {
@@ -21,12 +22,19 @@ namespace med
         glm::vec3 color2 = glm::vec3(1.0, 1.0, 1.0);
 
         m_Colors = LinearInterpolation::Generate<glm::vec3, int>(0, 4095, color1, color2, 1);
-        m_ColorMapCPs.emplace_back(color1.r, color1.g, color1.b, 0.0);
-        m_ColorMapCPs.emplace_back(color2.r, color2.g, color2.b, 4095);
+        
+        m_CmCpColor.emplace_back(color1.r, color1.g, color1.b, 1.0);
+        m_CmCpColor.emplace_back(color2.r, color2.g, color2.b, 1.0);
+
+        m_CmCpPos.emplace_back(0.0, 0.5);
+        m_CmCpPos.emplace_back(4095.0, 0.5);
     }
 
     void GradientCreator::Render()
     {
+        assert(m_CmCpColor.size() == m_CmCpPos.size() && "Number of control points colors don't match with number of positions");
+        auto cpSize = m_CmCpColor.size();
+
         if (ImPlot::BeginPlot("##gradient", ImVec2(-1, -1)))
         {
             ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_NoDecorations);
@@ -47,33 +55,52 @@ namespace med
                 // ImPlot::GetPlotDrawList()->AddRectFilled(rmin, rmax, ImGui::ColorConvertFloat4ToU32(ImVec4(rect.x, rect.y, rect.z, 1.0f));
 			}
             
-            int clickedId = -1;
             bool isDragging = false;
             static bool hasClicked = false;
             // We don't care about y coordinate, so we can use the same variable
             double HEIGHT = 0.5;
-            for (int id = 0; id < m_ColorMapCPs.size(); ++id)
+            for (int id = 0; id < cpSize; ++id)
             {
                 bool clickEvent = false;
-                isDragging |= ImPlot::DragPoint(id, &m_ColorMapCPs[id].a, &HEIGHT, ImVec4(255, 255, 0, 255), 4.0f, ImPlotDragToolFlags_Delayed, &clickEvent);
+                isDragging |= ImPlot::DragPoint(id, &m_CmCpPos[id].x, &HEIGHT, ImVec4(255, 255, 0, 255), 4.0f, ImPlotDragToolFlags_Delayed, &clickEvent);
                 hasClicked |= clickEvent;
+                
+                if (clickEvent)
+                {
+                    m_ClickedCpId = id;
+                }
+
                 HEIGHT = 0.5;
+            }
+
+            if (isDragging)
+            {
+                // Recalculate colors
+
+                isDragging = false;
             }
 
             if (hasClicked)
             {
-               ImGui::OpenPopup("ColorPickerPopup");
+               ImGui::OpenPopup("##colorpick");
                hasClicked = false;
             }
-
-            if (ImGui::BeginPopupContextItem("ColorPickerPopup")) {
-                ImVec4 selectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-                ImGui::ColorPicker4("Color",&selectedColor.x);
+            if (ImGui::BeginPopup("##colorpick"))
+            {
+                assert(m_ClickedCpId != -1 && "Clicked control point id is invalid");
+                if (ImGui::ColorPicker4("Color", glm::value_ptr(m_CmCpColor[m_ClickedCpId])))
+                {
+                    // Recalculate colors
+                }
                 ImGui::EndPopup();
             }
+            else
+            {
+                m_ClickedCpId = -1;
+            }
+
 
             ImPlot::PopPlotClipRect();
-
             ImPlot::EndPlot();
         }
     

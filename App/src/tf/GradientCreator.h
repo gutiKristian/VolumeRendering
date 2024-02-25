@@ -16,8 +16,11 @@ public:
     void Render();
 private:
     std::vector<glm::vec3> m_Colors{};
-    // RGB and position (only x is used, y is always 0.5)
-    std::vector<glm::dvec4> m_ColorMapCPs{};
+    // Control points positions and colors
+    std::vector<glm::dvec2> m_CmCpPos{};
+    std::vector<glm::vec4> m_CmCpColor{};
+
+    int m_ClickedCpId = -1;
 };
 
 } // med
