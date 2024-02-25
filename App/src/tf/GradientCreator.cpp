@@ -48,13 +48,28 @@ namespace med
 			}
             
             int clickedId = -1;
-            bool hasClicked = false;
+            bool isDragging = false;
+            static bool hasClicked = false;
             // We don't care about y coordinate, so we can use the same variable
             double HEIGHT = 0.5;
             for (int id = 0; id < m_ColorMapCPs.size(); ++id)
             {
-                ImPlot::DragPoint(id, &m_ColorMapCPs[id].a, &HEIGHT, ImVec4(255, 255, 0, 255), 4.0f, ImPlotDragToolFlags_Delayed);
+                bool clickEvent = false;
+                isDragging |= ImPlot::DragPoint(id, &m_ColorMapCPs[id].a, &HEIGHT, ImVec4(255, 255, 0, 255), 4.0f, ImPlotDragToolFlags_Delayed, &clickEvent);
+                hasClicked |= clickEvent;
                 HEIGHT = 0.5;
+            }
+
+            if (hasClicked)
+            {
+               ImGui::OpenPopup("ColorPickerPopup");
+               hasClicked = false;
+            }
+
+            if (ImGui::BeginPopupContextItem("ColorPickerPopup")) {
+                ImVec4 selectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+                ImGui::ColorPicker4("Color",&selectedColor.x);
+                ImGui::EndPopup();
             }
 
             ImPlot::PopPlotClipRect();
