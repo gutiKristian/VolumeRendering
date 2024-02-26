@@ -16,6 +16,8 @@ namespace med
 		bool Render();
 		void UpdateTexture();
 	private:
+		void UpdateColors(int cpId);
+	private:
 		int m_DataDepth;
 		int m_ClickedCpId = -1;
 		std::shared_ptr<Texture> p_Texture = nullptr;

@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "Base/Base.h"
 #include "Base/GraphicsContext.h"
+#include "TfUtils.h"
 
 #include <cassert>
 #include <glm/gtc/type_ptr.hpp>
@@ -21,7 +22,7 @@ namespace med
 		m_ControlCol.emplace_back(color2.r, color2.g, color2.b, 1.0);
 
 		m_ControlPos.emplace_back(0.0, 0.5);
-		m_ControlPos.emplace_back(4095.0, 0.5);
+		m_ControlPos.emplace_back(m_DataDepth - 1.0, 0.5);
 	}
 	
 	std::shared_ptr<Texture> ColorTF::GetTexture() const
@@ -53,14 +54,22 @@ namespace med
 			}
 
 			bool isDragging = false;
+			int draggedId = -1;
 			// We don't care about y coordinate, so we can use the same variable
 			double HEIGHT = 0.5;
 			for (int id = 0; id < cpSize; ++id)
 			{
 				bool clickEvent = false;
 				bool held = false;
-				isDragging |= ImPlot::DragPoint(id, &m_ControlPos[id].x, &HEIGHT, ImVec4(255, 255, 0, 255), 4.0f, ImPlotDragToolFlags_Delayed, &clickEvent);
+				isDragging |= ImPlot::DragPoint(id, &m_ControlPos[id].x, &HEIGHT, ImVec4(0, 0, 255, 255), 4.0f, ImPlotDragToolFlags_Delayed, &clickEvent);
 				m_HasClicked |= clickEvent;
+
+				if (isDragging && draggedId == -1)
+				{
+					// This point is being dragged and we will work with it below
+					draggedId = id;
+					TfUtils::CheckDragBounds(draggedId, m_ControlPos, m_DataDepth);
+				}
 
 				if (clickEvent)
 				{
@@ -72,7 +81,9 @@ namespace med
 
 			if (isDragging)
 			{
+				assert(draggedId != -1 && "Dragging event was unexpectedly fired and dragged id is invalid");
 				// Recalculate colors
+				UpdateColors(draggedId);
 			}
 
 			// Do not open pop up if we are dragging or dragging has been done
@@ -87,6 +98,7 @@ namespace med
 				if (ImGui::ColorPicker4("Color", glm::value_ptr(m_ControlCol[m_ClickedCpId])))
 				{
 					// Recalculate colors
+					UpdateColors(m_ClickedCpId);
 				}
 				ImGui::EndPopup();
 			}
@@ -101,11 +113,15 @@ namespace med
 			// of the function, so it's drawn next frame
 			if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
 			{
-				// Same procedure as AddPoint at TF, also get the color from m_Colors[int(xClickPos)] this is the starting color
-				// for the new control point
+				auto x = std::round(ImPlot::GetPlotMousePos().x);
+				glm::vec3 color = m_Colors[static_cast<int>(x)];
+				int index = TfUtils::AddControlPoint(x, 0.5, m_ControlPos);
+				if (index != -1)
+				{
+					m_ControlCol.emplace(m_ControlCol.begin() + index, color.r, color.g, color.b, 1.0);
+				}
 				LOG_INFO("Added colormap cp");
 			}
-
 
 			ImPlot::EndPlot();
 		}
@@ -116,4 +132,8 @@ namespace med
 	void ColorTF::UpdateTexture()
 	{
 	}
-}
+
+	void ColorTF::UpdateColors(int cpId)
+	{
+	}
+} // namespace med
