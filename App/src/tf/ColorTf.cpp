@@ -63,12 +63,22 @@ namespace med
 				bool held = false;
 				isDragging |= ImPlot::DragPoint(id, &m_ControlPos[id].x, &HEIGHT, ImVec4(0, 0, 255, 255), 4.0f, ImPlotDragToolFlags_Delayed, &clickEvent);
 				m_HasClicked |= clickEvent;
-
+				
 				if (isDragging && draggedId == -1)
 				{
-					// This point is being dragged and we will work with it below
-					draggedId = id;
-					TfUtils::CheckDragBounds(draggedId, m_ControlPos, m_DataDepth);
+					if (id == 0 || id == (cpSize - 1))
+					{
+						// We don't want to drag the first and last control points
+						isDragging = false;
+						m_ControlPos[0].x = 0.0;
+						m_ControlPos[cpSize - 1].x = m_DataDepth - 1.0;
+					}
+					else
+					{
+						// This point is being dragged and we will work with it below
+						draggedId = id;
+						TfUtils::CheckDragBounds(draggedId, m_ControlPos, m_DataDepth);
+					}
 				}
 
 				if (clickEvent)
@@ -135,5 +145,38 @@ namespace med
 
 	void ColorTF::UpdateColors(int cpId)
 	{
+		assert(cpId >= 0 && cpId < m_ControlCol.size() && "Control point index is out of bounds");
+
+		// Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
+		auto updateIntervalValues = [&](double cx1, double cx2, glm::vec3 cy1, glm::vec3 cy2)
+			{
+				int x0 = static_cast<int>(cx1);
+				int x1 = static_cast<int>(cx2);
+				
+				std::vector<glm::vec3> result = LinearInterpolation::Generate<glm::vec3, int>(x0, x1, cy1, cy2, 1);
+				assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
+
+				for (size_t i = 0; i < std::abs(x1 - x0); ++i)
+				{
+					m_Colors[i + x0] = result[i];
+				}
+			};
+
+		auto currentIndex = static_cast<int>(m_ControlPos[cpId].x);
+		// Update control interval between control point below and current
+		if (cpId - 1 >= 0)
+		{
+			auto predecessorIndex = static_cast<int>(m_ControlPos[cpId - 1].x);
+			updateIntervalValues(m_ControlPos[cpId - 1].x, m_ControlPos[cpId].x,
+				m_Colors[predecessorIndex], m_Colors[currentIndex]);
+		}
+
+		// Update control interval between current control point and control point above
+		if (cpId + 1 < m_ControlCol.size())
+		{
+			auto successorIndex = static_cast<int>(m_ControlPos[cpId + 1].x);
+			updateIntervalValues(m_ControlPos[cpId].x, m_ControlPos[cpId + 1].x,
+				m_Colors[currentIndex], m_Colors[successorIndex]);
+		}
 	}
 } // namespace med
