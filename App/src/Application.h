@@ -11,6 +11,8 @@
 #include "renderer/Texture.h"
 #include "renderer/IndexBuffer.h"
 #include "tf/GradientCreator.h"
+#include "tf/OpacityTf.h"
+#include "tf/ColorTf.h"
 #include "file/VolumeFile.h"
 
 #include <memory>
@@ -73,26 +75,10 @@ namespace med {
 		/*Event helpers*/
 		void ToggleMouse(int key, bool toggle);
 
-        /*Transfer function helpers -- will be abstracted*/
-
-        /*
-		* Initializes simple TF based on max value
-		* [0, maxValue] -> for each value within this interval alpha is generated (linearly)
-		*/
-        void InitializeTransferFunction();
-        /*
-         *  Adds control point to the TF.
-         *  Returns index of this point in the cp vector,
-         *  If CP already exists, does nothing and returns -1
-         */
-        size_t AddControlPoint(double x, double y);
         /*
          * Updates the y values between control points based on interpolation method.
          */
-        void UpdateTfDataIntervals(size_t controlPointIndex);
-        void CheckDragBounds(size_t index);
         void OnTfRender();
-        void CalculateHistogram(const VolumeFile& file);
 
 	private:
 #if defined(PLATFORM_WEB)
@@ -107,7 +93,6 @@ namespace med {
 		// data
 		uint32_t m_Width = 1280;
 		uint32_t m_Height = 720;
-        static constexpr int DATA_DEPTH = 4096;
 
 		// Camera utils
 		Camera m_Camera = Camera::CreatePerspective(glm::radians(60.0f), static_cast<float>(m_Width) / static_cast<float>(m_Height), 0.01f, 100.0f);
@@ -125,8 +110,6 @@ namespace med {
 		std::shared_ptr<Texture> p_TexDataAcom = nullptr;
 		std::shared_ptr<Texture> p_TexStartPos = nullptr;
 		std::shared_ptr<Texture> p_TexEndPos = nullptr;
-		std::shared_ptr<Texture> p_TexTf = nullptr;
-
 
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineStart = nullptr;
@@ -171,14 +154,8 @@ namespace med {
 		float m_LastY = 0.0f;
 		
 		// TF
-		float m_TfX[DATA_DEPTH];
-		float m_TfY[DATA_DEPTH];
-        float m_Histogram[DATA_DEPTH] = {0.0f};
-        std::vector<glm::dvec2> m_TfContrPHandle{};
-		bool m_ShouldUpdateTf = false;
-        std::vector<glm::vec3> m_TfColorMap{};
-		GradientCreator m_GradientCreator;
-
+		std::unique_ptr<OpacityTF> p_OpacityTf = nullptr;
+		std::unique_ptr<ColorTF> p_ColorTf = nullptr;
 
 		// ImGui
 		int m_FragmentMode = 0;

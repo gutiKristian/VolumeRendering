@@ -67,7 +67,6 @@ namespace med {
 		InitializeSamplers();
 		InitializeUniforms();
 		InitializeTextures();
-		InitializeTransferFunction();
 		InitializeVertexBuffers();
 		InitializeIndexBuffers();
 		InitializeBindGroups();
@@ -90,12 +89,8 @@ namespace med {
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
 		p_UStepsCount->UpdateBuffer(queue, 0, &m_StepsCount, sizeOfInt);
 
-		if (m_ShouldUpdateTf)
-		{
-			m_ShouldUpdateTf = false;
-			LOG_INFO("TF update initiated");
-			p_TexTf->UpdateTexture(base::GraphicsContext::GetQueue(), m_TfY);
-		}
+		// Update transfer functions, update is initiated by the TF itself when needed
+		p_OpacityTf->UpdateTexture();
 	}
 
 	void Application::OnRender()
@@ -245,7 +240,7 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
-		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 		
@@ -396,8 +391,13 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
-		// Calculates on raw intensities
-		CalculateHistogram(*ctFile);
+		// For now hardcode the depth, later we will get it from the file
+		constexpr int DEPTH = 4096;
+		p_OpacityTf = std::make_unique<OpacityTF>(DEPTH);
+		p_ColorTf = std::make_unique<ColorTF>(DEPTH);
+
+		p_OpacityTf->ActivateHistogram(*ctFile);
+
 		// ctFile->PreComputeGradient();
 
 		LOG_INFO("Initializing textures");
@@ -446,7 +446,7 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
-		m_BGroupTextures.AddTexture(*p_TexTf, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);
         m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
@@ -494,32 +494,6 @@ namespace med {
 
 	}
 
-	void Application::InitializeTransferFunction()
-	{
-		LOG_INFO("Initializing transfer function");
-
-		m_GradientCreator.Init();
-
-		// We are working with 12bit data
-        m_TfContrPHandle.emplace_back(0.0, 0.0);
-        m_TfContrPHandle.emplace_back(DATA_DEPTH - 1.0, 1.0);
-
-		std::vector<float> result = LinearInterpolation::Generate<float>(0, DATA_DEPTH - 1, 0.0f, 1.0f, 1);
-
-		assert(result.size() == DATA_DEPTH && "Size of generated TF does not match");
-
-		// Fill for plotting
-		for (size_t i = 0; i < DATA_DEPTH; ++i)
-		{
-			m_TfX[i] = i;
-			m_TfY[i] = result[i];
-		}
-
-		p_TexTf = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_TfY, WGPUTextureDimension_1D, {DATA_DEPTH, 1, 1},
-			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Transfer function");
-	
-	}
-
 	void Application::ToggleMouse(int key, bool toggle)
 	{
 		switch (key)
@@ -535,132 +509,14 @@ namespace med {
 		}
 	}
 
-    size_t Application::AddControlPoint(double x, double y)
-    {
-        // On x-axis we always work with nearest integer values -- from 0 to 'bit depth of the voxel data'
-        x = std::round(x);
-
-        // Retrieve the index of this point if already exist
-        auto iter = std::find_if(m_TfContrPHandle.begin(), m_TfContrPHandle.end(), [x] (const auto& obj){ return obj.x == x; });
-        if (iter != m_TfContrPHandle.end())
-        {
-            LOG_TRACE("Control point already exists, drag it to edit its value");
-            return -1;
-        }
-
-        // Create Implot handles for control points
-        m_TfContrPHandle.emplace_back(x, y);
-        // Helps us recalculate data between the neighbourhood points
-        std::ranges::sort(m_TfContrPHandle, [](const auto& a, const auto& b) {return a.x < b.x; });
-
-        //TODO: what the distance returns when two end matches
-        iter = std::find_if(m_TfContrPHandle.begin(), m_TfContrPHandle.end(), [x] (const auto& obj){ return obj.x == x; });
-
-        LOG_TRACE("Added new point");
-        return std::distance(m_TfContrPHandle.begin(), iter);
-    }
-
-    void Application::UpdateTfDataIntervals(size_t controlPointIndex)
-    {
-        // Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
-        auto updateIntervalValues = [&](double cx1, double cx2, float cy1, float cy2)
-        {
-            int x0 = static_cast<int>(cx1);
-            int x1 = static_cast<int>(cx2);
-
-            std::vector<float> result = LinearInterpolation::Generate<float, int>(x0, x1, cy1, cy2, 1);
-            assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
-
-            for (size_t i = 0; i < std::abs(x1 - x0); ++i)
-            {
-                m_TfY[i + x0] = result[i];
-            }
-        };
-
-        // Update control interval between control point below and current
-        if (controlPointIndex - 1 >= 0)
-        {
-            auto predecessorIndex = static_cast<size_t>(m_TfContrPHandle[controlPointIndex-1].x);
-            updateIntervalValues(m_TfContrPHandle[controlPointIndex - 1].x, m_TfContrPHandle[controlPointIndex].x,
-                                 m_TfY[predecessorIndex], static_cast<float>(m_TfContrPHandle[controlPointIndex].y));
-        }
-
-        // Update control interval between current control point and control point above
-        if (controlPointIndex + 1 < m_TfContrPHandle.size())
-        {
-            auto successorIndex = static_cast<size_t>(m_TfContrPHandle[controlPointIndex+1].x);
-            updateIntervalValues(m_TfContrPHandle[controlPointIndex].x, m_TfContrPHandle[controlPointIndex + 1].x,
-                                 static_cast<float>(m_TfContrPHandle[controlPointIndex].y), m_TfY[successorIndex]);
-        }
-    }
-
     void Application::OnTfRender()
     {
-        MED_BEGIN_TAB_BAR("Tf settings")
+		MED_BEGIN_TAB_BAR("Tf settings")
 
-        MED_BEGIN_TAB_ITEM("TF Plot")
+		MED_BEGIN_TAB_ITEM("TF Plot")
 
-        if (ImPlot::BeginPlot("##tfplot"))
-        {
-            // This sets up axes 1
-            ImPlot::SetupAxes("Voxel value", "Alpha");
-
-            // Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
-            ImPlot::SetupAxisLimitsConstraints(ImAxis_X1,0.0, DATA_DEPTH - 1.0);
-            ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1,0.0, 1.0);
-
-            ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, .25f);
-            ImPlot::PlotShaded("##Histogram", m_TfX, m_Histogram, DATA_DEPTH);
-            ImPlot::PopStyleVar();
-
-            bool isDragging = false;
-            bool hasClicked = false;
-            int draggedId = -1;
-
-            // Create drag points
-            for (int id = 0; id < m_TfContrPHandle.size(); ++id)
-            {
-                isDragging |= ImPlot::DragPoint(id, &m_TfContrPHandle[id].x, &m_TfContrPHandle[id].y,
-                                                ImVec4(0,0.9f,0,1), 4, ImPlotDragToolFlags_Delayed, nullptr, nullptr, nullptr);
-
-                if (isDragging && draggedId == -1)
-                {
-                    // This point is being dragged and we will work with it below
-                    draggedId = id;
-                    CheckDragBounds(draggedId);
-                }
-            }
-            ImPlot::PlotLine("Tf", m_TfX, m_TfY, DATA_DEPTH);
-
-            // Drag event
-            if (isDragging)
-            {
-                UpdateTfDataIntervals(draggedId);
-                m_ShouldUpdateTf = true;
-            }
-
-            auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.1f);
-            hasClicked = ImPlot::IsPlotHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)
-                         && dragDelta.x == 0.0 && dragDelta.y == 0.0;
-
-            // Click event
-            if (hasClicked)
-            {
-                ImPlotPoint mousePos = ImPlot::GetPlotMousePos();
-
-                std::stringstream ss;
-                ss << "Clicked in plot:" << "\tx: " << static_cast<int>(mousePos.x) << " | y: " << mousePos.y;
-                LOG_TRACE(ss.str().c_str());
-
-                size_t index = AddControlPoint(mousePos.x, mousePos.y);
-                UpdateTfDataIntervals(index);
-                m_ShouldUpdateTf = true;
-            }
-
-            ImPlot::EndPlot();
-        }
-
-		m_GradientCreator.Render();
+		p_OpacityTf->Render();
+		p_ColorTf->Render();
 
         MED_END_TAB_ITEM
 
@@ -686,55 +542,5 @@ namespace med {
         MED_END_TAB_BAR
 
 
-    }
-
-    void Application::CheckDragBounds(size_t index)
-    {
-        constexpr double X_MAX = DATA_DEPTH - 1.0; // Depends on input data depth
-        constexpr double X_MIN = 0.0;
-
-        // We must use floor in order to have at least one unit padding between two cps
-        auto& cp = m_TfContrPHandle[index];
-        const auto cpSize = m_TfContrPHandle.size();
-
-        // Within max y coords
-        cp.y = std::clamp(cp.y, 0.0, 1.0);
-        cp.x = std::clamp(cp.x, X_MIN, X_MAX);
-
-        // is bounded from left
-        if (index - 1 >= 0 && m_TfContrPHandle[index - 1].x >= (cp.x - 1.0))
-        {
-            cp.x = std::ceil(m_TfContrPHandle[index - 1].x + 1.0);
-        }
-        // is bounded from right
-        if (index + 1 < cpSize && m_TfContrPHandle[index + 1].x <= (cp.x + 1.0))
-        {
-            cp.x = std::floor(m_TfContrPHandle[index + 1].x - 1.0);
-        }
-
-    }
-
-    void Application::CalculateHistogram(const VolumeFile& file)
-    {
-		LOG_INFO("Caclculating histogram");
-        const auto& data = file.GetVecReference();
-        auto[xSize,ySize,slices] = file.GetSize();
-        const size_t size = xSize * ySize * slices;
-        float maxVal = 0.0f;
-        for (std::uint32_t i = 0; i < size; ++i)
-        {
-        	// glm::vec4().a -> density (rgb are reserved for gradient)
-            auto value = static_cast<int>(data[i].a);
-            ++m_Histogram[value];
-        }
-        maxVal = std::log10(size);
-        for (float & i : m_Histogram)
-        {
-            if (i != 0.0f)
-            {
-                i = std::log10(i) / maxVal;
-            }
-        }
-		LOG_INFO("Done");
     }
 }
