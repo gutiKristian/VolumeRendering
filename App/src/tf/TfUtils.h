@@ -13,6 +13,6 @@ namespace med
 		*/
 		static int AddControlPoint(double x, double y, std::vector<glm::dvec2>& cp);
 
-		static void CheckDragBounds(size_t index, std::vector<glm::dvec2>& controlPoints, int maxDataVal);
+		static void CheckDragBounds(int index, std::vector<glm::dvec2>& controlPoints, int maxDataVal);
 	};
 }

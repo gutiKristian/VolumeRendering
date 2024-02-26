@@ -34,7 +34,7 @@ namespace med
 		return std::distance(cp.begin(), iter);
 	}
 
-	void TfUtils::CheckDragBounds(size_t index, std::vector<glm::dvec2>& controlPoints, int maxDataVal)
+	void TfUtils::CheckDragBounds(int index, std::vector<glm::dvec2>& controlPoints, int maxDataVal)
 	{
 		const double X_MAX = maxDataVal - 1.0; // Depends on input data depth
 		const double X_MIN = 0.0;
