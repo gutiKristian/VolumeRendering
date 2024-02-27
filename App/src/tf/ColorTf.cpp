@@ -13,13 +13,13 @@ namespace med
 {
 	ColorTF::ColorTF(int maxDataValue) : m_DataDepth(maxDataValue)
 	{
-		glm::vec3 color1 = glm::vec3(0.0, 0.0, 0.0);
-		glm::vec3 color2 = glm::vec3(1.0, 1.0, 1.0);
+		auto color1 = glm::vec4(0.0, 0.0, 0.0, 1.0);
+		auto color2 = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
-		m_Colors = LinearInterpolation::Generate<glm::vec3, int>(0, 4095, color1, color2, 1);
+		m_Colors = LinearInterpolation::Generate<glm::vec4, int>(0, 4095, color1, color2, 1);
 
-		m_ControlCol.emplace_back(color1.r, color1.g, color1.b, 1.0);
-		m_ControlCol.emplace_back(color2.r, color2.g, color2.b, 1.0);
+		m_ControlCol.push_back(color1);
+		m_ControlCol.push_back(color2);
 
 		m_ControlPos.emplace_back(0.0, 0.5);
 		m_ControlPos.emplace_back(m_DataDepth - 1.0, 0.5);
@@ -124,11 +124,10 @@ namespace med
 			if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
 			{
 				auto x = std::round(ImPlot::GetPlotMousePos().x);
-				glm::vec3 color = m_Colors[static_cast<int>(x)];
 				int index = TfUtils::AddControlPoint(x, 0.5, m_ControlPos);
 				if (index != -1)
 				{
-					m_ControlCol.emplace(m_ControlCol.begin() + index, color.r, color.g, color.b, 1.0);
+					m_ControlCol.emplace(m_ControlCol.begin() + index, m_Colors[static_cast<int>(x)]);
 					UpdateColors(index);
 				}
 				LOG_INFO("Added colormap cp");
@@ -149,12 +148,12 @@ namespace med
 		assert(cpId >= 0 && cpId < m_ControlCol.size() && "Control point index is out of bounds");
 
 		// Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
-		auto updateIntervalValues = [&](double cx1, double cx2, glm::vec3 cy1, glm::vec3 cy2)
+		auto updateIntervalValues = [&](double cx1, double cx2, glm::vec4 cy1, glm::vec4 cy2)
 			{
 				int x0 = static_cast<int>(cx1);
 				int x1 = static_cast<int>(cx2);
 				
-				std::vector<glm::vec3> result = LinearInterpolation::Generate<glm::vec3, int>(x0, x1, cy1, cy2, 1);
+				std::vector<glm::vec4> result = LinearInterpolation::Generate<glm::vec4, int>(x0, x1, cy1, cy2, 1);
 				assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
 
 				for (size_t i = 0; i < std::abs(x1 - x0); ++i)
@@ -163,19 +162,18 @@ namespace med
 				}
 			};
 
-		glm::vec3 color = glm::vec3(m_ControlCol[cpId].r, m_ControlCol[cpId].g, m_ControlCol[cpId].b);
 		// Update control interval between control point below and current
 		if (cpId - 1 >= 0)
 		{
 			auto predecessorIndex = static_cast<int>(m_ControlPos[cpId - 1].x);
-			updateIntervalValues(m_ControlPos[cpId - 1].x, m_ControlPos[cpId].x, m_Colors[predecessorIndex], color);
+			updateIntervalValues(m_ControlPos[cpId - 1].x, m_ControlPos[cpId].x, m_Colors[predecessorIndex], m_ControlCol[cpId]);
 		}
 
 		// Update control interval between current control point and control point above
 		if (cpId + 1 < m_ControlCol.size())
 		{
 			auto successorIndex = static_cast<int>(m_ControlPos[cpId + 1].x);
-			updateIntervalValues(m_ControlPos[cpId].x, m_ControlPos[cpId + 1].x, color, m_Colors[successorIndex]);
+			updateIntervalValues(m_ControlPos[cpId].x, m_ControlPos[cpId + 1].x, m_ControlCol[cpId], m_Colors[successorIndex]);
 		}
 	}
 } // namespace med

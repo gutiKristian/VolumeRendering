@@ -21,7 +21,7 @@ namespace med
 		int m_DataDepth;
 		int m_ClickedCpId = -1;
 		std::shared_ptr<Texture> p_Texture = nullptr;
-		std::vector<glm::vec3> m_Colors{};
+		std::vector<glm::vec4> m_Colors{};
 		// Control points positions and colors
 		std::vector<glm::dvec2> m_ControlPos{};
 		std::vector<glm::vec4> m_ControlCol{};
