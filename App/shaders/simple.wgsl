@@ -133,6 +133,13 @@ fn computeGradient(position: vec3<f32>, step: f32) -> vec3f
 	return -result/l;
 }
 
+
+fn jitter(co: vec2<f32>) -> f32
+{
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+
 const DENSITY_FACTOR = 1/4095.0;
 
 @fragment
@@ -170,9 +177,10 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	var step_size: f32 = 0.01;
 
  	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
-	var current_position: vec3<f32> = ray.start.xyz;
+	// apply jitter using screen space coordinates, we could divide it (jitter input) by resolution to keep it same across all res.
+	var current_position: vec3<f32> = ray.start.xyz + ray.direction * step_size * jitter(in.position.xy); 
 	var step: vec3<f32> = ray.direction * step_size;
-
+ 
 	var dst: vec4<f32> = vec4<f32>(0.0);
 
 	for (var i: i32 = 0; i < steps_count; i++)
@@ -184,13 +192,15 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var density: f32 = sampledVolume.a * DENSITY_FACTOR;
 
 		var tf: f32 = textureSample(tex_tf, texture_sampler, density).r;
-		var src: vec4<f32> = vec4f(tf);
+		var color: vec3f = textureSample(texTfColor, texture_sampler, density).rgb;
+
+		var src: vec4<f32> = vec4f(color.r, color.g, color.b, tf);
 		
 		var ll = clamp(dot(gradient, lightPos), 0.0, 1.0);
 		// diffuse			ambient
-		src.r = ll * src.r; // + 0.3 * src.r;
-		src.g = ll * src.g; // + 0.3 * src.g;
-		src.b = ll * src.b; // + 0.3 * src.b;
+		src.r = ll * src.r + 0.3 * src.r;
+		src.g = ll * src.g + 0.3 * src.g;
+		src.b = ll * src.b + 0.3 * src.b;
 
 		if is_in_sample_coords(current_position) && dst.a < 1.0
 		{
