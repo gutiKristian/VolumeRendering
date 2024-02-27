@@ -138,14 +138,16 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 	for (var i: i32 = 0; i < steps_count; i++)
 	{
-		var sampledVolume: vec4f = textureSample(tex, texture_sampler, current_position);
+		var ctVolume: vec4f = textureSample(tex, texture_sampler, current_position);
+		var rtVolume: vec4f = textureSample(texAcom, texture_sampler, current_position);
 		
 		// for now, the values of gradient and density are untouched on cpu side
-		var gradient: vec3f = normalize(sampledVolume.rgb);
-		var density: f32 = sampledVolume.a * DENSITY_FACTOR;
+		var gradient: vec3f = normalize(ctVolume.rgb);
+		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR;
+		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR;
 
-		var tf: f32 = textureSample(tex_tf, texture_sampler, density).r;
-		var color: vec3f = textureSample(texTfColor, texture_sampler, density).rgb;
+		var tf: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
+		var color: vec3f = textureSample(texTfColor, texture_sampler, densityCT).rgb;
 
 		var src: vec4<f32> = vec4f(color.r, color.g, color.b, tf);
 		
