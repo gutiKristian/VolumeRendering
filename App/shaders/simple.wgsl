@@ -147,7 +147,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR;
 
 		var tf: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
-		var color: vec3f = textureSample(texTfColor, texture_sampler, densityCT).rgb;
+		var color: vec3f = textureSample(texTfColor, texture_sampler, densityRT).rgb;
 
 		var src: vec4<f32> = vec4f(color.r, color.g, color.b, tf);
 		
