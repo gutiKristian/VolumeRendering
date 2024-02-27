@@ -45,8 +45,12 @@ add_executable(App
 	"src/file/dat/DatReader.cpp"
 		
 	"src/tf/LinearInterpolation.h" 
-	"src/tf/GradientCreator.h"
-	"src/tf/GradientCreator.cpp")
+	"src/tf/TfUtils.h"
+	"src/tf/TfUtils.cpp"
+	"src/tf/ColorTf.h"
+	"src/tf/ColorTf.cpp"
+	"src/tf/OpacityTf.h"
+	"src/tf/OpacityTf.cpp")
 
 target_compile_definitions(App
 	PRIVATE
