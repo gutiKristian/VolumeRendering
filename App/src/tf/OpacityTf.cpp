@@ -29,7 +29,7 @@ namespace med
 		}
 
 		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_YPoints.data(), WGPUTextureDimension_1D, {m_DataDepth, 1, 1},
-			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Transfer function");
+			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Opacity TF");
 	}
 
 	std::shared_ptr<Texture> OpacityTF::GetTexture() const
