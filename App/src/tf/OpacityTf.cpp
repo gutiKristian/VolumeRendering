@@ -84,7 +84,6 @@ namespace med
             if (isDragging)
             {
                 UpdateYPoints(draggedId);
-                m_ShouldUpdate = true;
             }
 
             auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0.1f);
@@ -103,7 +102,6 @@ namespace med
                 if (index != -1)
                 {
 					UpdateYPoints(index);
-					m_ShouldUpdate = true;
 				}
             }
 
@@ -179,5 +177,6 @@ namespace med
             updateIntervalValues(m_ControlPoints[controlPointIndex].x, m_ControlPoints[controlPointIndex + 1].x,
                 static_cast<float>(m_ControlPoints[controlPointIndex].y), m_YPoints[successorIndex]);
         }
+        m_ShouldUpdate = true;
     }
 }
