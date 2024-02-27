@@ -91,6 +91,7 @@ namespace med {
 
 		// Update transfer functions, update is initiated by the TF itself when needed
 		p_OpacityTf->UpdateTexture();
+		p_ColorTf->UpdateTexture();
 	}
 
 	void Application::OnRender()
@@ -242,6 +243,8 @@ namespace med {
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);
+		m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 		
 		// Reinit pipelines
@@ -391,14 +394,14 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
+		ctFile->PreComputeGradient();
+
 		// For now hardcode the depth, later we will get it from the file
 		constexpr int DEPTH = 4096;
 		p_OpacityTf = std::make_unique<OpacityTF>(DEPTH);
 		p_ColorTf = std::make_unique<ColorTF>(DEPTH);
 
 		p_OpacityTf->ActivateHistogram(*ctFile);
-
-		// ctFile->PreComputeGradient();
 
 		LOG_INFO("Initializing textures");
 		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
@@ -449,6 +452,7 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
         m_BGroupTextures.AddSampler(*p_SamplerNN);
         m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
