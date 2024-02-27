@@ -17,12 +17,12 @@ namespace med
 
 			for (auto i = x0; i < x1 + 1; i += step)
 			{
-				if constexpr (std::is_same<T, glm::vec3>::value)
+				if constexpr (std::is_same<T, glm::vec4>::value)
 				{
 					float r = fx0.r + slope.r * (i - x0);
 					float g = fx0.g + slope.g * (i - x0);
 					float b = fx0.b + slope.b * (i - x0);
-					result.emplace_back(r, g, b);
+					result.emplace_back(r, g, b, 1.0f);
 				}
 				else
 				{
