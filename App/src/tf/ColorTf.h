@@ -25,7 +25,7 @@ namespace med
 		// Control points positions and colors
 		std::vector<glm::dvec2> m_ControlPos{};
 		std::vector<glm::vec4> m_ControlCol{};
-
+		bool m_ShouldUpdate = false;
 		bool m_HasClicked = false;
 	};
 }

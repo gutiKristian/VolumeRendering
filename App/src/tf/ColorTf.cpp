@@ -23,6 +23,9 @@ namespace med
 
 		m_ControlPos.emplace_back(0.0, 0.5);
 		m_ControlPos.emplace_back(m_DataDepth - 1.0, 0.5);
+
+		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_Colors.data(), WGPUTextureDimension_1D, {m_DataDepth, 1, 1},
+						WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Color TF");
 	}
 	
 	std::shared_ptr<Texture> ColorTF::GetTexture() const
@@ -141,6 +144,12 @@ namespace med
 
 	void ColorTF::UpdateTexture()
 	{
+		if (m_ShouldUpdate)
+		{
+			assert(p_Texture != nullptr && "Texture is not initialized");
+			p_Texture->UpdateTexture(base::GraphicsContext::GetQueue(), m_Colors.data());
+			m_ShouldUpdate = false;
+		}
 	}
 
 	void ColorTF::UpdateColors(int cpId)
@@ -175,5 +184,6 @@ namespace med
 			auto successorIndex = static_cast<int>(m_ControlPos[cpId + 1].x);
 			updateIntervalValues(m_ControlPos[cpId].x, m_ControlPos[cpId + 1].x, m_ControlCol[cpId], m_Colors[successorIndex]);
 		}
+		m_ShouldUpdate = true;
 	}
 } // namespace med
