@@ -10,7 +10,6 @@
 #include "renderer/RenderPipeline.h"
 #include "renderer/Texture.h"
 #include "renderer/IndexBuffer.h"
-#include "tf/GradientCreator.h"
 #include "tf/OpacityTf.h"
 #include "tf/ColorTf.h"
 #include "file/VolumeFile.h"
