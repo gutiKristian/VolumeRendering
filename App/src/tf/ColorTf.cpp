@@ -129,6 +129,7 @@ namespace med
 				if (index != -1)
 				{
 					m_ControlCol.emplace(m_ControlCol.begin() + index, color.r, color.g, color.b, 1.0);
+					UpdateColors(index);
 				}
 				LOG_INFO("Added colormap cp");
 			}
@@ -162,21 +163,19 @@ namespace med
 				}
 			};
 
-		auto currentIndex = static_cast<int>(m_ControlPos[cpId].x);
+		glm::vec3 color = glm::vec3(m_ControlCol[cpId].r, m_ControlCol[cpId].g, m_ControlCol[cpId].b);
 		// Update control interval between control point below and current
 		if (cpId - 1 >= 0)
 		{
 			auto predecessorIndex = static_cast<int>(m_ControlPos[cpId - 1].x);
-			updateIntervalValues(m_ControlPos[cpId - 1].x, m_ControlPos[cpId].x,
-				m_Colors[predecessorIndex], m_Colors[currentIndex]);
+			updateIntervalValues(m_ControlPos[cpId - 1].x, m_ControlPos[cpId].x, m_Colors[predecessorIndex], color);
 		}
 
 		// Update control interval between current control point and control point above
 		if (cpId + 1 < m_ControlCol.size())
 		{
 			auto successorIndex = static_cast<int>(m_ControlPos[cpId + 1].x);
-			updateIntervalValues(m_ControlPos[cpId].x, m_ControlPos[cpId + 1].x,
-				m_Colors[currentIndex], m_Colors[successorIndex]);
+			updateIntervalValues(m_ControlPos[cpId].x, m_ControlPos[cpId + 1].x, color, m_Colors[successorIndex]);
 		}
 	}
 } // namespace med
