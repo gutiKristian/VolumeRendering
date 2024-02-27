@@ -52,18 +52,6 @@ fn vs_main(@builtin(vertex_index) v_id: u32, @location(0) vertex_coord: vec3f, @
 	return vs_out;
 }
 
-/*
-* Helper for change of base
-* For now UNUSED
-*/
-fn view_to_world(pixel: vec2<f32>) -> vec3<f32>
-{
-	//! pass width and height as uniforms or whatever
-	var coordNdc: vec2f =  vec2f((pixel.x / 1280.0), (pixel.y / 720.0)) * 2.0 - 1.0;
-	var temp: vec4<f32> = camera.projection_inverse * vec4f(coordNdc.x, coordNdc.y, 1, 1);
-	var coordWorld: vec4f = camera.view_inverse * (temp / temp.w);
-	return coordWorld.xyz;
-}
 
 /*
 * Checks whether the position is within out bbox basically,
@@ -78,25 +66,6 @@ fn is_in_sample_coords(position: vec3<f32>) -> bool
 			position.y >= b_min.y && position.y <= b_max.y &&
 			position.z >= b_min.z && position.z <= b_max.z;
 }
-
-/*
-* Fixed sample size
-* Based on step_size, it returns number of samples/steps on a ray
-* PROBLEM WITH NON UNIFORM FLOW...
-*/
-// fn get_number_of_samples(ray_length: f32, step_size: f32) -> i32
-// {
-// 	return i32(ray_length / step_size);
-// }
-
-/*
-* Based on number of samples, it returns the size of the step to fit desired number of samples/steps
-*/
-fn get_step_size(ray_length: f32, samples: i32) -> f32
-{
-	return ray_length / f32(samples);
-}
-
 
 fn setup_ray(tex_pos: vec2<i32>) -> Ray
 {
@@ -117,23 +86,7 @@ fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32>
 	return  (1.0 - dst.a) * src_ + dst;
 }
 
-fn computeGradient(position: vec3<f32>, step: f32) -> vec3f
-{
-	var result = vec3f(0.0, 0.0, 0.0);
-	var dirs = array<vec3f, 3>(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
-	result.x = textureSample(tex, texture_sampler, position + dirs[0] * step).a - textureSample(tex, texture_sampler, position - dirs[0] * step).a;
-	result.y = textureSample(tex, texture_sampler, position + dirs[1] * step).a - textureSample(tex, texture_sampler, position - dirs[1] * step).a;
-	result.z = textureSample(tex, texture_sampler, position + dirs[2] * step).a - textureSample(tex, texture_sampler, position - dirs[2] * step).a;
-	let l = length(result);
-	if l == 0.0
-	{
-		return vec3f(0.0);
-	}
-
-	return -result/l;
-}
-
-
+// PRNG
 fn jitter(co: vec2<f32>) -> f32
 {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -212,4 +165,56 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	}
 
 	return dst;
+}
+
+
+//  ------------------------------- UNUSED -------------------------------
+
+fn computeGradient(position: vec3<f32>, step: f32) -> vec3f
+{
+	var result = vec3f(0.0, 0.0, 0.0);
+	var dirs = array<vec3f, 3>(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
+	result.x = textureSample(tex, texture_sampler, position + dirs[0] * step).a - textureSample(tex, texture_sampler, position - dirs[0] * step).a;
+	result.y = textureSample(tex, texture_sampler, position + dirs[1] * step).a - textureSample(tex, texture_sampler, position - dirs[1] * step).a;
+	result.z = textureSample(tex, texture_sampler, position + dirs[2] * step).a - textureSample(tex, texture_sampler, position - dirs[2] * step).a;
+	let l = length(result);
+	if l == 0.0
+	{
+		return vec3f(0.0);
+	}
+
+	return -result/l;
+}
+
+
+/*
+* Helper for change of base
+* For now UNUSED
+*/
+fn view_to_world(pixel: vec2<f32>) -> vec3<f32>
+{
+	// required to pass width and height as uniforms or whatever
+	var coordNdc: vec2f =  vec2f((pixel.x / 1280.0), (pixel.y / 720.0)) * 2.0 - 1.0;
+	var temp: vec4<f32> = camera.projection_inverse * vec4f(coordNdc.x, coordNdc.y, 1, 1);
+	var coordWorld: vec4f = camera.view_inverse * (temp / temp.w);
+	return coordWorld.xyz;
+}
+
+
+/*
+* Fixed sample size
+* Based on step_size, it returns number of samples/steps on a ray
+* PROBLEM WITH NON UNIFORM FLOW...
+*/
+fn get_number_of_samples(ray_length: f32, step_size: f32) -> i32
+{
+	return i32(ray_length / step_size);
+}
+
+/*
+* Based on number of samples, it returns the size of the step to fit desired number of samples/steps
+*/
+fn get_step_size(ray_length: f32, samples: i32) -> f32
+{
+	return ray_length / f32(samples);
 }
