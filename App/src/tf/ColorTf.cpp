@@ -165,7 +165,7 @@ namespace med
 				std::vector<glm::vec4> result = LinearInterpolation::Generate<glm::vec4, int>(x0, x1, cy1, cy2, 1);
 				assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
 
-				for (size_t i = 0; i < std::abs(x1 - x0); ++i)
+				for (size_t i = 0; i <= std::abs(x1 - x0); ++i)
 				{
 					m_Colors[i + x0] = result[i];
 				}
