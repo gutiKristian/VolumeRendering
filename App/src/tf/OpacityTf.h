@@ -3,9 +3,10 @@
 #include "../renderer/Texture.h"
 #include "../file/VolumeFile.h"
 
+#include <glm/glm.hpp>
 #include <vector>
 #include <memory>
-#include <glm/glm.hpp>
+#include <string>
 
 namespace med
 {
@@ -18,6 +19,8 @@ namespace med
 		bool Render();
 		void UpdateTexture();
 		void ActivateHistogram(const VolumeFile& file);
+		void Save(const std::string& name);
+		void Load(const std::string& name);
 	private:
 		void UpdateYPoints(int controlPointIndex);
 	private:

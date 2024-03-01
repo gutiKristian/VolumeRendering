@@ -5,9 +5,11 @@
 #include "Base/Base.h"
 #include "Base/GraphicsContext.h"
 #include "TfUtils.h"
+#include <glm/gtc/type_ptr.hpp>
 
 #include <cassert>
-#include <glm/gtc/type_ptr.hpp>
+#include <fstream>
+#include <sstream>
 
 namespace med
 {
@@ -150,6 +152,79 @@ namespace med
 			p_Texture->UpdateTexture(base::GraphicsContext::GetQueue(), m_Colors.data());
 			m_ShouldUpdate = false;
 		}
+	}
+
+	void ColorTF::Save(const std::string& name)
+	{
+		assert(m_ControlCol.size() == m_ControlPos.size() && "Number of control points colors don't match with number of positions");
+		// Create file with this structure first line is [opacity] second line is number of control points and then x y values
+		std::ofstream file(name);
+		file << "[color]\n";
+		file << m_ControlPos.size() << "\n";
+		for (int i = 0; i < m_ControlCol.size(); ++i)
+		{
+			file << m_ControlPos[i].x << " " << m_ControlPos[i].y << m_ControlCol[i].r << " " << m_ControlCol[i].g << " " << m_ControlCol[i].b << " " << m_ControlCol[i].a << "\n";
+		}
+		file.close();
+	}
+
+	void ColorTF::Load(const std::string& name)
+	{
+		std::ifstream file(name);
+		std::string line;
+		std::vector<glm::dvec2> cpPos{};
+		std::vector<glm::vec4> cpCol{};
+
+		std::getline(file, line);
+		
+		if (line != "[color]")
+		{
+			LOG_ERROR("Invalid file format");
+			return;
+		}
+
+		std::getline(file, line);
+		int controlPoints = 0;
+		try
+		{
+			controlPoints = std::stoi(line);
+		}
+		catch (const std::exception&)
+		{
+			LOG_ERROR("Invalid file format");
+			return;
+		}
+
+		for (int i = 0; i < controlPoints; ++i)
+		{
+			if (!std::getline(file, line))
+			{
+				LOG_ERROR("Unexpected end of file, TF was not loaded");
+				return;
+			}
+
+			std::istringstream linestream(line);
+			double x, y;
+			glm::vec4 color;
+
+			linestream >> x >> y; 
+			linestream >> color.r >> color.g >> color.b >> color.a;
+			cpPos.emplace_back(x, y);
+			cpCol.push_back(color);
+		}
+		file.close();
+		
+		m_ControlCol = cpCol;
+		m_ControlPos = cpPos;
+
+		// Jumping by 2 to avoid recalculation of the same interval
+		for (int i = 1; i < controlPoints; i+=2)
+		{
+			UpdateColors(i);
+		}
+
+		m_ShouldUpdate = true;
+		LOG_INFO("Color TF loaded");
 	}
 
 	void ColorTF::UpdateColors(int cpId)

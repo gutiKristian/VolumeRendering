@@ -15,6 +15,8 @@ namespace med
 		std::shared_ptr<Texture> GetTexture() const;
 		bool Render();
 		void UpdateTexture();
+		void Save(const std::string& name);
+		void Load(const std::string& name);
 	private:
 		void UpdateColors(int cpId);
 	private:
