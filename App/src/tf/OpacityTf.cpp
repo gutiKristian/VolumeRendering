@@ -42,7 +42,7 @@ namespace med
 	}
 
 	// Maybe in the future refactor: HandleClick, HandleDrag
-	bool OpacityTF::Render()
+	void OpacityTF::Render()
 	{
 		if (ImPlot::BeginPlot("##optfplot"))
 		{
@@ -116,8 +116,6 @@ namespace med
 
 			ImPlot::EndPlot();
 		}
-
-		return false;
 	}
 
 	void OpacityTF::UpdateTexture()

@@ -37,7 +37,7 @@ namespace med
 		return p_Texture;
 	}
 	
-	bool ColorTF::Render()
+	void ColorTF::Render()
 	{
 		assert(m_ControlCol.size() == m_ControlPos.size() && "Number of control points colors don't match with number of positions");
 		auto cpSize = m_ControlCol.size();
@@ -147,8 +147,6 @@ namespace med
 
 			ImPlot::EndPlot();
 		}
-
-		return true;
 	}
 
 	void ColorTF::UpdateTexture()
