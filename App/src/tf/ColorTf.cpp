@@ -5,6 +5,7 @@
 #include "Base/Base.h"
 #include "Base/GraphicsContext.h"
 #include "TfUtils.h"
+#include "../file/FileReader.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include <cassert>
@@ -41,7 +42,7 @@ namespace med
 		assert(m_ControlCol.size() == m_ControlPos.size() && "Number of control points colors don't match with number of positions");
 		auto cpSize = m_ControlCol.size();
 
-		if (ImPlot::BeginPlot("##gradient", ImVec2(-1, -1), ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoFrame))
+		if (ImPlot::BeginPlot("##gradient", ImVec2(-1, 100), ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoFrame))
 		{
 			ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_NoDecorations);
 			ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
@@ -136,6 +137,12 @@ namespace med
 					UpdateColors(index);
 				}
 				LOG_INFO("Added colormap cp");
+			}
+
+			if (ImGui::Button("Save Color TF preset"))
+			{
+				std::string s = (FileReader::GetDefaultPath() / "assets" / "colormap1").string();
+				Save(s);
 			}
 
 			ImPlot::EndPlot();
