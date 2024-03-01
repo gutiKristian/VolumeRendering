@@ -5,6 +5,7 @@
 #include "Base/GraphicsContext.h"
 #include "implot/implot.h"
 #include "implot_internal.h"
+#include "../file/FileReader.h"
 
 #include <cassert>
 #include <fstream>
@@ -105,6 +106,12 @@ namespace med
 				{
 					UpdateYPoints(index);
 				}
+			}
+
+			if (ImGui::Button("Save opacity TF preset"))
+			{
+				std::string str = (FileReader::GetDefaultPath() / "assets" / "opacity1").string();
+				Save(str);
 			}
 
 			ImPlot::EndPlot();
