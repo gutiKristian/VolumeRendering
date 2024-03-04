@@ -1,7 +1,7 @@
 struct Fragment
 {
 	@builtin(position) position: vec4f,
-	@location(0) raw_pos: vec4f,
+	@location(0) world_coord: vec4f,
 	@location(1) tex_coord: vec3f
 }
 
@@ -12,15 +12,19 @@ struct CameraData
 	projection: mat4x4<f32>,
 	view_inverse: mat4x4<f32>,
 	projection_inverse: mat4x4<f32>
-};
+}
 
 struct LightData
 {
 	position: vec3<f32>,
+	_alignment01: f32,
 	ambient: vec3<f32>,
+	_alignment02: f32,
 	diffuse: vec3<f32>,
-	specular: vec3<f32>
-};
+	_alignment03: f32,
+	specular: vec3<f32>,
+	_alignment04: f32
+}
 
 struct Ray
 {
@@ -28,7 +32,7 @@ struct Ray
 	end: vec3<f32>,
 	direction: vec3<f32>,
 	length: f32
-};
+}
 
 @group(0) @binding(0) var<uniform> camera: CameraData;
 @group(0) @binding(1) var<uniform> camera_pos: vec3f;
@@ -56,7 +60,8 @@ fn vs_main(@builtin(vertex_index) v_id: u32, @location(0) vertex_coord: vec3f, @
 	var vs_out: Fragment;
 	
 	vs_out.position = out_position;
-	vs_out.raw_pos = out_position;
+	// passing world coordinates
+	vs_out.world_coord = camera.model * vec4f(vertex_coord, 1.0);
 	vs_out.tex_coord = tex_coord;
 
 	return vs_out;
@@ -103,19 +108,35 @@ fn jitter(co: vec2<f32>) -> f32
 }
 
 
+/*
+	N - unit normal vector
+	L- unit vector pointing from sampled point to the light
+	V - unit view vector from point to camera
+*/
+fn blinnPhong(N: vec3f, worldPosition: vec3f) -> vec3f
+{
+	var L: vec3f = normalize(light.position - worldPosition);
+	var V: vec3f = normalize(camera_pos - worldPosition);
+	var R: vec3f = 2 * (N * L)* N - L;
+	var H: vec3f = normalize(V + L); 
+	return light.diffuse * max(dot(N, L), 0.0) +
+		light.specular * pow(max(dot(N, H), 0.0), 120);
+}
+
+
 const DENSITY_FACTOR = 1/4095.0;
 
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 {
-	var lightPos = vec3f(-10.0 , -10.0 , 0.6267);
 
 	// If we would like to sample the texture with a sampler, this transforms the coordinates in ndc to texture
 	// and as we rendered the cube to the texture of size of screen this gives us the coords, Y IS FLIPPED
-	var texC: vec2f = in.raw_pos.xy / in.raw_pos.w;
+	var texC: vec2f = in.world_coord.xy / in.world_coord.w;
 	texC.x =  0.5*texC.x + 0.5;
 	texC.y = -0.5*texC.y + 0.5;
-	
+
+	var wordlCoords: vec3f = in.world_coord.xyz;
 	// Ray setup
 	let ray: Ray = setup_ray(vec2<i32>(i32(in.position.x), i32(in.position.y)));
 
@@ -152,6 +173,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var rtVolume: vec4f = textureSample(texAcom, texture_sampler, current_position);
 		
 		// for now, the values of gradient and density are untouched on cpu side
+		// var gradient: vec3f = normalize(ctVolume.rgb);
 		var gradient: vec3f = normalize(ctVolume.rgb);
 		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR;
 		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR;
@@ -159,13 +181,12 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var tf: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
 		var color: vec3f = textureSample(texTfColor, texture_sampler, densityRT).rgb;
 
+		// Blinn-Phong (no spec)
+		var lightColor = blinnPhong(gradient, wordlCoords);
+		color = light.ambient + lightColor * color;
+
+		// Blending
 		var src: vec4<f32> = vec4f(color.r, color.g, color.b, tf);
-		
-		var ll = clamp(dot(gradient, lightPos), 0.0, 1.0);
-		// diffuse			ambient
-		src.r = ll * src.r + 0.3 * src.r;
-		src.g = ll * src.g + 0.3 * src.g;
-		src.b = ll * src.b + 0.3 * src.b;
 
 		if is_in_sample_coords(current_position) && dst.a < 1.0
 		{
@@ -174,6 +195,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 		// Advance ray
 		current_position = current_position + step;
+		wordlCoords = wordlCoords + step;
 	}
 
 	return dst;

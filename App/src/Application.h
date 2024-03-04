@@ -178,20 +178,20 @@ namespace med {
 			"Texture coordinates"
 		};
 
-		// Directional
+		// Directional, although we need only rgb, padding is added for alignment -> wgpu aligns to 16 bytes
 		struct Light
 		{
-			glm::vec3 Position{ 0.0f };
-			glm::vec3 Ambient{ 0.0f };
-			glm::vec3 Diffuse{ 0.0f };
-			glm::vec3 Specular{ 0.0f };
+			glm::vec4 Position{ 0.0f };
+			glm::vec4 Ambient{ 0.0f };
+			glm::vec4 Diffuse{ 0.0f };
+			glm::vec4 Specular{ 0.0f };
 		};
 
 		Light m_Light1{
-			.Position	= {5.0f, 0.0f, 5.0f},
-			.Ambient	= glm::vec3{0.2f},
-			.Diffuse	= glm::vec3{0.5f},
-			.Specular	= glm::vec3{1.0f}
+			.Position = {0.0f, 0.0f, -5.0f, 1.0f},
+			.Ambient = glm::vec4{0.0f},
+			.Diffuse = glm::vec4{1.0f, 1.0f, 1.0f, 0.0f},
+			.Specular = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f}
 		};
 	};
 
