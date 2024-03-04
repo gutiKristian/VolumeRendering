@@ -14,13 +14,21 @@ struct CameraData
 	projection_inverse: mat4x4<f32>
 };
 
+struct LightData
+{
+	position: vec3<f32>,
+	ambient: vec3<f32>,
+	diffuse: vec3<f32>,
+	specular: vec3<f32>
+};
+
 struct Ray
 {
 	start: vec3<f32>,
 	end: vec3<f32>,
 	direction: vec3<f32>,
 	length: f32
-}
+};
 
 @group(0) @binding(0) var<uniform> camera: CameraData;
 @group(0) @binding(1) var<uniform> camera_pos: vec3f;
@@ -37,6 +45,8 @@ struct Ray
 
 @group(2) @binding(0) var<uniform> fragment_mode: i32;
 @group(2) @binding(1) var<uniform> steps_count: i32;
+
+@group(3) @binding(0) var<uniform> light: LightData;
 
 @vertex
 fn vs_main(@builtin(vertex_index) v_id: u32, @location(0) vertex_coord: vec3f, @location(1) tex_coord: vec3f) -> Fragment {

@@ -88,6 +88,7 @@ namespace med {
 
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
 		p_UStepsCount->UpdateBuffer(queue, 0, &m_StepsCount, sizeOfInt);
+		p_ULight1->UpdateBuffer(queue, 0, &m_Light1, sizeof(Light));
 
 		// Update transfer functions, update is initiated by the TF itself when needed
 		p_OpacityTf->UpdateTexture();
@@ -179,6 +180,7 @@ namespace med {
 		m_BGroupCamera.Bind(pass);
 		m_BGroupTextures.Bind(pass);
 		m_BGroupImGui.Bind(pass);
+		m_BGroupLights.Bind(pass);
 		wgpuRenderPassEncoderDrawIndexed(pass, p_IBCube->GetCount(), 1, 0, 0, 0);
 		wgpuRenderPassEncoderEnd(pass);
 		BindGroup::ResetBindSlotsIndices();
@@ -370,19 +372,24 @@ namespace med {
 	void Application::InitializeUniforms()
 	{
 		LOG_INFO("Initializing uniforms");
+
+		const auto device = base::GraphicsContext::GetDevice();
+		const auto queue = base::GraphicsContext::GetQueue();
+
 		glm::mat4 dummy_model{ 1.0f };
 		constexpr float UNIFORM_CAMERA_SIZE = sizeof(float) * 16 * 5; // float * mat4 *  card({Model, View, Proj, InverseProj, InverseView})
-		p_UCamera = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), static_cast<void*>(&dummy_model),
+		p_UCamera = UniformBuffer::CreateFromData(device, queue, static_cast<void*>(&dummy_model),
 			/* float * mat4 *  MVP IP IV = */ sizeof(float) * 16 * 5, 0, false, "Camera Uniform");
-		p_UCamera->UpdateBuffer(base::GraphicsContext::GetQueue(), sizeof(float) * 16, &m_Camera.GetViewMatrix(), sizeof(float) * 16);
-		p_UCamera->UpdateBuffer(base::GraphicsContext::GetQueue(), sizeof(float) * 16 * 2, &m_Camera.GetProjectionMatrix(), sizeof(float) * 16);
-		p_UCamera->UpdateBuffer(base::GraphicsContext::GetQueue(), sizeof(float) * 16 * 3, &m_Camera.GetInverseViewMatrix(), sizeof(float) * 16);
-		p_UCamera->UpdateBuffer(base::GraphicsContext::GetQueue(), sizeof(float) * 16 * 4, &m_Camera.GetInverseProjectionMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16, &m_Camera.GetViewMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 2, &m_Camera.GetProjectionMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 3, &m_Camera.GetInverseViewMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 4, &m_Camera.GetInverseProjectionMatrix(), sizeof(float) * 16);
 
 
-		p_UCameraPos = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
-		p_UFragmentMode = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), &m_FragmentMode, sizeof(int));
-		p_UStepsCount = UniformBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), &m_StepsCount, sizeof(int));
+		p_UCameraPos =	UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
+		p_UFragmentMode = UniformBuffer::CreateFromData(device, queue, &m_FragmentMode, sizeof(int));
+		p_UStepsCount = UniformBuffer::CreateFromData(device, queue, &m_StepsCount, sizeof(int));
+		p_ULight1 = UniformBuffer::CreateFromData(device, queue, &m_Light1, sizeof(Light));
 	}
 
 	void Application::InitializeTextures()
@@ -458,6 +465,9 @@ namespace med {
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
 		m_BGroupImGui.AddBuffer(*p_UStepsCount, WGPUShaderStage_Fragment);
 		m_BGroupImGui.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+
+		m_BGroupLights.AddBuffer(*p_ULight1, WGPUShaderStage_Fragment);
+		m_BGroupLights.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 	}
 
 	void Application::InitializeRenderPipelines()
@@ -474,6 +484,7 @@ namespace med {
 		builder.AddBindGroup(m_BGroupCamera);
 		builder.AddBindGroup(m_BGroupTextures);
 		builder.AddBindGroup(m_BGroupImGui);
+		builder.AddBindGroup(m_BGroupLights);
 		builder.AddShaderModule(shaderModule);
 		builder.SetFrontFace(WGPUFrontFace_CCW);
 		builder.SetCullFace(WGPUCullMode_Back);
