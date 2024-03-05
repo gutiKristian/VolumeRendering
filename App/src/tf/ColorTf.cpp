@@ -14,12 +14,20 @@
 
 namespace med
 {
-	ColorTF::ColorTF(int maxDataValue) : m_DataDepth(maxDataValue)
+
+	ColorTF::ColorTF(int desiredTfResolution) : m_DataDepth(desiredTfResolution)
 	{
+		size_t maxTex1DSize = base::GraphicsContext::GetLimits().maxTextureDimension1D;
+		if (m_DataDepth > maxTex1DSize)
+		{
+			LOG_WARN("Max value is greater than maximum texture 1D size, clamping to maximum size");
+			m_DataDepth = maxTex1DSize;
+		}
+
 		auto color1 = glm::vec4(0.0, 0.0, 0.0, 1.0);
 		auto color2 = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
-		m_Colors = LinearInterpolation::Generate<glm::vec4, int>(0, 4095, color1, color2, 1);
+		m_Colors = LinearInterpolation::Generate<glm::vec4, int>(0, m_DataDepth - 1, color1, color2, 1);
 
 		m_ControlCol.push_back(color1);
 		m_ControlCol.push_back(color2);
@@ -42,11 +50,11 @@ namespace med
 		assert(m_ControlCol.size() == m_ControlPos.size() && "Number of control points colors don't match with number of positions");
 		auto cpSize = m_ControlCol.size();
 
-		if (ImPlot::BeginPlot("##gradient", ImVec2(-1, 100), ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoFrame))
+		if (ImPlot::BeginPlot("##gradient", ImVec2(-1, 150), ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoFrame))
 		{
 			ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_NoDecorations);
 			ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
-			ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, 4095.0);
+			ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, m_DataDepth - 1);
 
 			// Plot is from 0 to 4095 on x axis and 0 to 1 on y axis
 			float xx = 1.0f;

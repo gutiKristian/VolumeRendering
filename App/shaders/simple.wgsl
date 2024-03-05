@@ -123,7 +123,8 @@ fn blinnPhong(N: vec3f, worldPosition: vec3f) -> vec3f
 }
 
 
-const DENSITY_FACTOR = 1/4095.0;
+const DENSITY_FACTOR_CT = 1/4095.0;
+const DENSITY_FACTOR_RT = 1/32768.0;
 
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
@@ -161,7 +162,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
  	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
 	// apply jitter using screen space coordinates, we could divide it (jitter input) by resolution to keep it same across all res.
-	var current_position: vec3<f32> = ray.start.xyz;// + ray.direction * step_size * jitter(in.position.xy); 
+	var current_position: vec3<f32> = ray.start.xyz + ray.direction * step_size * jitter(in.position.xy); 
 	var step: vec3<f32> = ray.direction * step_size;
  
 	var dst: vec4<f32> = vec4<f32>(0.0);
@@ -174,15 +175,15 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		// for now, the values of gradient and density are untouched on cpu side
 		// var gradient: vec3f = normalize(ctVolume.rgb);
 		// var gradient: vec3f = computeGradient(current_position, step_size);
-		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR;
-		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR;
+		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR_CT;
+		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR_RT;
 
 		var opacity: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
 		var color: vec3f = textureSample(texTfColor, texture_sampler, densityRT).rgb;
-
+		
 		// Blinn-Phong
-		//var lightColor = blinnPhong(gradient, wordlCoords);
-		//color = light.ambient + lightColor * color;
+		// var lightColor = blinnPhong(gradient, wordlCoords);
+		// color = light.ambient + vec3(0.1) + lightColor * color;
 
 
 		// Blending

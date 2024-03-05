@@ -409,15 +409,14 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
-		ctFile->PreComputeGradient();
-		rtDoseFile->PreComputeGradient();
+		//ctFile->PreComputeGradient(true);
+		//rtDoseFile->PreComputeGradient(true);
 
 		// For now hardcode the depth, later we will get it from the file
-		constexpr int DEPTH = 4096;
-		p_OpacityTf = std::make_unique<OpacityTF>(DEPTH);
-		p_ColorTf = std::make_unique<ColorTF>(DEPTH);
+		p_OpacityTf = std::make_unique<OpacityTF>(256);
+		p_ColorTf = std::make_unique<ColorTF>(256);
 
-		p_OpacityTf->ActivateHistogram(*ctFile);
+		//p_OpacityTf->ActivateHistogram(*ctFile);
 
 		LOG_INFO("Initializing textures");
 		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),

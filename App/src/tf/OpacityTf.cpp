@@ -13,8 +13,15 @@
 
 namespace med
 {
-	OpacityTF::OpacityTF(int maxDataValue) : m_DataDepth(maxDataValue)
+	OpacityTF::OpacityTF(int desiredTfResolution) : m_DataDepth(desiredTfResolution)
 	{
+		size_t maxTex1Dsize = base::GraphicsContext::GetLimits().maxTextureDimension1D;
+		if (maxTex1Dsize < m_DataDepth)
+		{
+			LOG_WARN("Max data value is greater than max texture 1D size, clamping to max texture size");
+			m_DataDepth = maxTex1Dsize;
+		}
+
 		m_XPoints.resize(m_DataDepth, 0.0f);
 		m_YPoints.resize(m_DataDepth, 0.0f);
 
