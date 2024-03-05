@@ -176,17 +176,17 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var rtVolume: vec4f = textureSample(texAcom, texture_sampler, current_position);
 		
 		// for now, the values of gradient and density are untouched on cpu side
-		// var gradient: vec3f = normalize(ctVolume.rgb);
+		var gradient: vec3f = ctVolume.rgb;
 		// var gradient: vec3f = computeGradient(current_position, step_size);
 		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR_CT;
 		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR_RT;
 
-		var opacity: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
-		var color: vec3f = textureSample(texTfColor, texture_sampler, densityRT).rgb;
+		var opacity: f32 = textureSample(tex_tf, texture_sampler, densityCT).r * length(gradient);
+		var color: vec3f = textureSample(texTfColor, texture_sampler, densityCT).rgb;
 
 		// Blinn-Phong
-		// var lightColor = blinnPhong(gradient, wordlCoords);
-		// color = light.ambient + vec3(0.1) + lightColor * color;
+		var lightColor = blinnPhong(gradient, wordlCoords);
+		color = light.ambient + vec3(0.1) + lightColor * color;
 
 
 		// Blending

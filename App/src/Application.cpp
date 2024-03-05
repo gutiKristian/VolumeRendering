@@ -409,8 +409,8 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
-		//ctFile->PreComputeGradient(true);
-		//rtDoseFile->PreComputeGradient(true);
+		ctFile->PreComputeGradient(true);
+		rtDoseFile->PreComputeGradient(true);
 
 		// For now hardcode the depth, later we will get it from the file
 		p_OpacityTf = std::make_unique<OpacityTF>(256);
