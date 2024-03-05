@@ -98,18 +98,26 @@ namespace med {
 		glm::vec2 m_MousePos{};
 		bool m_ShouldRotate = false;
 		bool m_ShouldZoom = false;
-		//
-
+		
+		// Uniforms
+		// Binding 0
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
 		std::shared_ptr<UniformBuffer> p_UCameraPos = nullptr;
-		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
-		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
 
+		// Binding 1
 		std::shared_ptr<Texture> p_TexDataMain = nullptr;
 		std::shared_ptr<Texture> p_TexDataAcom = nullptr;
 		std::shared_ptr<Texture> p_TexStartPos = nullptr;
 		std::shared_ptr<Texture> p_TexEndPos = nullptr;
 
+		// Binding 2
+		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
+		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
+		
+		// Binding 3
+		std::shared_ptr<UniformBuffer> p_ULight1 = nullptr;
+
+		// Pipelines
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineStart = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineEnd = nullptr;
@@ -117,6 +125,7 @@ namespace med {
 		BindGroup m_BGroupCamera;
 		BindGroup m_BGroupTextures;
 		BindGroup m_BGroupImGui;
+		BindGroup m_BGroupLights;
 
 		std::shared_ptr<VertexBuffer> p_VBCube = nullptr;
 		std::shared_ptr<IndexBuffer> p_IBCube = nullptr;
@@ -167,6 +176,22 @@ namespace med {
 			"Front faces",
 			"Back Faces",
 			"Texture coordinates"
+		};
+
+		// Directional, although we need only rgb, padding is added for alignment -> wgpu aligns to 16 bytes
+		struct Light
+		{
+			glm::vec4 Position{ 0.0f };
+			glm::vec4 Ambient{ 0.0f };
+			glm::vec4 Diffuse{ 0.0f };
+			glm::vec4 Specular{ 0.0f };
+		};
+
+		Light m_Light1{
+			.Position = {0.0f, 0.0f, -5.0f, 1.0f},
+			.Ambient = glm::vec4{0.0f},
+			.Diffuse = glm::vec4{1.0f, 1.0f, 1.0f, 0.0f},
+			.Specular = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f}
 		};
 	};
 
