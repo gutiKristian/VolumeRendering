@@ -177,7 +177,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR;
 		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR;
 
-		var tf: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
+		var opacity: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
 		var color: vec3f = textureSample(texTfColor, texture_sampler, densityRT).rgb;
 
 		// Blinn-Phong
@@ -186,7 +186,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 
 		// Blending
-		var src: vec4<f32> = vec4f(color.r, color.g, color.b, tf);
+		var src: vec4<f32> = vec4f(color.r, color.g, color.b, opacity);
 
 		if is_in_sample_coords(current_position) && dst.a < 1.0
 		{
