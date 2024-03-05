@@ -409,7 +409,8 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
-		//ctFile->PreComputeGradient();
+		ctFile->PreComputeGradient();
+		rtDoseFile->PreComputeGradient();
 
 		// For now hardcode the depth, later we will get it from the file
 		constexpr int DEPTH = 4096;
