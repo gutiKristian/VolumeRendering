@@ -34,6 +34,7 @@ namespace med
 
 		/**
 		 * @brief Computes gradient using finite differences.
+		 * @param normToZeroOne if true, the gradient will be normalized to the range [0, 1]
 		 */
 		void PreComputeGradient(bool normToZeroOne=false);
 		void PreComputeGradientSobel();
