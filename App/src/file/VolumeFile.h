@@ -35,7 +35,7 @@ namespace med
 		/**
 		 * @brief Computes gradient using finite differences.
 		 */
-		void PreComputeGradient();
+		void PreComputeGradient(bool normToZeroOne=false);
 		void PreComputeGradientSobel();
 
 		/*
