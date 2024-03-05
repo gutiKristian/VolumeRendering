@@ -23,6 +23,16 @@ namespace med
 		m_Path = std::move(path);
 	}
 
+	void VolumeFile::SetMaxNumber(size_t maxNumber)
+	{
+		m_MaxNumber = maxNumber;
+	}
+
+	size_t VolumeFile::GetMaxNumber() const
+	{
+		return m_MaxNumber;
+	}
+
 	void VolumeFile::PreComputeGradientSobel()
 	{
 		if (m_HasGradient)

@@ -32,6 +32,8 @@ namespace med
 
 		void SetPath(std::filesystem::path path);
 
+		void SetMaxNumber(size_t maxNumber);
+
 		/**
 		 * @brief Computes gradient using finite differences.
 		 * @param normToZeroOne if true, the gradient will be normalized to the range [0, 1]
@@ -55,6 +57,8 @@ namespace med
 		[[nodiscard]] const void* GetVoidPtr() const;
 
 		[[nodiscard]] const std::vector<glm::vec4>& GetVecReference() const;
+
+		[[nodiscard]] size_t GetMaxNumber() const;
 
 	protected:
 		/**
@@ -82,6 +86,8 @@ namespace med
 		std::filesystem::path m_Path{};
 		
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> m_Size{ 0, 0, 0 };
+
+		size_t m_MaxNumber = 0;
 		
 		std::vector<glm::vec4> m_Data{};
 		std::vector<float> m_DataSqueezed{};
