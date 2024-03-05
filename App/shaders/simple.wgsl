@@ -122,9 +122,12 @@ fn blinnPhong(N: vec3f, worldPosition: vec3f) -> vec3f
 	return light.diffuse * max(dot(N, L), 0.0) * 1.2;// + light.specular * pow(max(dot(N, H), 0.0), 3);
 }
 
-
-const DENSITY_FACTOR_CT = 1/4095.0;
-const DENSITY_FACTOR_RT = 1/32768.0;
+// Either upload max value for dataset as uniform or upload already normalised data (had some gradient troubles)
+const DENSITY_FACTOR_CT = 1/4095.0; // Divide by -> max possible (2900 something), 2^(used bits) - 1 4095, 2^dicom param allocated bits 2^16
+const DENSITY_FACTOR_RT = 1/32767.0;
+// dividing by max value from data we are stretching them more for instance: max val is 2900:  2900 / 2900 -> 1 
+// and 2900/4095 -> 0.7 so using max value we get finer mapping and higher res
+// as we stretch 0-2900 to [0,1] instead of 0-4095 to [0,1]
 
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
@@ -180,7 +183,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 		var opacity: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
 		var color: vec3f = textureSample(texTfColor, texture_sampler, densityRT).rgb;
-		
+
 		// Blinn-Phong
 		// var lightColor = blinnPhong(gradient, wordlCoords);
 		// color = light.ambient + vec3(0.1) + lightColor * color;

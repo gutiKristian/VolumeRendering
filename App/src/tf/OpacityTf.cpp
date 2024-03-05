@@ -137,6 +137,8 @@ namespace med
 
 	void OpacityTF::ActivateHistogram(const VolumeFile& file)
 	{
+		// Based on mapping that's gonna be used in shader
+		// this function will create histogram of data, (divide either by max value or 2^used bits) then multiplied by desired resolution
 		m_Histogram.resize(m_DataDepth, 0.0f);
 		const auto& data = file.GetVecReference();
 		auto [xSize, ySize, slices] = file.GetSize();
