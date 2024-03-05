@@ -23,6 +23,47 @@ namespace med
         m_Path = std::move(path);
     }
 
+    void VolumeFile::PreComputeGradientSobel()
+    {
+        if (m_HasGradient)
+        {
+            LOG_WARN("Gradient has been already computed, skipping...");
+            return;
+        }
+
+        LOG_INFO("Computing gradients");
+        auto [xS, yS, zS] = m_Size;
+
+        for (int z = 1; z < zS - 1; ++z)
+        {
+            for (int y = 1; y < yS - 1; ++y)
+            {
+                for (int x = 1; x < xS - 1; ++x)
+                {
+                    float gx = 0.0f, gy = 0.0f, gz = 0.0f;
+                    for (int i = -1; i <= 1; ++i)
+					{
+						for (int j = -1; j <= 1; ++j)
+						{
+							for (int k = -1; k <= 1; ++k)
+							{
+                                gx += GetVoxelData(x + i, y + j, z + k).a * m_SobelX[k + 1][j + 1][i + 1];
+                                gy += GetVoxelData(x + i, y + j, z + k).a * m_SobelY[k + 1][j + 1][i + 1];
+                                gz += GetVoxelData(x + i, y + j, z + k).a * m_SobelZ[k + 1][j + 1][i + 1];
+							}
+						}
+					}
+                    int c = GetIndexFrom3D(x, y, z);
+                    m_Data[c].x = gx;
+                    m_Data[c].y = gy;
+                    m_Data[c].z = gz;
+                }
+            }
+        }
+        m_HasGradient = true;
+        LOG_INFO("Done");
+    }
+
     void VolumeFile::PreComputeGradient()
     {
         if (m_HasGradient)

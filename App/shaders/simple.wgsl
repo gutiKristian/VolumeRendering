@@ -119,8 +119,7 @@ fn blinnPhong(N: vec3f, worldPosition: vec3f) -> vec3f
 	var V: vec3f = normalize(camera_pos - worldPosition);
 	var R: vec3f = 2 * (N * L)* N - L;
 	var H: vec3f = normalize(V + L); 
-	return light.diffuse * max(dot(N, L), 0.0) +
-		light.specular * pow(max(dot(N, H), 0.0), 120);
+	return light.diffuse * max(dot(N, L), 0.0) * 1.2;// + light.specular * pow(max(dot(N, H), 0.0), 3);
 }
 
 
@@ -173,17 +172,18 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var rtVolume: vec4f = textureSample(texAcom, texture_sampler, current_position);
 		
 		// for now, the values of gradient and density are untouched on cpu side
-		// var gradient: vec3f = normalize(ctVolume.rgb);
 		var gradient: vec3f = normalize(ctVolume.rgb);
+		// var gradient: vec3f = computeGradient(current_position, step_size);
 		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR;
 		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR;
 
 		var tf: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
 		var color: vec3f = textureSample(texTfColor, texture_sampler, densityRT).rgb;
 
-		// Blinn-Phong (no spec)
+		// Blinn-Phong
 		var lightColor = blinnPhong(gradient, wordlCoords);
 		color = light.ambient + lightColor * color;
+
 
 		// Blending
 		var src: vec4<f32> = vec4f(color.r, color.g, color.b, tf);

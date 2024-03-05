@@ -36,6 +36,7 @@ namespace med
 		 * @brief Computes gradient using finite differences.
 		 */
 		void PreComputeGradient();
+		void PreComputeGradientSobel();
 
 		/*
 		* @brief Get size/dimension of the input data.
@@ -84,5 +85,21 @@ namespace med
 		std::vector<glm::vec4> m_Data{};
 		std::vector<float> m_DataSqueezed{};
 		//TODO: Uploads to the gpu are 4x bigger rn, in the future use templates or when really needed use squeezed arr
+
+		float m_SobelX[3][3][3] = {
+			{ { -1, 0, 1 }, { -2, 0, 2 }, { -1, 0, 1 } },
+			{ { -2, 0, 2 }, { -4, 0, 4 }, { -2, 0, 2 } },
+			{ { -1, 0, 1 }, { -2, 0, 2 }, { -1, 0, 1 } }
+		};
+		float m_SobelY[3][3][3] = {
+			{ { -1, -2, -1 }, { 0, 0, 0 }, { 1, 2, 1 } },
+			{ { -2, -4, -2 }, { 0, 0, 0 }, { 2, 4, 2 } },
+			{ { -1, -2, -1 }, { 0, 0, 0 }, { 1, 2, 1 } }
+		};
+		float m_SobelZ[3][3][3] = {
+			{ { -1, -2, -1 }, { -2, -4, -2 }, { -1, -2, -1 } },
+			{ { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } },
+			{ { 1, 2, 1 }, { 2, 4, 2 }, { 1, 2, 1 } }
+		};
 	};
 }
