@@ -292,9 +292,17 @@ namespace med {
 				m_Running = false;
 				return;
 			case base::EventType::KeyPressed:
-			{
-				m_Camera.KeyboardEvent(ev.as.keyPressedEvent.key);
-			}
+				{
+					if (ev.as.keyPressedEvent.key == GLFW_KEY_R)
+					{
+						LOG_WARN("Pipeline refresh requested");
+						InitializeRenderPipelines();
+					}
+					else
+					{
+						m_Camera.KeyboardEvent(ev.as.keyPressedEvent.key);
+					}
+				}
 			case base::EventType::MouseMoved:
 				{
 					static glm::vec2 previousPosition = { ev.as.mouseMovedEvent.xPos, ev.as.mouseMovedEvent.yPos };
@@ -401,7 +409,7 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
-		ctFile->PreComputeGradient();
+		//ctFile->PreComputeGradient();
 
 		// For now hardcode the depth, later we will get it from the file
 		constexpr int DEPTH = 4096;
