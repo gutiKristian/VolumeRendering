@@ -79,6 +79,7 @@ namespace med
 		auto file = std::make_unique<VolumeFileDcm>(s_Path / name, m_Params);
 		file->SetData(m_Data);
 		file->SetDataSize({ m_Params.X, m_Params.Y, m_Params.Z});
+		file->SetMaxNumber(n);
 		file->SetFileDataType(m_FileDataType);	
 
 		return file;
