@@ -73,6 +73,9 @@ namespace med
 			m_Params.Z = numberOfFiles;
 		}
 
+		auto n = GetMaxNumber<glm::vec4>(m_Data);
+		auto bits = GetMaxUsedBits(n);
+
 		auto file = std::make_unique<VolumeFileDcm>(s_Path / name, m_Params);
 		file->SetData(m_Data);
 		file->SetDataSize({ m_Params.X, m_Params.Y, m_Params.Z});
@@ -237,9 +240,4 @@ namespace med
 		}
 	}
 
-	//int DicomReader::GetMaxUsedBits() const
-	//{
-	//	auto iter = std::max_element(m_Data.begin(), m_Data.end());
-	//	return iter == m_Data.end() ? 0 : std::bit_width(static_cast<size_t>(std::ceil(iter->a)));
-	//}
 }
