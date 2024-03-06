@@ -209,7 +209,7 @@ namespace med {
 	void Application::OnImGuiRender()
 	{
 		ImGui::Begin("Debug settings");
-		ImPlot::ShowDemoWindow();
+		//ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
 		ImGui::End();
@@ -413,7 +413,7 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
-		//ctFile->PreComputeGradient(true);
+		ctFile->PreComputeGradient(true);
 		//rtDoseFile->PreComputeGradient(true);
 
 		// For now hardcode the depth, later we will get it from the file
