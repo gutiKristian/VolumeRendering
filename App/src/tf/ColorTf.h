@@ -10,7 +10,7 @@ namespace med
 	class ColorTF
 	{
 	public:
-		explicit ColorTF(int maxDataValue);
+		explicit ColorTF(int desiredTfResolution);
 
 		std::shared_ptr<Texture> GetTexture() const;
 		void Render();

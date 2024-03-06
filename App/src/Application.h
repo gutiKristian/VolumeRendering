@@ -165,6 +165,10 @@ namespace med {
 		std::unique_ptr<OpacityTF> p_OpacityTf = nullptr;
 		std::unique_ptr<ColorTF> p_ColorTf = nullptr;
 
+		std::unique_ptr<OpacityTF> p_OpacityTfRT = nullptr;
+		std::unique_ptr<ColorTF> p_ColorTfRT = nullptr;
+
+
 		// ImGui
 		int m_FragmentMode = 0;
 		int m_StepsCount = 100;
@@ -188,8 +192,8 @@ namespace med {
 		};
 
 		Light m_Light1{
-			.Position = {0.0f, 0.0f, -5.0f, 1.0f},
-			.Ambient = glm::vec4{0.0f},
+			.Position = {5.0f, 5.0f, -5.0f, 1.0f},
+			.Ambient = glm::vec4{0.1f},
 			.Diffuse = glm::vec4{1.0f, 1.0f, 1.0f, 0.0f},
 			.Specular = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f}
 		};

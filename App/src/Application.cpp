@@ -22,20 +22,20 @@
 #include "tf/LinearInterpolation.h"
 
 #define MED_BEGIN_TAB_BAR(name) \
-    if (ImGui::BeginTabBar(name)) \
-    {
+	if (ImGui::BeginTabBar(name)) \
+	{
 
 #define MED_END_TAB_BAR \
-        ImGui::EndTabBar(); \
-    }
+		ImGui::EndTabBar(); \
+	}
 
 #define MED_BEGIN_TAB_ITEM(name) \
-    if (ImGui::BeginTabItem(name)) \
-    {
+	if (ImGui::BeginTabItem(name)) \
+	{
 
 #define MED_END_TAB_ITEM \
-        ImGui::EndTabItem(); \
-    }
+		ImGui::EndTabItem(); \
+	}
 
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
@@ -93,6 +93,8 @@ namespace med {
 		// Update transfer functions, update is initiated by the TF itself when needed
 		p_OpacityTf->UpdateTexture();
 		p_ColorTf->UpdateTexture();
+		p_OpacityTfRT->UpdateTexture();
+		p_ColorTfRT->UpdateTexture();
 	}
 
 	void Application::OnRender()
@@ -207,14 +209,14 @@ namespace med {
 	void Application::OnImGuiRender()
 	{
 		ImGui::Begin("Debug settings");
-		ImPlot::ShowDemoWindow();
+		//ImPlot::ShowDemoWindow();
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
-        ImGui::End();
+		ImGui::End();
 
-        ImGui::Begin("Transfer function");
-        OnTfRender();
-        ImGui::End();
+		ImGui::Begin("Transfer function");
+		OnTfRender();
+		ImGui::End();
 
 	}
 
@@ -244,9 +246,11 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-        m_BGroupTextures.AddSampler(*p_SamplerNN);
+		m_BGroupTextures.AddSampler(*p_SamplerNN);
 		m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 		
 		// Reinit pipelines
@@ -292,9 +296,17 @@ namespace med {
 				m_Running = false;
 				return;
 			case base::EventType::KeyPressed:
-			{
-				m_Camera.KeyboardEvent(ev.as.keyPressedEvent.key);
-			}
+				{
+					if (ev.as.keyPressedEvent.key == GLFW_KEY_R)
+					{
+						LOG_WARN("Pipeline refresh requested");
+						InitializeRenderPipelines();
+					}
+					else
+					{
+						m_Camera.KeyboardEvent(ev.as.keyPressedEvent.key);
+					}
+				}
 			case base::EventType::MouseMoved:
 				{
 					static glm::vec2 previousPosition = { ev.as.mouseMovedEvent.xPos, ev.as.mouseMovedEvent.yPos };
@@ -366,7 +378,7 @@ namespace med {
 	{
 		LOG_INFO("Initializing samplers");
 		p_Sampler = Sampler::CreateSampler(base::GraphicsContext::GetDevice(), WGPUFilterMode_Linear, WGPUMipmapFilterMode_Linear);
-        p_SamplerNN = Sampler::CreateSampler(base::GraphicsContext::GetDevice(), WGPUFilterMode_Nearest, WGPUMipmapFilterMode_Nearest);
+		p_SamplerNN = Sampler::CreateSampler(base::GraphicsContext::GetDevice(), WGPUFilterMode_Nearest, WGPUMipmapFilterMode_Nearest);
 	}
 
 	void Application::InitializeUniforms()
@@ -401,14 +413,18 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
-		ctFile->PreComputeGradient();
+		ctFile->PreComputeGradient(true);
+		//rtDoseFile->PreComputeGradient(true);
 
 		// For now hardcode the depth, later we will get it from the file
-		constexpr int DEPTH = 4096;
-		p_OpacityTf = std::make_unique<OpacityTF>(DEPTH);
-		p_ColorTf = std::make_unique<ColorTF>(DEPTH);
+		p_OpacityTf = std::make_unique<OpacityTF>(256);
+		p_ColorTf = std::make_unique<ColorTF>(256);
+		
+		p_OpacityTfRT = std::make_unique<OpacityTF>(256);
+		p_ColorTfRT = std::make_unique<ColorTF>(256);
 
-		p_OpacityTf->ActivateHistogram(*ctFile);
+		// Disabled for now
+		//p_OpacityTf->ActivateHistogram(*ctFile);
 
 		LOG_INFO("Initializing textures");
 		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
@@ -457,9 +473,11 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupTextures.AddSampler(*p_Sampler);
 		m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-        m_BGroupTextures.AddSampler(*p_SamplerNN);
-        m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddSampler(*p_SamplerNN);
+		m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
@@ -524,38 +542,43 @@ namespace med {
 		}
 	}
 
-    void Application::OnTfRender()
-    {
+	void Application::OnTfRender()
+	{
 		MED_BEGIN_TAB_BAR("Tf settings")
 
 		MED_BEGIN_TAB_ITEM("TF Plot")
 
 		p_OpacityTf->Render();
 		p_ColorTf->Render();
+	
+		MED_END_TAB_ITEM
+		
+		MED_BEGIN_TAB_ITEM("RTDose TF")
+		p_OpacityTfRT->Render();
+		p_ColorTfRT->Render();
+		MED_END_TAB_ITEM
 
-        MED_END_TAB_ITEM
+		MED_BEGIN_TAB_ITEM("Colormaps")
+		auto numberOfCm = ImPlot::GetColormapCount();
+		// On purpose skipping those first 4
+		for (auto i = 4; i < numberOfCm; ++i)
+		{
 
-        MED_BEGIN_TAB_ITEM("Colormaps")
-        auto numberOfCm = ImPlot::GetColormapCount();
-        // On purpose skipping those first 4
-        for (auto i = 4; i < numberOfCm; ++i)
-        {
+			ImGui::Text("%s", ImPlot::GetColormapName(i));
+			ImGui::SameLine(75.0f);
+			std::string id = "##" + std::to_string(i);
+			if (ImPlot::ColormapButton(id.c_str(), ImVec2(-1, 0), i))
+			{
+				// context expected to exist
+				ImPlot::GetCurrentContext()->Style.Colormap = i;
+				ImPlot::BustColorCache();
+			}
+		}
 
-            ImGui::Text("%s", ImPlot::GetColormapName(i));
-            ImGui::SameLine(75.0f);
-            std::string id = "##" + std::to_string(i);
-            if (ImPlot::ColormapButton(id.c_str(), ImVec2(-1, 0), i))
-            {
-                // context expected to exist
-                ImPlot::GetCurrentContext()->Style.Colormap = i;
-                ImPlot::BustColorCache();
-            }
-        }
+		MED_END_TAB_ITEM
 
-        MED_END_TAB_ITEM
-
-        MED_END_TAB_BAR
+		MED_END_TAB_BAR
 
 
-    }
+	}
 }

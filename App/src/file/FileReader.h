@@ -42,6 +42,28 @@ namespace med
 			return s_Path;
 		}
 
+        template <typename T>
+        size_t GetMaxNumber(const std::vector<T>& vec)
+        {
+            if constexpr (std::is_same_v<T, glm::vec4>)
+            {
+                auto maxElement = std::max_element(vec.begin(), vec.end(), [](const T& a, const T& b) {
+                    return a.r < b.r;
+                });
+                return maxElement != vec.end() ? maxElement->r : 0;
+            }
+            else
+            {
+                auto maxElement = std::max_element(vec.begin(), vec.end());
+                return maxElement != vec.end() ? *maxElement : 0;
+            }
+        }
+
+		size_t GetMaxUsedBits(size_t maxNumber)
+		{
+			return std::bit_width(maxNumber);
+		}
+
 	protected:
 		static std::filesystem::path s_Path;
 	};

@@ -50,15 +50,6 @@ namespace med
 		 * @brief Initiliazes file type based on allocated bits tag in dicom file.
 		 */
 		void ResolveFileType();
-
-		/**
-		 * Move to FileReader during refactoring.
-		 * @brief Calculates how many bits is enough to represent the array. Based on this TF is created
-		 * since we want to cover every possible density. So when
-		 * @return actual used bit depth
-		 */
-		/*[[nodiscard]] int GetMaxUsedBits() const;*/
-
 		
         /**
          * @brief Parses a string of numbers separated by '\\' into an array of doubles.

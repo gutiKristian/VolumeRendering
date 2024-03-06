@@ -10,10 +10,11 @@
 
 namespace med
 {
+	// In the future create a base class for transfer functions, to avoid code duplication
 	class OpacityTF
 	{
 	public:
-		explicit OpacityTF(int maxDataValue);
+		explicit OpacityTF(int desiredTfResolution);
 
 		std::shared_ptr<Texture> GetTexture() const;
 		
