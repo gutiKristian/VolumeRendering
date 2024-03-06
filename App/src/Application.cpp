@@ -93,6 +93,8 @@ namespace med {
 		// Update transfer functions, update is initiated by the TF itself when needed
 		p_OpacityTf->UpdateTexture();
 		p_ColorTf->UpdateTexture();
+		p_OpacityTfRT->UpdateTexture();
+		p_ColorTfRT->UpdateTexture();
 	}
 
 	void Application::OnRender()
@@ -247,6 +249,8 @@ namespace med {
 		m_BGroupTextures.AddSampler(*p_SamplerNN);
 		m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 		
 		// Reinit pipelines
@@ -472,6 +476,8 @@ namespace med {
 		m_BGroupTextures.AddSampler(*p_SamplerNN);
 		m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);

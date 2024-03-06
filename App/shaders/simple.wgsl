@@ -45,6 +45,8 @@ struct Ray
 @group(1) @binding(5) var tex_sampler_nn: sampler;
 @group(1) @binding(6) var texAcom: texture_3d<f32>;
 @group(1) @binding(7) var texTfColor: texture_1d<f32>;
+@group(1) @binding(8) var RtTFOpacity: texture_1d<f32>;
+@group(1) @binding(9) var RtTFColor: texture_1d<f32>;
 
 
 @group(2) @binding(0) var<uniform> fragment_mode: i32;
@@ -176,17 +178,17 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var rtVolume: vec4f = textureSample(texAcom, texture_sampler, current_position);
 		
 		// for now, the values of gradient and density are untouched on cpu side
-		var gradient: vec3f = ctVolume.rgb;
+		// var gradient: vec3f = ctVolume.rgb;
 		// var gradient: vec3f = computeGradient(current_position, step_size);
 		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR_CT;
 		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR_RT;
 
-		var opacity: f32 = textureSample(tex_tf, texture_sampler, densityCT).r * length(gradient);
+		var opacity: f32 = textureSample(tex_tf, texture_sampler, densityCT).r;
 		var color: vec3f = textureSample(texTfColor, texture_sampler, densityCT).rgb;
 
 		// Blinn-Phong
-		var lightColor = blinnPhong(gradient, wordlCoords);
-		color = light.ambient + vec3(0.1) + lightColor * color;
+		// var lightColor = blinnPhong(gradient, wordlCoords);
+		// color = light.ambient + vec3(0.1) + lightColor * color;
 
 
 		// Blending
