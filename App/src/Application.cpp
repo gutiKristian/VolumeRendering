@@ -409,12 +409,15 @@ namespace med {
 			, false);
 		LOG_INFO("Done");
 
-		ctFile->PreComputeGradient(true);
-		rtDoseFile->PreComputeGradient(true);
+		//ctFile->PreComputeGradient(true);
+		//rtDoseFile->PreComputeGradient(true);
 
 		// For now hardcode the depth, later we will get it from the file
 		p_OpacityTf = std::make_unique<OpacityTF>(256);
 		p_ColorTf = std::make_unique<ColorTF>(256);
+		
+		p_OpacityTfRT = std::make_unique<OpacityTF>(256);
+		p_ColorTfRT = std::make_unique<ColorTF>(256);
 
 		// Disabled for now
 		//p_OpacityTf->ActivateHistogram(*ctFile);
@@ -541,7 +544,12 @@ namespace med {
 
 		p_OpacityTf->Render();
 		p_ColorTf->Render();
-
+	
+		MED_END_TAB_ITEM
+		
+		MED_BEGIN_TAB_ITEM("RTDose TF")
+		p_OpacityTfRT->Render();
+		p_ColorTfRT->Render();
 		MED_END_TAB_ITEM
 
 		MED_BEGIN_TAB_ITEM("Colormaps")

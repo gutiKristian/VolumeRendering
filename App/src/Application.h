@@ -165,6 +165,10 @@ namespace med {
 		std::unique_ptr<OpacityTF> p_OpacityTf = nullptr;
 		std::unique_ptr<ColorTF> p_ColorTf = nullptr;
 
+		std::unique_ptr<OpacityTF> p_OpacityTfRT = nullptr;
+		std::unique_ptr<ColorTF> p_ColorTfRT = nullptr;
+
+
 		// ImGui
 		int m_FragmentMode = 0;
 		int m_StepsCount = 100;
