@@ -115,13 +115,14 @@ fn jitter(co: vec2<f32>) -> f32
 	L- unit vector pointing from sampled point to the light
 	V - unit view vector from point to camera
 */
-fn blinnPhong(N: vec3f, worldPosition: vec3f) -> vec3f
+fn blinnPhong(N: vec3f, worldPosition: vec3f) -> f32
 {
 	var L: vec3f = normalize(light.position - worldPosition);
 	var V: vec3f = normalize(camera_pos - worldPosition);
 	var R: vec3f = 2 * (N * L)* N - L;
 	var H: vec3f = normalize(V + L); 
-	return light.diffuse * max(dot(N, L), 0.0) * 1.2;// + light.specular * pow(max(dot(N, H), 0.0), 3);
+
+	return length(light.diffuse * max(dot(N, L), 0.0)) * 1.2 + length(light.specular * pow(max(dot(N, H), 0.0), 3)) * 1.0 + 0.3;
 }
 
 // Either upload max value for dataset as uniform or upload already normalised data (had some gradient troubles)
@@ -178,7 +179,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var rtVolume: vec4f = textureSample(texAcom, texture_sampler, current_position);
 		
 		// for now, the values of gradient and density are untouched on cpu side
-		var gradient: vec3f = ctVolume.rgb;
+		var gradient: vec3f = ctVolume.rgb; // within [0, 1]
 		// var gradient: vec3f = computeGradient(current_position, step_size);
 		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR_CT;
 		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR_RT;
@@ -196,8 +197,8 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		// var opacity: f32 = opacityCT;
 
 		// Same approach but with gradient modulation of opacity
-		var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
-		var opacity: f32 = opacityCT * length(gradient);
+		// var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
+		// var opacity: f32 = opacityCT * length(gradient);
 
 		// ----------------- COMBINATION BASED ON multiplying colors and adding opacities -----------------
 		// too dark
@@ -208,8 +209,12 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 
 		// Blinn-Phong
-		// var lightColor = blinnPhong(gradient, wordlCoords);
-		// color = light.ambient + vec3(0.1) + lightColor * color;
+		var s: f32 = blinnPhong(gradient, wordlCoords);
+		var kt: f32 = 3.0;
+		var ks: f32 = 0.6;
+
+		var opacity: f32 = opacityCT * pow(length(gradient), pow(kt * s * (1 - length(current_position -  ray.start)) * (1 - dst.a), ks));
+		var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
 
 
 		// Blending
