@@ -20,7 +20,7 @@ namespace med
 	{
 		bool firstRun = true;
 		m_Data = std::vector<glm::vec4>();
-		m_Params = DicomParams();
+		m_Params = DicomImageParams();
 
 		// Init
 		std::vector<std::filesystem::path> paths;
@@ -65,9 +65,6 @@ namespace med
 			}
 		}
 
-		// End of reading
-		//int bitDepth = GetMaxUsedBits();
-
 		if (isDir)
 		{
 			m_Params.Z = numberOfFiles;
@@ -110,7 +107,7 @@ namespace med
 		};
 
 		// Read the parameters
-		DicomParams currentParams;
+		DicomImageParams currentParams;
 
 		f.GetUint16(dcm::tags::kRows, &currentParams.X);
 		f.GetUint16(dcm::tags::kColumns, &currentParams.Y);

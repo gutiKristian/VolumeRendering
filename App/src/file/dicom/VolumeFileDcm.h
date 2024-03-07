@@ -11,10 +11,10 @@ namespace med
 	{
 
 	public:
-		VolumeFileDcm(DicomParams params) : m_Params(params) {};
-		VolumeFileDcm(const std::filesystem::path& path, DicomParams params) : VolumeFile(path), m_Params(params) {};
+		VolumeFileDcm(DicomImageParams params) : m_Params(params) {};
+		VolumeFileDcm(const std::filesystem::path& path, DicomImageParams params) : VolumeFile(path), m_Params(params) {};
 
 	private:
-		DicomParams m_Params;
+		DicomImageParams m_Params;
 	};
 }

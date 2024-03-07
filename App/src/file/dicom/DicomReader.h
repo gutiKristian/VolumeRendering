@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <array>
 #include <memory>
+#include <variant>
 
 namespace med
 {
@@ -87,7 +88,7 @@ namespace med
         };
 
 	private:
-		DicomParams m_Params;
+		DicomImageParams m_Params;
 		FileDataType m_FileDataType = FileDataType::Undefined;
 		std::vector<glm::vec4> m_Data{};
 	};
