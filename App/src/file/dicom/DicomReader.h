@@ -34,7 +34,7 @@ namespace med
 		 * @brief Reads all necessary tags from the dicom file
 		 * @param f opened dicom file
 		 */
-		void ReadDicomVariables(const dcm::DicomFile& f);
+		void ReadDicomVolumeVariables(const dcm::DicomFile& f);
 		/*
 		* Based on detected type prepares memory for entire Volume.
 		*/

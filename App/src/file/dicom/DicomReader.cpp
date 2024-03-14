@@ -49,7 +49,7 @@ namespace med
 
 			if (f.Load())
 			{
-				ReadDicomVariables(f);
+				ReadDicomVolumeVariables(f);
 
 				if (firstRun)
 				{
@@ -102,7 +102,7 @@ namespace med
 		return DicomModality::UNKNOWN;
 	}
 
-	void DicomReader::ReadDicomVariables(const dcm::DicomFile& f)
+	void DicomReader::ReadDicomVolumeVariables(const dcm::DicomFile& f)
 	{
 		// Lambda functions for parsing
 		auto IS = [](std::string& str) -> int
