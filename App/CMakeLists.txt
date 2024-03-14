@@ -40,6 +40,9 @@ add_executable(App
 	"src/file/dicom/DicomParams.h"
 	"src/file/dicom/VolumeFileDcm.h"
 	"src/file/dicom/VolumeFileDcm.cpp"
+	"src/file/dicom/IDicomFile.h"
+	"src/file/dicom/StructureFileDcm.h"
+	"src/file/dicom/StructureFileDcm.cpp"
 	
 	"src/file/dat/DatReader.h"
 	"src/file/dat/DatReader.cpp"

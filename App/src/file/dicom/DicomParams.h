@@ -13,16 +13,16 @@ namespace med
 
 	struct DicomBaseParams
 	{
-		DicomBaseParams(DicomModality mod) : modality(mod) {}
+		DicomBaseParams(DicomModality mod) : Modality(mod) {}
 		
-		DicomModality modality{ DicomModality::UNKNOWN };
+		DicomModality Modality{ DicomModality::UNKNOWN };
 		std::string FrameOfReference{};
 	};
 
 	// CT, MR, RTDose, PET
-	struct DicomImageParams : public DicomBaseParams
+	struct DicomVolumeParams : public DicomBaseParams
 	{
-		DicomImageParams() : DicomBaseParams(DicomModality::CT) {}
+		DicomVolumeParams() : DicomBaseParams(DicomModality::UNKNOWN) {}
 		
 		std::uint16_t X = 0;											// (0028,0011) Columns
 		std::uint16_t Y = 0;											// (0028,0010) Rows

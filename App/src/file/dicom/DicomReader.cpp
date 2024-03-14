@@ -3,6 +3,7 @@
 #include "Base/Log.h"
 #include "VolumeFileDcm.h"
 #include "dcm/defs.h"
+#include "DicomParams.h"
 
 #include <cassert>
 #include <string>
@@ -16,11 +17,11 @@ namespace med
 	const dcm::Tag kImageOrientationPatient = 0x00200013;
 	const dcm::Tag kSliceThickness = 0x00200013;
 
-	std::unique_ptr<VolumeFileDcm> DicomReader::ReadFile(const std::filesystem::path& name, bool isDir)
+	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(const std::filesystem::path& name, bool isDir)
 	{
 		bool firstRun = true;
 		m_Data = std::vector<glm::vec4>();
-		m_Params = DicomImageParams();
+		m_Params = DicomVolumeParams();
 
 		// Init
 		std::vector<std::filesystem::path> paths;
@@ -72,14 +73,33 @@ namespace med
 
 		auto n = GetMaxNumber<glm::vec4>(m_Data);
 		auto bits = GetMaxUsedBits(n);
+		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size = { m_Params.X, m_Params.Y, m_Params.Z };
+		return std::make_unique<VolumeFileDcm>(s_Path / name, size, m_FileDataType, m_Params, m_Data);
+	}
 
-		auto file = std::make_unique<VolumeFileDcm>(s_Path / name, m_Params);
-		file->SetData(m_Data);
-		file->SetDataSize({ m_Params.X, m_Params.Y, m_Params.Z});
-		file->SetMaxNumber(n);
-		file->SetFileDataType(m_FileDataType);	
+	std::unique_ptr<StructureFileDcm> DicomReader::ReadStructFile(const std::filesystem::path& name)
+	{
+		auto params = DicomStructParams();
+		return std::make_unique<StructureFileDcm>(params);
+	}
 
-		return file;
+	DicomModality DicomReader::CheckModality(const std::filesystem::path& name)
+	{
+		dcm::DicomFile f(name.c_str());
+		if (f.Load())
+		{
+			std::string modality;
+			f.GetString(dcm::tags::kModality, &modality);
+			if (modality == "CT")
+				return DicomModality::CT;
+			else if (modality == "MR")
+				return DicomModality::MR;
+			else if (modality == "RTDOSE")
+				return DicomModality::RTDOSE;
+			else if (modality == "RTSTRUCT")
+				return DicomModality::RTSTRUCT;
+		}
+		return DicomModality::UNKNOWN;
 	}
 
 	void DicomReader::ReadDicomVariables(const dcm::DicomFile& f)
@@ -107,7 +127,7 @@ namespace med
 		};
 
 		// Read the parameters
-		DicomImageParams currentParams;
+		DicomVolumeParams currentParams;
 
 		f.GetUint16(dcm::tags::kRows, &currentParams.X);
 		f.GetUint16(dcm::tags::kColumns, &currentParams.Y);
