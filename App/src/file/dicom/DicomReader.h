@@ -20,10 +20,9 @@ namespace med
 		/**
 		 * @brief Reads the dicom file and stores the data in the VolumeFileDcm object
 		 * @param name path to the file
-		 * @param isDir if true, the path is a directory, otherwise it is a file
 		 * @return VolumeFileDcm object with the data
 		 */
-		[[nodiscard]] std::unique_ptr<VolumeFileDcm> ReadVolumeFile(const std::filesystem::path& name, bool isDir);
+		[[nodiscard]] std::unique_ptr<VolumeFileDcm> ReadVolumeFile(std::filesystem::path name);
 
 		[[nodiscard]] std::unique_ptr<StructureFileDcm> ReadStructFile(std::filesystem::path name);
 

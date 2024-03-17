@@ -21,21 +21,32 @@ namespace med
 	const dcm::Tag kROIContourSequence = 0x30060039;
 	const dcm::Tag kDisplayColor = 0x3006002A;
 
-	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(const std::filesystem::path& name, bool isDir)
+	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
 	{
 		bool firstRun = true;
 		m_Data = std::vector<glm::vec4>();
 		m_Params = DicomVolumeParams();
 
+		// Full path
+		name = s_Path / name;
+		
 		// Init
+		bool isDir = IsDirectory(name);
 		std::vector<std::filesystem::path> paths;
+
 		if (isDir)
 		{
 			paths = SortDicomSlices(ListDirFiles(name, /*extension=*/".dcm"));
 		}
 		else
 		{
-			paths.push_back(s_Path / name);
+			if (!IsDicomFile(name))
+			{
+				LOG_ERROR("File is not a dicom file!");
+				throw std::exception("Error!");
+			}
+
+			paths.push_back(name);
 		}
 
 		std::size_t numberOfFiles = paths.size();
