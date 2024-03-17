@@ -64,6 +64,11 @@ namespace med
 			return std::bit_width(maxNumber);
 		}
 
+		bool IsDirectory(const std::filesystem::path& path)
+		{
+			return std::filesystem::is_directory(path);
+		}
+
 	protected:
 		static std::filesystem::path s_Path;
 	};
