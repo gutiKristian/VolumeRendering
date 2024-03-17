@@ -7,7 +7,7 @@
 
 #include <cassert>
 #include <string>
-
+#include <cctype>
 
 
 namespace med
@@ -94,6 +94,7 @@ namespace med
 
 	std::unique_ptr<StructureFileDcm> DicomReader::ReadStructFile(std::filesystem::path name)
 	{
+		name = s_Path / name;
 		// Handling directory and file extension
 		if (IsDirectory(name))
 		{
@@ -131,12 +132,20 @@ namespace med
 			LOG_ERROR(err.c_str());
 			return nullptr;
 		}
+
+		// We so support only RTSTRUCT files
+		if ((params.Modality = ResolveModality(f.GetString(dcm::tags::kModality))) != DicomModality::RTSTRUCT)
+		{
+			std::string type = "Not a valid struct file, file type: " + ResolveModality(params.Modality);
+			LOG_ERROR(type.c_str());
+			return nullptr;
+		}
 		
 		// StructureSetROI params
 		const auto* strSetROISequence = f.GetSequence(kStructureSetROISequence);	
 		// ROIContour params and data
 		const auto* roiContourSequence = f.GetSequence(kROIContourSequence);
-	
+
 		if (strSetROISequence == nullptr || roiContourSequence == nullptr)
 		{
 			LOG_ERROR("Error reading sequences, data are incomplete, terminating");
@@ -164,6 +173,7 @@ namespace med
 		}
 		return DicomModality::UNKNOWN;
 	}
+
 
 	void DicomReader::ReadDicomVolumeVariables(const dcm::DicomFile& f)
 	{
@@ -326,4 +336,31 @@ namespace med
 		return path.extension() == ".dcm";
 	}
 
+	std::string DicomReader::ResolveModality(DicomModality modality)
+	{
+
+		switch (modality)
+		{
+			case DicomModality::CT:
+				return "CT";
+			case DicomModality::RTSTRUCT:
+				return "RTSTRUCT";
+			case DicomModality::RTDOSE:
+				return "RTDOSE";
+			case DicomModality::MR:
+				return "MR";
+			default:
+				return "UNKNOWN";
+		}
+	}
+
+	DicomModality DicomReader::ResolveModality(std::string modality)
+	{
+		std::ranges::transform(modality, modality.begin(), ::toupper);
+		if (modality == "CT") return DicomModality::CT;
+		if (modality == "RTSTRUCT") return DicomModality::RTSTRUCT;
+		if (modality == "RTDOSE") return DicomModality::RTDOSE;
+		if (modality == "MR") return DicomModality::MR;
+		return DicomModality::UNKNOWN;
+	}
 }

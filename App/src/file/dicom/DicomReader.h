@@ -28,6 +28,9 @@ namespace med
 
 		[[nodiscard]] static DicomModality CheckModality(const std::filesystem::path& name);
 
+		[[nodiscard]] static DicomModality ResolveModality(std::string modality);
+		[[nodiscard]] static std::string ResolveModality(DicomModality modality);
+
 	private:
 		/**
 		 * @brief Reads all necessary tags from the dicom file
