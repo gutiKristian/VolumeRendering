@@ -25,7 +25,7 @@ namespace med
 		 */
 		[[nodiscard]] std::unique_ptr<VolumeFileDcm> ReadVolumeFile(const std::filesystem::path& name, bool isDir);
 
-		[[nodiscard]] std::unique_ptr<StructureFileDcm> ReadStructFile(const std::filesystem::path& name);
+		[[nodiscard]] std::unique_ptr<StructureFileDcm> ReadStructFile(std::filesystem::path name);
 
 		[[nodiscard]] static DicomModality CheckModality(const std::filesystem::path& name);
 
@@ -91,6 +91,8 @@ namespace med
 			}
 			return numbers;
 		};
+
+		bool IsDicomFile(const std::filesystem::path& path) const;
 
 	private:
 		DicomVolumeParams m_Params;

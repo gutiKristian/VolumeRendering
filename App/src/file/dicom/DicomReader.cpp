@@ -17,6 +17,10 @@ namespace med
 	const dcm::Tag kImageOrientationPatient = 0x00200013;
 	const dcm::Tag kSliceThickness = 0x00200013;
 
+	const dcm::Tag kStructureSetROISequence = 0x30060020;
+	const dcm::Tag kROIContourSequence = 0x30060039;
+	const dcm::Tag kDisplayColor = 0x3006002A;
+
 	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(const std::filesystem::path& name, bool isDir)
 	{
 		bool firstRun = true;
@@ -77,9 +81,57 @@ namespace med
 		return std::make_unique<VolumeFileDcm>(s_Path / name, size, m_FileDataType, m_Params, m_Data);
 	}
 
-	std::unique_ptr<StructureFileDcm> DicomReader::ReadStructFile(const std::filesystem::path& name)
+	std::unique_ptr<StructureFileDcm> DicomReader::ReadStructFile(std::filesystem::path name)
 	{
+		// Handling directory and file extension
+		if (IsDirectory(name))
+		{
+			auto files = ListDirFiles(name, ".dcm");
+			
+			if (files.empty())
+			{
+				LOG_ERROR("No structure files found!");
+				return nullptr;
+			}
+
+			if (files.size() > 1)
+			{
+				LOG_ERROR("Multiple contour files are not allowed!");
+				return nullptr;
+			}
+
+			name = files[0];
+		}
+
+		if (!IsDicomFile(name))
+		{
+			LOG_ERROR("File is not a dicom file!");
+			return nullptr;
+		}
+
+		// Loading the file
 		auto params = DicomStructParams();
+
+		dcm::DicomFile f(name.c_str());
+		
+		if (!f.Load())
+		{
+			std::string err = "Cannot continue, unable to open: " + name.string();
+			LOG_ERROR(err.c_str());
+			return nullptr;
+		}
+		
+		// StructureSetROI params
+		const auto* strSetROISequence = f.GetSequence(kStructureSetROISequence);	
+		// ROIContour params and data
+		const auto* roiContourSequence = f.GetSequence(kROIContourSequence);
+	
+		if (strSetROISequence == nullptr || roiContourSequence == nullptr)
+		{
+			LOG_ERROR("Error reading sequences, data are incomplete, terminating");
+			return nullptr;
+		}
+
 		return std::make_unique<StructureFileDcm>(params);
 	}
 
@@ -256,6 +308,11 @@ namespace med
 			default:
 				throw std::exception("Unknown type");
 		}
+	}
+
+	bool DicomReader::IsDicomFile(const std::filesystem::path& path) const
+	{
+		return path.extension() == ".dcm";
 	}
 
 }
