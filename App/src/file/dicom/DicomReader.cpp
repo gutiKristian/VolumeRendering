@@ -20,6 +20,11 @@ namespace med
 	const dcm::Tag kStructureSetROISequence = 0x30060020;
 	const dcm::Tag kROIContourSequence = 0x30060039;
 	const dcm::Tag kDisplayColor = 0x3006002A;
+	// Structure Set ROI Sequence
+	const dcm::Tag kROIName = 0x30060026;
+	const dcm::Tag kROINumber = 0x30060022;
+	const dcm::Tag kROIGenerationAlgorithm = 0x30060036;
+	const dcm::Tag kROIDescription = 0x30060028;
 
 	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
 	{
@@ -141,17 +146,9 @@ namespace med
 			return nullptr;
 		}
 		
-		// StructureSetROI params
-		const auto* strSetROISequence = f.GetSequence(kStructureSetROISequence);	
-		// ROIContour params and data
-		const auto* roiContourSequence = f.GetSequence(kROIContourSequence);
-
-		if (strSetROISequence == nullptr || roiContourSequence == nullptr)
-		{
-			LOG_ERROR("Error reading sequences, data are incomplete, terminating");
-			return nullptr;
-		}
-
+		StructVisitor visitor;
+		f.Accept(visitor);
+		
 		return std::make_unique<StructureFileDcm>(params);
 	}
 

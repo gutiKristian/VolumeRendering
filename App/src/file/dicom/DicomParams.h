@@ -1,5 +1,11 @@
 #pragma once
 
+#include "dcm/data_element.h"
+#include "dcm/data_sequence.h"
+#include "dcm/data_set.h"
+#include "dcm/dicom_file.h"
+#include "dcm/visitor.h"
+
 #include <array>
 #include <string>
 #include <vector>
@@ -65,6 +71,37 @@ namespace med
 
 		std::vector<StructureSetROI> StructureSetROISequence;			
 		std::vector<ROIContour> ROIContourSequence;
+	};
+
+	class StructVisitor : public dcm::Visitor
+	{
+	public:
+		void VisitDataElement(const dcm::DataElement* dataElement) override
+		{
+			const auto& tag = dataElement->tag();
+			const auto& vr = dataElement->vr();
+		}
+
+		void VisitDataSequence(const dcm::DataSequence* dataSequence) override
+		{
+			for (size_t i = 0; i < dataSequence->size(); ++i)
+			{
+				const auto& item = dataSequence->At(i);
+
+				VisitDataElement(item.prefix);
+				VisitDataSet(item.data_set);
+
+			}
+
+		}
+
+		void VisitDataSet(const dcm::DataSet* dataSet) override
+		{
+			for (size_t i = 0; i < dataSet->size(); ++i)
+			{
+				(*dataSet)[i]->Accept(*this);
+			}
+		}
 	};
 
 }
