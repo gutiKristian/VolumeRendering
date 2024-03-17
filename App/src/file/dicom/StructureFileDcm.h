@@ -3,6 +3,8 @@
 #include "IDicomFile.h"
 #include "DicomParams.h"
 
+#include <vector>
+
 namespace med
 {
 	class StructureFileDcm : public IDicomFile
@@ -17,6 +19,6 @@ namespace med
 
 	private:
 		DicomStructParams m_Params;
-
+		std::vector<float> m_Data;
 	};
 }
