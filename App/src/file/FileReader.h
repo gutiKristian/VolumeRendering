@@ -27,7 +27,7 @@ namespace med
 			assert(extension.starts_with("."));
 			
 			std::vector<std::filesystem::path> paths;
-			for (const auto& entry : std::filesystem::directory_iterator(s_Path / path))
+			for (const auto& entry : std::filesystem::directory_iterator(path))
 			{
 				if (entry.path().extension().string() == extension)
 				{
