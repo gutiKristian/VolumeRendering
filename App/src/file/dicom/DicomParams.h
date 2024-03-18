@@ -109,10 +109,7 @@ namespace med
 
 		void VisitDataSequence(const dcm::DataSequence* dataSequence) override
 		{
-			std::string a = "Sequence visit: length: ";
-			a += std::to_string(dataSequence->size());
-			LOG_TRACE(a.c_str());
-
+			
 			if (dataSequence->tag() == kROIContourSequence)
 			{
 				std::string s = "Found " + std::to_string(dataSequence->size()) + " ROI Contours.";
@@ -123,7 +120,8 @@ namespace med
 			{
 				if (dataSequence->tag() == kContourSequence)
 				{
-					ContourData[ContourData.size() - 1].push_back({});
+					std::string str = "Contour Sequence found. Size: " + std::to_string(dataSequence->size());
+					LOG_TRACE(str.c_str());
 				}
 
 				for (size_t i = 0; i < dataSequence->size(); ++i)
@@ -138,8 +136,10 @@ namespace med
 
 		void VisitROIContourSequence(const dcm::DataSequence* dataSequence)
 		{
+			std::string s = "Adding vector for contour number: ";
 			for (size_t i = 0; i < dataSequence->size(); ++i)
 			{
+				LOG_TRACE((s + std::to_string(i)).c_str());
 				ContourData.push_back({});
 				const auto& item = dataSequence->At(i);
 				VisitDataSet(item.data_set);
