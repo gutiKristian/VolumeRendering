@@ -17,14 +17,6 @@ namespace med
 	const dcm::Tag kImageOrientationPatient = 0x00200013;
 	const dcm::Tag kSliceThickness = 0x00200013;
 
-	const dcm::Tag kStructureSetROISequence = 0x30060020;
-	const dcm::Tag kROIContourSequence = 0x30060039;
-	const dcm::Tag kDisplayColor = 0x3006002A;
-	// Structure Set ROI Sequence
-	const dcm::Tag kROIName = 0x30060026;
-	const dcm::Tag kROINumber = 0x30060022;
-	const dcm::Tag kROIGenerationAlgorithm = 0x30060036;
-	const dcm::Tag kROIDescription = 0x30060028;
 
 	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
 	{
@@ -126,9 +118,6 @@ namespace med
 			return nullptr;
 		}
 
-		// Loading the file
-		auto params = DicomStructParams();
-
 		dcm::DicomFile f(name.c_str());
 		
 		if (!f.Load())
@@ -139,17 +128,16 @@ namespace med
 		}
 
 		// We so support only RTSTRUCT files
-		if ((params.Modality = ResolveModality(f.GetString(dcm::tags::kModality))) != DicomModality::RTSTRUCT)
+		if (ResolveModality(f.GetString(dcm::tags::kModality)) != DicomModality::RTSTRUCT)
 		{
-			std::string type = "Not a valid struct file, file type: " + ResolveModality(params.Modality);
-			LOG_ERROR(type.c_str());
+			LOG_ERROR("Not a valid struct file");
 			return nullptr;
 		}
 		
 		StructVisitor visitor;
 		f.Accept(visitor);
-		
-		return std::make_unique<StructureFileDcm>(params);
+
+		return std::make_unique<StructureFileDcm>(visitor.Params);
 	}
 
 	DicomModality DicomReader::CheckModality(const std::filesystem::path& name)
