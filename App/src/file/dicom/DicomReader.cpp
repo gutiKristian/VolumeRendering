@@ -162,56 +162,39 @@ namespace med
 
 	void DicomReader::ReadDicomVolumeVariables(const dcm::DicomFile& f)
 	{
-		// Lambda functions for parsing
-		auto IS = [](std::string& str) -> int
-		{
-			if (str == "")
-			{
-				// For dataset spread across multiple files
-				return 1;
-			}
-
-			// parse int in the string if it fails return 1
-			try
-			{
-				return std::stoi(str);
-			}
-			catch (std::exception& e)
-			{
-				// Something strange happened
-				LOG_ERROR(("Error parsing string to int: " + std::string(e.what())).c_str());
-				return 1;
-			}
-		};
-
 		// Read the parameters
 		DicomVolumeParams currentParams;
 
 		f.GetUint16(dcm::tags::kRows, &currentParams.X);
 		f.GetUint16(dcm::tags::kColumns, &currentParams.Y);
-
+		
 		std::string str;
-		// Sometimes number of frames is zero, this means one frame 
+
 		f.GetString(dcm::tags::kNumberOfFrames, &str);
-		currentParams.Z = IS(str);
+		currentParams.Z = ParseStringToNumArr<int, 1>(str)[0];
+		// Usually, the number of frames is 0 when it is one frame
+		if (currentParams.Z == 0)
+		{
+			currentParams.Z = 1;
+		}
 
 		f.GetUint16(dcm::tags::kBitsStored, &currentParams.BitsStored);
 		f.GetUint16(dcm::tags::kBitsAllocated, &currentParams.BitsAllocated);
 		
 		f.GetString(kImageOrientationPatient, &str);
-		currentParams.ImageOrientationPatient = DS<6>(str);
+		currentParams.ImageOrientationPatient = ParseStringToNumArr<double, 6>(str);
 
 		//TODO: We have to keep only the position from the first slice
 		f.GetString(kImagePositionPatient, &str);
-		currentParams.ImagePositionPatient = DS<3>(str);
+		currentParams.ImagePositionPatient = ParseStringToNumArr<double, 3>(str);
 
 		f.GetString(kSliceThickness, &str);
 		std::array<double, 1> sT{ 0.0 };
-		sT = DS<1>(str);
+		sT = ParseStringToNumArr<double, 1>(str);
 		currentParams.SliceThickness = sT[0];
 
 		f.GetString(dcm::tags::kPixelSpacing, &str);
-		currentParams.PixelSpacing = DS<2>(str);
+		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
 		
 		if (m_Params.X != 0 && m_Params.Y != 0)
 		{
