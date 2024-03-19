@@ -1,4 +1,5 @@
 #pragma once
+#include "glm/glm.hpp"
 
 #include <array>
 #include <string>
@@ -41,7 +42,7 @@ namespace med
 	struct DicomStructParams : public DicomBaseParams
 	{
 		DicomStructParams() : DicomBaseParams(DicomModality::RTSTRUCT) {}
-	private:
+	public:
 		
 		// (3006,0020) Structure Set ROI Sequence, description of the ROI (Region of Interest)
 		struct StructureSetROI
@@ -51,19 +52,13 @@ namespace med
 			std::string AlgorithmType{};								// (3006,002A) ROI Generation Algorithm
 		};
 		
-		// (3006,0039) ROI Contour Sequence, description of the contour
-		struct ROIContour
-		{
-			std::array<int, 3> DisplayColor{ 0 } ;						// (3006, 002A) ROI Display Color
-		};
-
 	public:
 		// User defined label and name for the whole structure set
 		std::string Label{};											// (3006,0002) RT Structure Set Label
 		std::string Name{};												// (3006,0004) RT Structure Set Name
 
-		std::vector<StructureSetROI> StructureSetROISequence;			
-		std::vector<ROIContour> ROIContourSequence;
+		std::vector<StructureSetROI> StructureSetROISequence{};
+		std::vector<glm::vec3> DisplayColors{};				// (3006, 002A) ROI Display Color
 	};
 
 }

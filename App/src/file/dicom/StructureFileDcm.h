@@ -10,7 +10,7 @@ namespace med
 	class StructureFileDcm : public IDicomFile
 	{
 	public:
-		StructureFileDcm(DicomStructParams params);
+		StructureFileDcm(DicomStructParams params, std::vector<std::vector<std::vector<float>>> data);
 		
 	public:
 		DicomBaseParams GetBaseParams() const override;
@@ -19,6 +19,6 @@ namespace med
 
 	private:
 		DicomStructParams m_Params;
-		std::vector<float> m_Data;
+		std::vector<std::vector<std::vector<float>>> m_Data;
 	};
 }

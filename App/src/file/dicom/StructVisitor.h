@@ -32,18 +32,39 @@ namespace med
 				auto contourNumber = ContourData[indexOfContour].size() - 1;
 				ContourData[indexOfContour].push_back(ParseContours(data));
 			}
-
-			if (tag == kROINumber)
+			else if (tag == kDisplayColor)
 			{
-				std::string name;
-				dataElement->GetString(&name);
-				LOG_TRACE(name.c_str());
+				constexpr float factor = 1/255.0f;
+				std::string data;
+				dataElement->GetString(&data);
+				auto d = ParseStringToNumArr<int, 3>(data);
+				Params.DisplayColors.emplace_back(d[0] * factor, d[1] * factor, d[2] * factor);
 			}
-			if (tag == kROIName)
+			else if (tag == kROINumber)
 			{
-				std::string name;
-				dataElement->GetString(&name);
-				LOG_TRACE(name.c_str());
+				std::string data;
+				dataElement->GetString(&data);
+				Params.StructureSetROISequence.back().Number = ParseStringToNumArr<int, 1>(data)[0];
+			}
+			else if (tag == kROIName)
+			{
+				dataElement->GetString(&Params.StructureSetROISequence.back().Name);
+			}
+			else if (tag == kROIGenerationAlgorithm)
+			{
+				dataElement->GetString(&Params.StructureSetROISequence.back().AlgorithmType);
+			}
+			else if (tag == kFrameOfReference)
+			{
+				dataElement->GetString(&Params.FrameOfReference);
+			}
+			else if (tag == kStructureSetName)
+			{
+				dataElement->GetString(&Params.Name);
+			}
+			else if (tag == kStructureSetLabel)
+			{
+				dataElement->GetString(&Params.Label);
 			}
 		}
 
@@ -66,9 +87,11 @@ namespace med
 
 				for (size_t i = 0; i < dataSequence->size(); ++i)
 				{
+					if (dataSequence->tag() == kStructureSetROISequence)
+					{
+						Params.StructureSetROISequence.emplace_back();
+					}
 					const auto& item = dataSequence->At(i);
-
-
 					VisitDataSet(item.data_set);
 				}
 			}
@@ -100,6 +123,11 @@ namespace med
 		DicomStructParams Params;
 		std::vector<std::vector<std::vector<float>>> ContourData{};
 	private:
+		const dcm::Tag kFrameOfReference = 0x00200052;
+		const dcm::Tag kStructureSetName = 0x30060004;
+		const dcm::Tag kStructureSetLabel = 0x30060002;
+
+
 		const dcm::Tag kStructureSetROISequence = 0x30060020;
 		const dcm::Tag kROIContourSequence = 0x30060039;
 		const dcm::Tag kDisplayColor = 0x3006002A;

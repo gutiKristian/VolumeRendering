@@ -19,6 +19,7 @@ namespace med
 	const dcm::Tag kImagePositionPatient = 0x00200032;
 	const dcm::Tag kImageOrientationPatient = 0x00200037;
 	const dcm::Tag kSliceThickness = 0x00200050;
+	const dcm::Tag kFrameOfReference = 0x00200052;
 
 
 	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
@@ -140,7 +141,7 @@ namespace med
 		StructVisitor visitor;
 		f.Accept(visitor);
 
-		return std::make_unique<StructureFileDcm>(visitor.Params);
+		return std::make_unique<StructureFileDcm>(visitor.Params, visitor.ContourData);
 	}
 
 	DicomModality DicomReader::CheckModality(const std::filesystem::path& name)
@@ -167,6 +168,8 @@ namespace med
 	{
 		// Read the parameters
 		DicomVolumeParams currentParams;
+
+		currentParams.FrameOfReference = f.GetString(kFrameOfReference);
 
 		f.GetUint16(dcm::tags::kRows, &currentParams.X);
 		f.GetUint16(dcm::tags::kColumns, &currentParams.Y);

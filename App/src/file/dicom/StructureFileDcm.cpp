@@ -2,7 +2,7 @@
 
 namespace med
 {
-	StructureFileDcm::StructureFileDcm(DicomStructParams params) : m_Params(params)
+	StructureFileDcm::StructureFileDcm(DicomStructParams params, std::vector<std::vector<std::vector<float>>> data) : m_Params(params), m_Data(data)
 	{
 	}
 

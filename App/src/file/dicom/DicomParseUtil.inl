@@ -64,6 +64,8 @@ namespace med
 			}
 			catch (std::exception& e)
 			{
+				std::string err = "Error parsing string to number, input: " + str + " , index: " + std::to_string(i);
+				LOG_ERROR(err.c_str());
 				// do nothing, just skip the number (decide in the future)
 			}
 		}
