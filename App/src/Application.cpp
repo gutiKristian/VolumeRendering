@@ -408,9 +408,9 @@ namespace med {
 	{
 		LOG_INFO("Loading files...");
 		DicomReader reader;
-		std::unique_ptr<VolumeFileDcm> ctFile = reader.ReadFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000", true);
-		std::unique_ptr<VolumeFileDcm> rtDoseFile = reader.ReadFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\2.16.840.1.114362.1.6.5.9.16309.10765415608.432686722.485.282.dcm"
-			, false);
+		std::unique_ptr<StructureFileDcm> contourFile = reader.ReadStructFile("assets\\716^716_716_RTst_2013-04-02_230000_716-1-01_OCM.BladderShell_n1__00000/");
+		std::unique_ptr<VolumeFileDcm> ctFile = reader.ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000");
+		std::unique_ptr<VolumeFileDcm> rtDoseFile = reader.ReadVolumeFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\2.16.840.1.114362.1.6.5.9.16309.10765415608.432686722.485.282.dcm");
 		LOG_INFO("Done");
 
 		ctFile->PreComputeGradient(true);

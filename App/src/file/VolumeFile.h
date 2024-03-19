@@ -19,10 +19,11 @@ namespace med
 	{
 	public:
 		VolumeFile() = default;
-		explicit VolumeFile(std::filesystem::path path) : m_Path(std::move(path)) {}
+		explicit VolumeFile(std::filesystem::path path, std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size,
+			FileDataType type, std::vector<glm::vec4>& data) : m_Path(std::move(path)), m_Size(size), m_FileDataType(type), m_Data(std::move(data)) {}
 		virtual ~VolumeFile() = default;
 
-	public:
+	protected:
 
 		void SetData(std::vector<glm::vec4>& src);
 		
@@ -33,7 +34,8 @@ namespace med
 		void SetPath(std::filesystem::path path);
 
 		void SetMaxNumber(size_t maxNumber);
-
+	
+	public:
 		/**
 		 * @brief Computes gradient using finite differences.
 		 * @param normToZeroOne if true, the gradient will be normalized to the range [0, 1]

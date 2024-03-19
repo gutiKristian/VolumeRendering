@@ -27,7 +27,7 @@ namespace med
 			assert(extension.starts_with("."));
 			
 			std::vector<std::filesystem::path> paths;
-			for (const auto& entry : std::filesystem::directory_iterator(s_Path / path))
+			for (const auto& entry : std::filesystem::directory_iterator(path))
 			{
 				if (entry.path().extension().string() == extension)
 				{
@@ -62,6 +62,11 @@ namespace med
 		size_t GetMaxUsedBits(size_t maxNumber)
 		{
 			return std::bit_width(maxNumber);
+		}
+
+		bool IsDirectory(const std::filesystem::path& path)
+		{
+			return std::filesystem::is_directory(path);
 		}
 
 	protected:

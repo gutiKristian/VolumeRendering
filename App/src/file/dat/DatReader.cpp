@@ -41,11 +41,6 @@ namespace med
 		std::ranges::transform(rawImg, std::back_inserter(data), [](auto& value) { return glm::vec4(value); });
 
 		// Create new Volume file (more like data class)
-		VolumeFile volFile(s_Path / name);
-		volFile.SetData(data);
-		volFile.SetFileDataType(FileDataType::Uint16);
-		volFile.SetDataSize({ dims[0], dims[1], dims[2]});
-		return volFile;
-
+		return VolumeFile(s_Path / name, { dims[0], dims[1], dims[2] }, FileDataType::Uint16, data);
 	}
 }

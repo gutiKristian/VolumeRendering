@@ -2,35 +2,52 @@
 
 #include "Base/Log.h"
 #include "VolumeFileDcm.h"
+#include "StructureFileDcm.h"
 #include "dcm/defs.h"
+#include "DicomParams.h"
+#include "DicomParseUtil.h"
+#include "StructVisitor.h"
 
 #include <cassert>
 #include <string>
-
+#include <cctype>
 
 
 namespace med
 {
 	const dcm::Tag kInstanceNumber = 0x00200013;
-	const dcm::Tag kImagePositionPatient = 0x00200013;
-	const dcm::Tag kImageOrientationPatient = 0x00200013;
-	const dcm::Tag kSliceThickness = 0x00200013;
+	const dcm::Tag kImagePositionPatient = 0x00200032;
+	const dcm::Tag kImageOrientationPatient = 0x00200037;
+	const dcm::Tag kSliceThickness = 0x00200050;
+	const dcm::Tag kFrameOfReference = 0x00200052;
 
-	std::unique_ptr<VolumeFileDcm> DicomReader::ReadFile(const std::filesystem::path& name, bool isDir)
+
+	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
 	{
 		bool firstRun = true;
 		m_Data = std::vector<glm::vec4>();
-		m_Params = DicomParams();
+		m_Params = DicomVolumeParams();
 
+		// Full path
+		name = s_Path / name;
+		
 		// Init
+		bool isDir = IsDirectory(name);
 		std::vector<std::filesystem::path> paths;
+
 		if (isDir)
 		{
 			paths = SortDicomSlices(ListDirFiles(name, /*extension=*/".dcm"));
 		}
 		else
 		{
-			paths.push_back(s_Path / name);
+			if (!IsDicomFile(name))
+			{
+				LOG_ERROR("File is not a dicom file!");
+				throw std::exception("Error!");
+			}
+
+			paths.push_back(name);
 		}
 
 		std::size_t numberOfFiles = paths.size();
@@ -48,7 +65,7 @@ namespace med
 
 			if (f.Load())
 			{
-				ReadDicomVariables(f);
+				ReadDicomVolumeVariables(f);
 
 				if (firstRun)
 				{
@@ -65,9 +82,6 @@ namespace med
 			}
 		}
 
-		// End of reading
-		//int bitDepth = GetMaxUsedBits();
-
 		if (isDir)
 		{
 			m_Params.Z = numberOfFiles;
@@ -75,68 +89,117 @@ namespace med
 
 		auto n = GetMaxNumber<glm::vec4>(m_Data);
 		auto bits = GetMaxUsedBits(n);
-
-		auto file = std::make_unique<VolumeFileDcm>(s_Path / name, m_Params);
-		file->SetData(m_Data);
-		file->SetDataSize({ m_Params.X, m_Params.Y, m_Params.Z});
-		file->SetMaxNumber(n);
-		file->SetFileDataType(m_FileDataType);	
-
-		return file;
+		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size = { m_Params.X, m_Params.Y, m_Params.Z };
+		return std::make_unique<VolumeFileDcm>(s_Path / name, size, m_FileDataType, m_Params, m_Data);
 	}
 
-	void DicomReader::ReadDicomVariables(const dcm::DicomFile& f)
+	std::unique_ptr<StructureFileDcm> DicomReader::ReadStructFile(std::filesystem::path name)
 	{
-		// Lambda functions for parsing
-		auto IS = [](std::string& str) -> int
+		name = s_Path / name;
+		// Handling directory and file extension
+		if (IsDirectory(name))
 		{
-			if (str == "")
+			auto files = ListDirFiles(name, ".dcm");
+			
+			if (files.empty())
 			{
-				// For dataset spread across multiple files
-				return 1;
+				LOG_ERROR("No structure files found!");
+				return nullptr;
 			}
 
-			// parse int in the string if it fails return 1
-			try
+			if (files.size() > 1)
 			{
-				return std::stoi(str);
+				LOG_ERROR("Multiple contour files are not allowed!");
+				return nullptr;
 			}
-			catch (std::exception& e)
-			{
-				// Something strange happened
-				LOG_ERROR(("Error parsing string to int: " + std::string(e.what())).c_str());
-				return 1;
-			}
-		};
 
+			name = files[0];
+		}
+
+		if (!IsDicomFile(name))
+		{
+			LOG_ERROR("File is not a dicom file!");
+			return nullptr;
+		}
+
+		dcm::DicomFile f(name.c_str());
+		
+		if (!f.Load())
+		{
+			std::string err = "Cannot continue, unable to open: " + name.string();
+			LOG_ERROR(err.c_str());
+			return nullptr;
+		}
+
+		// We so support only RTSTRUCT files
+		if (ResolveModality(f.GetString(dcm::tags::kModality)) != DicomModality::RTSTRUCT)
+		{
+			LOG_ERROR("Not a valid struct file");
+			return nullptr;
+		}
+		
+		StructVisitor visitor;
+		f.Accept(visitor);
+
+		return std::make_unique<StructureFileDcm>(visitor.Params, visitor.ContourData);
+	}
+
+	DicomModality DicomReader::CheckModality(const std::filesystem::path& name)
+	{
+		dcm::DicomFile f(name.c_str());
+		if (f.Load())
+		{
+			std::string modality;
+			f.GetString(dcm::tags::kModality, &modality);
+			if (modality == "CT")
+				return DicomModality::CT;
+			else if (modality == "MR")
+				return DicomModality::MR;
+			else if (modality == "RTDOSE")
+				return DicomModality::RTDOSE;
+			else if (modality == "RTSTRUCT")
+				return DicomModality::RTSTRUCT;
+		}
+		return DicomModality::UNKNOWN;
+	}
+
+
+	void DicomReader::ReadDicomVolumeVariables(const dcm::DicomFile& f)
+	{
 		// Read the parameters
-		DicomParams currentParams;
+		DicomVolumeParams currentParams;
+
+		currentParams.FrameOfReference = f.GetString(kFrameOfReference);
 
 		f.GetUint16(dcm::tags::kRows, &currentParams.X);
 		f.GetUint16(dcm::tags::kColumns, &currentParams.Y);
-
+		
 		std::string str;
-		// Sometimes number of frames is zero, this means one frame 
+		std::vector<std::string> strArr;
+
 		f.GetString(dcm::tags::kNumberOfFrames, &str);
-		currentParams.Z = IS(str);
+		currentParams.Z = ParseStringToNumArr<int, 1>(str)[0];
+		// Usually, the number of frames is 0 when it is one frame
+		if (currentParams.Z == 0)
+		{
+			currentParams.Z = 1;
+		}
 
 		f.GetUint16(dcm::tags::kBitsStored, &currentParams.BitsStored);
 		f.GetUint16(dcm::tags::kBitsAllocated, &currentParams.BitsAllocated);
-		
+	
 		f.GetString(kImageOrientationPatient, &str);
-		currentParams.ImageOrientationPatient = DS<6>(str);
+		currentParams.ImageOrientationPatient = ParseStringToNumArr<double, 6>(str);
 
 		//TODO: We have to keep only the position from the first slice
 		f.GetString(kImagePositionPatient, &str);
-		currentParams.ImagePositionPatient = DS<3>(str);
+		currentParams.ImagePositionPatient = ParseStringToNumArr<double, 3>(str);
 
 		f.GetString(kSliceThickness, &str);
-		std::array<double, 1> sT{ 0.0 };
-		sT = DS<1>(str);
-		currentParams.SliceThickness = sT[0];
+		currentParams.SliceThickness = ParseStringToNumArr<double, 1>(str)[0];
 
 		f.GetString(dcm::tags::kPixelSpacing, &str);
-		currentParams.PixelSpacing = DS<2>(str);
+		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
 		
 		if (m_Params.X != 0 && m_Params.Y != 0)
 		{
@@ -241,4 +304,35 @@ namespace med
 		}
 	}
 
+	bool DicomReader::IsDicomFile(const std::filesystem::path& path)
+	{
+		return path.extension() == ".dcm";
+	}
+	
+	std::string DicomReader::ResolveModality(DicomModality modality)
+	{
+		switch (modality)
+		{
+			case DicomModality::CT:
+				return "CT";
+			case DicomModality::RTSTRUCT:
+				return "RTSTRUCT";
+			case DicomModality::RTDOSE:
+				return "RTDOSE";
+			case DicomModality::MR:
+				return "MR";
+			default:
+				return "UNKNOWN";
+		}
+	}
+
+	DicomModality DicomReader::ResolveModality(std::string modality)
+	{
+		std::ranges::transform(modality, modality.begin(), ::toupper);
+		if (modality == "CT") return DicomModality::CT;
+		if (modality == "RTSTRUCT") return DicomModality::RTSTRUCT;
+		if (modality == "RTDOSE") return DicomModality::RTDOSE;
+		if (modality == "MR") return DicomModality::MR;
+		return DicomModality::UNKNOWN;
+	}
 }
