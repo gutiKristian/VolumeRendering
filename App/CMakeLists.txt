@@ -53,7 +53,7 @@ add_executable(App
 	"src/tf/ColorTf.h"
 	"src/tf/ColorTf.cpp"
 	"src/tf/OpacityTf.h"
-	"src/tf/OpacityTf.cpp")
+	"src/tf/OpacityTf.cpp" "src/file/dicom/StructVisitor.h" "src/file/dicom/DicomParseUtil.h")
 
 target_compile_definitions(App
 	PRIVATE

@@ -2,8 +2,11 @@
 
 #include "Base/Log.h"
 #include "VolumeFileDcm.h"
+#include "StructureFileDcm.h"
 #include "dcm/defs.h"
 #include "DicomParams.h"
+#include "DicomParseUtil.h"
+#include "StructVisitor.h"
 
 #include <cassert>
 #include <string>
@@ -13,9 +16,9 @@
 namespace med
 {
 	const dcm::Tag kInstanceNumber = 0x00200013;
-	const dcm::Tag kImagePositionPatient = 0x00200013;
-	const dcm::Tag kImageOrientationPatient = 0x00200013;
-	const dcm::Tag kSliceThickness = 0x00200013;
+	const dcm::Tag kImagePositionPatient = 0x00200032;
+	const dcm::Tag kImageOrientationPatient = 0x00200037;
+	const dcm::Tag kSliceThickness = 0x00200050;
 
 
 	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
@@ -169,6 +172,7 @@ namespace med
 		f.GetUint16(dcm::tags::kColumns, &currentParams.Y);
 		
 		std::string str;
+		std::vector<std::string> strArr;
 
 		f.GetString(dcm::tags::kNumberOfFrames, &str);
 		currentParams.Z = ParseStringToNumArr<int, 1>(str)[0];
@@ -180,7 +184,7 @@ namespace med
 
 		f.GetUint16(dcm::tags::kBitsStored, &currentParams.BitsStored);
 		f.GetUint16(dcm::tags::kBitsAllocated, &currentParams.BitsAllocated);
-		
+	
 		f.GetString(kImageOrientationPatient, &str);
 		currentParams.ImageOrientationPatient = ParseStringToNumArr<double, 6>(str);
 
@@ -189,9 +193,7 @@ namespace med
 		currentParams.ImagePositionPatient = ParseStringToNumArr<double, 3>(str);
 
 		f.GetString(kSliceThickness, &str);
-		std::array<double, 1> sT{ 0.0 };
-		sT = ParseStringToNumArr<double, 1>(str);
-		currentParams.SliceThickness = sT[0];
+		currentParams.SliceThickness = ParseStringToNumArr<double, 1>(str)[0];
 
 		f.GetString(dcm::tags::kPixelSpacing, &str);
 		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
@@ -299,14 +301,13 @@ namespace med
 		}
 	}
 
-	bool DicomReader::IsDicomFile(const std::filesystem::path& path) const
+	bool DicomReader::IsDicomFile(const std::filesystem::path& path)
 	{
 		return path.extension() == ".dcm";
 	}
-
+	
 	std::string DicomReader::ResolveModality(DicomModality modality)
 	{
-
 		switch (modality)
 		{
 			case DicomModality::CT:
