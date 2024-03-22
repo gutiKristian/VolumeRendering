@@ -19,7 +19,7 @@ namespace med
 	{
 	public:
 		VolumeFile() = default;
-		explicit VolumeFile(std::filesystem::path path, std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size,
+		VolumeFile(std::filesystem::path path, std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size,
 			FileDataType type, std::vector<glm::vec4>& data) : m_Path(std::move(path)), m_Size(size), m_FileDataType(type), m_Data(std::move(data)) {}
 		virtual ~VolumeFile() = default;
 
@@ -62,7 +62,6 @@ namespace med
 
 		[[nodiscard]] size_t GetMaxNumber() const;
 
-	protected:
 		/**
 		 * @brief Maps 3D coordinate to the 1D data.
 		 * @param x coordinate

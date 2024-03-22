@@ -141,7 +141,7 @@ namespace med
 		StructVisitor visitor;
 		f.Accept(visitor);
 
-		return std::make_unique<StructureFileDcm>(visitor.Params, visitor.ContourData);
+		return std::make_unique<StructureFileDcm>(name, visitor.Params, visitor.ContourData);
 	}
 
 	DicomModality DicomReader::CheckModality(const std::filesystem::path& name)

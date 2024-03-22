@@ -4,6 +4,7 @@
 
 namespace med
 {
+	// TODO: Put members that are in VolumeFileDcm and StructureFileDcm into this interface
 	// Interface for DICOM file
 	class IDicomFile
 	{
