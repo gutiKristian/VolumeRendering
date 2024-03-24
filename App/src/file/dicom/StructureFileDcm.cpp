@@ -34,17 +34,22 @@ namespace med
 			return nullptr;
 		}
 		
-		for (auto& id : contourIDs)
+		std::vector<int> finalContours{};
+		for (auto id : contourIDs)
 		{
 			if (id < 0 || id >= m_Data.size())
 			{
-				id = 0;
 				std::string str = "Contour ID [ " + std::to_string(id) + "] out of bounds, available [" + std::to_string(m_Data.size()) + "]";
 				LOG_WARN(str.c_str());
 			}
 			else if (id == 0)
 			{
-				LOG_WARN("Contour ID [0], ignoring, note, contours are numbered from 1");
+				LOG_WARN("Contour ID [0], ignoring. Note, contours are numbered from 1");
+			}
+			else
+			{
+				// Existing contours
+				finalContours.push_back(id - 1);
 			}
 		}
 
@@ -65,13 +70,17 @@ namespace med
 		glm::vec3 spacing{ sx, sy, sz };
 		glm::vec3 origin{ ox, oy, oz };
 
-		for (size_t l = 0; l < contourIDs.size(); ++l)
+		// Traverse contours
+		for (size_t l = 0; l < finalContours.size(); ++l)
 		{
-			const auto cId = contourIDs[l];
+			const auto cId = finalContours[l];
+
+			// Pick contour
 			for (size_t i = 0; i < m_Data[cId].size(); ++i)
 			{
 				assert(m_Data[cId][i].size() % 3 == 0);
 
+				// Traverses images where contours are defined
 				for (size_t j = 0; j < m_Data[cId][i].size() - 3; j+=3)
 				{
 					glm::vec3 contourPoint{ m_Data[cId][i][j], m_Data[cId][i][j + 1], m_Data[cId][i][j + 2] };

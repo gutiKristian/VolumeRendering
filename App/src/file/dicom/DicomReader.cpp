@@ -18,7 +18,7 @@ namespace med
 	const dcm::Tag kInstanceNumber = 0x00200013;
 	const dcm::Tag kImagePositionPatient = 0x00200032;
 	const dcm::Tag kImageOrientationPatient = 0x00200037;
-	const dcm::Tag kSliceThickness = 0x00200050;
+	const dcm::Tag kSliceThickness = 0x00180050;
 	const dcm::Tag kFrameOfReference = 0x00200052;
 
 
