@@ -81,10 +81,11 @@ namespace med
 				assert(m_Data[cId][i].size() % 3 == 0);
 
 				// Traverses images where contours are defined
-				for (size_t j = 0; j < m_Data[cId][i].size() - 3; j+=3)
+				for (size_t j = 0; j <= m_Data[cId][i].size() - 3; j+=3)
 				{
 					glm::vec3 contourPoint{ m_Data[cId][i][j], m_Data[cId][i][j + 1], m_Data[cId][i][j + 2] };
-					glm::vec3 voxel = (contourPoint - origin) / spacing;
+					glm::vec3 voxel = glm::abs((contourPoint - origin) / spacing);
+
 					voxel = glm::round(voxel);
 					// reference is the same size as the mask
 					int index = reference.GetIndexFrom3D(static_cast<int>(voxel.x), static_cast<int>(voxel.y), static_cast<int>(voxel.z));
