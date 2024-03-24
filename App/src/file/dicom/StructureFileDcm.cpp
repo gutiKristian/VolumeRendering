@@ -29,7 +29,7 @@ namespace med
 	std::shared_ptr<VolumeFileDcm> StructureFileDcm::Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs) const
 	{
 		// Assuming same orientation
-		if (other.GetModality() != DicomModality::CT || CompareFrameOfReference(other))
+		if (other.GetModality() != DicomModality::CT || !CompareFrameOfReference(other))
 		{
 			return nullptr;
 		}

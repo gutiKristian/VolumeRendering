@@ -58,6 +58,7 @@ namespace med
 			throw new std::exception("No dicom files found!");
 		}
 
+
 		// Reading
 		for (const auto& file : paths)
 		{
@@ -69,6 +70,7 @@ namespace med
 
 				if (firstRun)
 				{
+					m_Params.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
 					PreAllocateMemory(numberOfFiles, isDir);
 				}
 				firstRun = false;
@@ -170,6 +172,8 @@ namespace med
 		DicomVolumeParams currentParams;
 
 		currentParams.FrameOfReference = f.GetString(kFrameOfReference);
+
+		currentParams.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
 
 		f.GetUint16(dcm::tags::kRows, &currentParams.X);
 		f.GetUint16(dcm::tags::kColumns, &currentParams.Y);
