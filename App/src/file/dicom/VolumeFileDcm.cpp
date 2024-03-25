@@ -30,7 +30,7 @@ namespace med
 
 	glm::vec3 VolumeFileDcm::PixelToRCSTransform(glm::vec2 coord) const
 	{
-		glm::vec4 res = m_PixelToRCS * glm::vec4(coord, 0.0f, 1.0f);
+		glm::vec4 res = m_PixelToRCS * glm::vec4(coord.x, coord.y, 0.0f, 1.0f);
 		return glm::vec3(res.x, res.y, res.z);
 	}
 
@@ -56,14 +56,14 @@ namespace med
 		*/
 		glm::mat4x4 T = glm::mat4x4(1.0f);
 		T[0][0] = Xx * di;
-		T[0][1] = Yx * dj;
-		T[0][3] = Sx;
-		T[1][0] = Xy * di;
+		T[1][0] = Yx * dj;
+		T[3][0] = Sx;
+		T[0][1] = Xy * di;
 		T[1][1] = Yy * dj;
-		T[1][3] = Sy;
-		T[2][0] = Xz * di;
-		T[2][1] = Yz * dj;
-		T[2][3] = Sz;
+		T[3][1] = Sy;
+		T[0][2] = Xz * di;
+		T[1][2] = Yz * dj;
+		T[3][2] = Sz;
 
 		m_PixelToRCS = T;
 		m_RCSToPixel = glm::inverse(T);
