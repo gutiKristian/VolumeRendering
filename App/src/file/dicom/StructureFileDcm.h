@@ -20,8 +20,7 @@ namespace med
 		DicomBaseParams GetBaseParams() const override;
 		DicomModality GetModality() const override;
 		bool CompareFrameOfReference(const IDicomFile& other) const override;
-
-		std::shared_ptr<VolumeFileDcm> Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs) const;
+		std::shared_ptr<VolumeFileDcm> Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, bool handleDuplicates = false) const;
 
 	private:
 		std::filesystem::path m_Path;

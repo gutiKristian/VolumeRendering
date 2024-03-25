@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cassert>
+#include <limits>
 
 namespace med
 {
@@ -26,7 +27,7 @@ namespace med
 		return m_Params.FrameOfReference == other.GetBaseParams().FrameOfReference;
 	}
 
-	std::shared_ptr<VolumeFileDcm> StructureFileDcm::Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs) const
+	std::shared_ptr<VolumeFileDcm> StructureFileDcm::Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, bool handleDuplicates) const
 	{
 		// Assuming same orientation
 		if (other.GetModality() != DicomModality::CT || !CompareFrameOfReference(other))
@@ -74,31 +75,67 @@ namespace med
 		for (size_t l = 0; l < finalContours.size(); ++l)
 		{
 			const auto cId = finalContours[l];
-
 			// Pick contour
 			for (size_t i = 0; i < m_Data[cId].size(); ++i)
 			{
 				assert(m_Data[cId][i].size() % 3 == 0);
-
 				// Traverses images where contours are defined
 				for (size_t j = 0; j <= m_Data[cId][i].size() - 3; j+=3)
 				{
 					glm::vec3 contourPoint{ m_Data[cId][i][j], m_Data[cId][i][j + 1], m_Data[cId][i][j + 2] };
-					glm::vec3 voxel = glm::abs((contourPoint - origin) / spacing);
-
+					glm::vec3 voxel = (contourPoint - origin) / spacing;
+					voxel.z = std::fabs(voxel.z);
 					voxel = glm::round(voxel);
+
 					// reference is the same size as the mask
 					int index = reference.GetIndexFrom3D(static_cast<int>(voxel.x), static_cast<int>(voxel.y), static_cast<int>(voxel.z));
-
+					
 					if (index == -1)
 					{
 						LOG_WARN("Contour point out of bounds, skipping...");
 					}
 					else
 					{
+						if (maskData[index][l] == 1 && handleDuplicates)
+						{
+							float minDist = std::numeric_limits<float>::max();
+							glm::ivec2 substituteVoxel(0, 0);
+
+							// Since contours are on slices here we work with images
+							for (int i = -1; i <= 1; ++i)
+							{
+								for (int j = -1; j <= 1; ++j)
+								{
+									if (i == 0 && j == 0)
+									{
+										continue;
+									}
+
+									int newX = voxel.x + j;
+									int newY = voxel.y + i;
+									
+									// I could check also the 3D coord and use more neighbours, but I suppose the contours are
+									// created on the slices so the error in z is not there
+									if (newX >= 0 && newX < xSize && newY >= 0 && newY <= ySize)
+									{
+										glm::vec2 current(newX, newY);
+										glm::vec3 rcs = reference.PixelToRCSTransform(current);
+										float currentDistance = glm::distance(contourPoint, rcs);
+										if (currentDistance < minDist)
+										{
+											minDist = currentDistance;
+											substituteVoxel.x = newX;
+											substituteVoxel.y = newY;
+										}
+									}
+								}
+							}
+
+							index = reference.GetIndexFrom3D(static_cast<int>(substituteVoxel.x), static_cast<int>(substituteVoxel.y), static_cast<int>(voxel.z));
+						}
+
 						maskData[index][l] = 1;
 					}
-
 				}
 			}
 		}
