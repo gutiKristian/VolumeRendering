@@ -21,7 +21,8 @@ namespace med
 		DicomModality GetModality() const override;
 		bool CompareFrameOfReference(const IDicomFile& other) const override;
 		std::shared_ptr<VolumeFileDcm> Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, bool handleDuplicates = false) const;
-
+	private:
+		glm::ivec2 HandleDuplicates(const VolumeFileDcm& reference, glm::vec3 currentRCS, glm::vec3 currentVoxel) const;
 	private:
 		std::filesystem::path m_Path;
 		DicomStructParams m_Params;
