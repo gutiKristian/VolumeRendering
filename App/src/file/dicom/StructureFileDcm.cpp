@@ -244,4 +244,79 @@ namespace med
 
 		return res;
 	}
+	void StructureFileDcm::Erosion(std::vector<glm::vec4>& data, int xSize, int ySize, int sliceNumber, std::vector<std::vector<uint8_t>> structureElement, std::array<int, 4> contourIDs)
+	{
+		if (structureElement.size() == 0 || structureElement[0].size() == 0)
+		{
+			LOG_ERROR("Structure element is undefined, skipping");
+			return;
+		}
+
+		if (structureElement.size() % 2 == 0 || structureElement[0].size() % 2 == 0)
+		{
+			LOG_ERROR("Cannot determine the middle point in structure element, skipping");
+		}
+
+		auto coord3D = [&](int x, int y)
+			{
+				return sliceNumber * ySize * xSize + y * xSize + x;
+			};
+
+		auto coord2D = [&](int x, int y)
+			{
+				return y * xSize + x;
+			};
+
+		int offy = structureElement.size() / 2;
+		int offx = structureElement[0].size() / 2;
+
+		std::vector<glm::vec4> altered{};
+		std::copy(data.begin() + coord3D(xSize, ySize) - 1, data.end(), altered);
+
+		for (int cId = 0; cId < contourIDs.size(); ++cId)
+		{
+			for (int y = offy; y < ySize - offy; ++y)
+			{
+				for (int x = offx; x < xSize - offx; x++)
+				{
+					bool hasMissed = false;
+
+					for (int i = -offy; i <= offy; ++i)
+					{
+						for (int j = -offx; j <= offx; ++j)
+						{
+							// Point where we attached the structure element or point that is not in structure element
+							if (structureElement[i + offy][j + offx] == 0)
+								continue;
+
+							int index = coord2D(x + j, y + i);
+							if (altered[index][cId] == 0)
+							{
+								hasMissed = true;
+								break;
+							}
+						}
+						if (hasMissed)
+							break;
+					}
+					
+					int dataCoord = coord3D(x, y);
+
+					if (hasMissed)
+					{
+						data[dataCoord][cId] = 0;
+					}
+					//else
+					//{
+					//	// Some struture elements may have non active attachment points
+					//	// + active, - disabled, strucure element -> + - + , where point in the middle is attachment point
+					//	data[dataCoord][cId] = 1;
+					//}
+
+				}
+			}
+		}
+
+	}
+
 }

@@ -39,6 +39,10 @@ namespace med
 	private:
 		glm::ivec2 HandleDuplicatesNearestNeighbour(const VolumeFileDcm& reference, glm::vec3 currentRCS, glm::vec3 currentVoxel) const;
 		std::vector<glm::ivec2> HandleDuplicatesLineToNextBresenahm(const const VolumeFileDcm& reference, glm::vec3 start, glm::vec3 end) const;
+		void Erosion(std::vector<glm::vec4>& data, int xSize, int ySize, int sliceNumber,
+			std::vector<std::vector<uint8_t>> structureElement, std::array<int, 4> contourIDs);
+
+		bool HasHitStructureElement(const std::vector<glm::vec4>& data, const std::vector<uint8_t> structureElement);
 	private:
 		std::filesystem::path m_Path;
 		DicomStructParams m_Params;
