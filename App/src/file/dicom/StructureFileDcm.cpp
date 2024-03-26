@@ -7,7 +7,7 @@
 
 namespace med
 {
-	StructureFileDcm::StructureFileDcm(std::filesystem::path path, DicomStructParams params, std::vector<std::vector<std::vector<float>>> data) : 
+	StructureFileDcm::StructureFileDcm(std::filesystem::path path, DicomStructParams params, std::vector<std::vector<std::vector<float>>> data) :
 		m_Path(path), m_Params(params), m_Data(data)
 	{
 	}
@@ -21,7 +21,7 @@ namespace med
 	{
 		return m_Params.Modality;
 	}
-	
+
 	bool med::StructureFileDcm::CompareFrameOfReference(const IDicomFile& other) const
 	{
 		return m_Params.FrameOfReference == other.GetBaseParams().FrameOfReference;
@@ -41,7 +41,7 @@ namespace med
 			LOG_CRITICAL("3D mask cannot be created, refernece modality is not CT or Frame of reference does not match with contour's");
 			return nullptr;
 		}
-		
+
 		std::vector<int> finalContours{};
 		for (auto id : contourIDs)
 		{
@@ -64,15 +64,15 @@ namespace med
 		// cast reference to VolumeFileDcm
 		const VolumeFileDcm& reference = dynamic_cast<const VolumeFileDcm&>(other);
 
-		auto[xSize, ySize, zSize] = reference.GetSize();
+		auto [xSize, ySize, zSize] = reference.GetSize();
 		std::vector<glm::vec4> maskData(xSize * ySize * zSize, { 0.0f, 0.0f, 0.0f, 0.0f });
 
 		// uint8_t is enough for mask data but beacuse of VolumeFile implementation we need to use glm::vec4 for now!
 		//std::vector<std::array<uint8_t, 4>> maskData(xSize * ySize * zSize, { 0, 0, 0, 0 });
 
 		// We assume that the ImagePositionPatient is stored from the first slice
-		auto[ox, oy, oz] = reference.GetVolumeParams().ImagePositionPatient;
-		auto[sx, sy] = reference.GetVolumeParams().PixelSpacing;
+		auto [ox, oy, oz] = reference.GetVolumeParams().ImagePositionPatient;
+		auto [sx, sy] = reference.GetVolumeParams().PixelSpacing;
 		auto sz = reference.GetVolumeParams().SliceThickness;
 
 		glm::vec3 spacing{ sx, sy, sz };
@@ -87,7 +87,7 @@ namespace med
 			{
 				assert(m_Data[cId][i].size() % 3 == 0);
 				// Traverses images where contours are defined
-				for (size_t j = 0; j <= m_Data[cId][i].size() - 3; j+=3)
+				for (size_t j = 0; j <= m_Data[cId][i].size() - 3; j += 3)
 				{
 					// RCS -> Voxel
 					glm::vec3 contourPoint{ m_Data[cId][i][j], m_Data[cId][i][j + 1], m_Data[cId][i][j + 2] };
@@ -97,7 +97,7 @@ namespace med
 
 					// 3D coordinates -> 1D coordinate; reference is the same size as the mask
 					int index = reference.GetIndexFrom3D(static_cast<int>(voxel.x), static_cast<int>(voxel.y), static_cast<int>(voxel.z));
-					
+
 					if (index == -1)
 					{
 						LOG_WARN("Contour point out of bounds, skipping...");
@@ -244,7 +244,8 @@ namespace med
 
 		return res;
 	}
-	void StructureFileDcm::Erosion(std::vector<glm::vec4>& data, int xSize, int ySize, int sliceNumber, std::vector<std::vector<uint8_t>> structureElement, std::array<int, 4> contourIDs)
+
+	void StructureFileDcm::MorphologicalOp(std::vector<glm::vec4>& data, int xSize, int ySize, int sliceNumber, std::vector<std::vector<uint8_t>> structureElement, std::array<int, 4> contourIDs, bool doErosion)
 	{
 		if (structureElement.size() == 0 || structureElement[0].size() == 0)
 		{
@@ -273,6 +274,7 @@ namespace med
 		std::vector<glm::vec4> altered{};
 		std::copy(data.begin() + coord3D(xSize, ySize) - 1, data.end(), altered);
 
+		// Move this inside
 		for (int cId = 0; cId < contourIDs.size(); ++cId)
 		{
 			for (int y = offy; y < ySize - offy; ++y)
@@ -280,6 +282,7 @@ namespace med
 				for (int x = offx; x < xSize - offx; x++)
 				{
 					bool hasMissed = false;
+					bool hasHit = false;
 
 					for (int i = -offy; i <= offy; ++i)
 					{
@@ -290,16 +293,31 @@ namespace med
 								continue;
 
 							int index = coord2D(x + j, y + i);
-							if (altered[index][cId] == 0)
+
+							if (doErosion)
 							{
-								hasMissed = true;
-								break;
+								if (altered[index][cId] == 0)
+								{
+									hasMissed = true;
+									break;
+								}
 							}
+							else
+							{
+								// Dilation
+								if (altered[index][cId] == 1)
+								{
+									hasHit = true;
+									break;
+								}
+							}
+
 						}
-						if (hasMissed)
+
+						if (hasMissed || hasHit)
 							break;
 					}
-					
+
 					int dataCoord = coord3D(x, y);
 
 					if (hasMissed)
@@ -313,10 +331,14 @@ namespace med
 					//	data[dataCoord][cId] = 1;
 					//}
 
+					if (hasHit)
+					{
+						data[dataCoord][cId] = 1;
+					}
+
 				}
 			}
 		}
 
 	}
-
 }
