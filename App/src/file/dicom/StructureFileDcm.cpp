@@ -104,7 +104,7 @@ namespace med
 						continue;
 					}
 
-					if (maskData[index][l] == 1 && !(postProcessOpt & ContourPostProcess::IGNORE))
+					if ((maskData[index][l] == 1 || postProcessOpt & PROCESS_NON_DUPLICATES) && !(postProcessOpt & ContourPostProcess::IGNORE))
 					{
 						if (postProcessOpt & ContourPostProcess::NEAREST_NEIGHBOUR)
 						{
