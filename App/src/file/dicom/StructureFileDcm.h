@@ -17,7 +17,14 @@ namespace med
 		NEAREST_NEIGHBOUR = 1 << 1,
 		RECONSTRUCT_BRESENHAM = 1 << 2,
 		CLOSING = 1 << 3,
+
+		PROCESS_NON_DUPLICATES = 1 << 4
 	};
+
+	inline ContourPostProcess operator|(ContourPostProcess a, ContourPostProcess b)
+	{
+		return static_cast<ContourPostProcess>(static_cast<int>(a) | static_cast<int>(b));
+	}
 
 	class StructureFileDcm : public IDicomFile
 	{
