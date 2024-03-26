@@ -27,11 +27,18 @@ namespace med
 		return m_Params.FrameOfReference == other.GetBaseParams().FrameOfReference;
 	}
 
-	std::shared_ptr<VolumeFileDcm> StructureFileDcm::Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, bool handleDuplicates) const
+	std::shared_ptr<VolumeFileDcm> StructureFileDcm::Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, ContourPostProcess postProcessOpt) const
 	{
+		if ((postProcessOpt & ContourPostProcess::IGNORE) && (~1 & postProcessOpt))
+		{
+			LOG_WARN("Ambiguous input for contour post process. Post processing will be ignored");
+			postProcessOpt = ContourPostProcess::IGNORE;
+		}
+
 		// Assuming same orientation
 		if (other.GetModality() != DicomModality::CT || !CompareFrameOfReference(other))
 		{
+			LOG_CRITICAL("3D mask cannot be created, refernece modality is not CT or Frame of reference does not match with contour's");
 			return nullptr;
 		}
 		
@@ -94,18 +101,39 @@ namespace med
 					if (index == -1)
 					{
 						LOG_WARN("Contour point out of bounds, skipping...");
+						continue;
 					}
-					else
+
+					if (maskData[index][l] == 1 && !(postProcessOpt & ContourPostProcess::IGNORE))
 					{
-						if (maskData[index][l] == 1 && handleDuplicates)
+						if (postProcessOpt & ContourPostProcess::NEAREST_NEIGHBOUR)
 						{
-							glm::ivec2 substituteVoxel = HandleDuplicates(reference, contourPoint, voxel);
-							index = reference.GetIndexFrom3D(substituteVoxel.x, substituteVoxel.y, static_cast<int>(voxel.z));
+							glm::ivec2 substituteVoxel = HandleDuplicatesNearestNeighbour(reference, contourPoint, voxel);
+							int newIndex = reference.GetIndexFrom3D(substituteVoxel.x, substituteVoxel.y, static_cast<int>(voxel.z));
+							maskData[newIndex][l] = 1;
 						}
 
-						// Activate point at index, l is the contour we are processing
-						maskData[index][l] = 1;
+						if (postProcessOpt & ContourPostProcess::RECONSTRUCT_BRESENHAM)
+						{
+							if (j + 3 <= m_Data[cId][i].size() - 3)
+							{
+								glm::vec3 contourNext{ m_Data[cId][i][j + 3], m_Data[cId][i][j + 4], m_Data[cId][i][j + 5] };
+								glm::vec3 nextVoxel = glm::round((contourNext - origin) / spacing);
+								auto derivedVoxels = HandleDuplicatesLineToNextBresenahm(reference, voxel, nextVoxel);
+								assert(derivedVoxels.back().x == nextVoxel.x && derivedVoxels.back().y == nextVoxel.y && "Bresenham issue");
+
+								// We must exclude last derived voxel, this is next voxel and we don't want it to be flagged as duplicate, next iter.
+								for (size_t i = 0; i < derivedVoxels.size() - 1; ++i)
+								{
+									index = reference.GetIndexFrom3D(derivedVoxels[i].x, derivedVoxels[i].y, static_cast<int>(voxel.z));
+									maskData[index][l] = 1;
+								}
+							}
+						}
+
 					}
+					// Activate point at index, l is the contour we are processing
+					maskData[index][l] = 1;
 				}
 			}
 		}
@@ -113,7 +141,7 @@ namespace med
 		return std::make_shared<VolumeFileDcm>(m_Path, reference.GetSize(), FileDataType::Float, reference.GetVolumeParams(), maskData);
 	}
 
-	glm::ivec2 StructureFileDcm::HandleDuplicates(const VolumeFileDcm& reference, glm::vec3 currentRCS, glm::vec3 currentVoxel) const
+	glm::ivec2 StructureFileDcm::HandleDuplicatesNearestNeighbour(const VolumeFileDcm& reference, glm::vec3 currentRCS, glm::vec3 currentVoxel) const
 	{
 		auto [xSize, ySize, zSize] = reference.GetSize();
 		float minDist = std::numeric_limits<float>::max();
@@ -150,5 +178,70 @@ namespace med
 		}
 
 		return substituteVoxel;
+	}
+
+	std::vector<glm::ivec2> StructureFileDcm::HandleDuplicatesLineToNextBresenahm(const const VolumeFileDcm& reference, glm::vec3 start, glm::vec3 end) const
+	{
+		std::vector<glm::ivec2> res{};
+		int dX = end.x - start.x;
+		int dY = end.y - start.y;
+
+		int step = 0;
+
+		int currentX = start.x;
+		int currentY = start.y;
+
+		int incrX = dX > 0 ? 1 : -1;
+		int incrY = dY > 0 ? 1 : -1;
+
+		int dValue = -std::abs(dX);
+
+		// how many steps we are going to make
+		if (std::abs(dX) > std::abs(dY))
+		{
+			step = std::abs(dX);
+		}
+		else
+		{
+			step = std::abs(dY);
+			dValue = -std::abs(dY);
+		}
+
+		for (int i = 0; i <= step; ++i)
+		{
+			res.emplace_back(currentX, currentY);
+
+			if (std::abs(dX) > std::abs(dY))
+			{
+				// sampling x axis
+				dValue = dValue + (2 * std::abs(dY));
+				if (dValue >= 0)
+				{
+					currentX += incrX;
+					currentY += incrY;
+					dValue = dValue - (2 * std::abs(dX));
+				}
+				else
+				{
+					currentX += incrX;
+				}
+			}
+			else
+			{
+				dValue = dValue + (2 * std::abs(dX));
+				if (dValue >= 0)
+				{
+					currentX += incrX;
+					currentY += incrY;
+					dValue = dValue - (2 * std::abs(dY));
+				}
+				else
+				{
+					currentY += incrY;
+				}
+			}
+		}
+
+		return res;
 	}
 }
