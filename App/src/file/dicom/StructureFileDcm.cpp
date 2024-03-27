@@ -270,9 +270,14 @@ namespace med
 
 		int offy = structureElement.size() / 2;
 		int offx = structureElement[0].size() / 2;
-
-		std::vector<glm::vec4> altered{};
-		std::copy(data.begin() + coord3D(xSize, ySize) - 1, data.end(), altered);
+		// Iterator to the begining of the sliceNumber, since data is 3D array with 1D represenation we have to jump to the current slice, (-1 as we index from 0)
+		std::vector<glm::vec4>::const_iterator begin = data.begin() + coord3D(xSize, ySize) - 1;
+		// We jump to the begining of the slice and then jump to the end, xSize*ySize is the number of elements in the slice (-1 as we index from 0)
+		std::vector<glm::vec4>::const_iterator end = data.begin() + coord3D(xSize, ySize) - 1 + (xSize * ySize) - 1;
+		// Altered stores the slice, where we compute the morphological operation
+		std::vector<glm::vec4> altered(begin, end);
+		
+		assert(altered.size() == xSize * ySize);
 
 		// Move this inside
 		for (int cId = 0; cId < contourIDs.size(); ++cId)
