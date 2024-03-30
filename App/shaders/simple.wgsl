@@ -47,6 +47,7 @@ struct Ray
 @group(1) @binding(7) var tfCtColor: texture_1d<f32>;
 @group(1) @binding(8) var tfRtOpacity: texture_1d<f32>;
 @group(1) @binding(9) var tfRtColor: texture_1d<f32>;
+@group(1) @binding(10) var textMask: texture_3d<f32>;
 
 
 @group(2) @binding(0) var<uniform> fragmentMode: i32;
@@ -213,7 +214,8 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		// Volume sampling
 		var ctVolume: vec4f = textureSample(textMain, samplerLin, current_position);
 		var rtVolume: vec4f = textureSample(texAcom, samplerLin, current_position);
-		
+		var maskVol: vec4f = textureSample(textMask, samplerNN, current_position);
+
 		// When working with gradients, we need to be careful about in what form we have them from cpu
 		var gradient: vec3f = ctVolume.rgb;
 		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR_CT;
@@ -228,12 +230,17 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 		// Colors
 		// var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
-		var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
+		var color: vec3f = maskVol.rgb;
 		
 		// Opacities
 		// var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
-		var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, current_position, ray.start, dst.a);
-		// var opacity: f32 = opacityCT;
+		// var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, current_position, ray.start, dst.a);
+		var opacity: f32 = 0.0;
+
+		if color.r > 0 || color.g > 0
+		{
+			opacity = 0.5;
+		}
 
 
 		// Blending
