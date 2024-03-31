@@ -27,7 +27,7 @@ namespace med
 		return m_Params.FrameOfReference == other.GetBaseParams().FrameOfReference;
 	}
 
-	std::shared_ptr<VolumeFileDcm> StructureFileDcm::Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, ContourPostProcess postProcessOpt) const
+	std::shared_ptr<VolumeFileDcm> StructureFileDcm::Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, ContourPostProcess postProcessOpt)
 	{
 		if ((postProcessOpt & ContourPostProcess::IGNORE) && (~1 & postProcessOpt))
 		{
@@ -60,6 +60,7 @@ namespace med
 				finalContours.push_back(id - 1);
 			}
 		}
+		m_ActiveContourIDs = finalContours;
 
 		// cast reference to VolumeFileDcm
 		const VolumeFileDcm& reference = dynamic_cast<const VolumeFileDcm&>(other);
@@ -86,6 +87,8 @@ namespace med
 			for (size_t i = 0; i < m_Data[cId].size(); ++i)
 			{
 				assert(m_Data[cId][i].size() % 3 == 0);
+				int sliceNumber = -1;
+
 				// Traverses images where contours are defined
 				for (size_t j = 0; j <= m_Data[cId][i].size() - 3; j += 3)
 				{
@@ -94,6 +97,7 @@ namespace med
 					glm::vec3 voxel = (contourPoint - origin) / spacing;
 					voxel.z = std::fabs(voxel.z);
 					voxel = glm::round(voxel);
+					sliceNumber = static_cast<int>(voxel.z);
 
 					// 3D coordinates -> 1D coordinate; reference is the same size as the mask
 					int index = reference.GetIndexFrom3D(static_cast<int>(voxel.x), static_cast<int>(voxel.y), static_cast<int>(voxel.z));
@@ -104,8 +108,10 @@ namespace med
 						continue;
 					}
 
+					// if (duplicate or	process non-duplicates anyway) and (ignore flag is deactivated)
 					if ((maskData[index][l] == 1 || postProcessOpt & PROCESS_NON_DUPLICATES) && !(postProcessOpt & ContourPostProcess::IGNORE))
 					{
+						// These post-processes are done on point/pixel level
 						if (postProcessOpt & ContourPostProcess::NEAREST_NEIGHBOUR)
 						{
 							glm::ivec2 substituteVoxel = HandleDuplicatesNearestNeighbour(reference, contourPoint, voxel);
@@ -135,13 +141,20 @@ namespace med
 					// Activate point at index, l is the contour we are processing
 					maskData[index][l] = 1;
 				}
+
+				// Process the created image
+				if (postProcessOpt & ContourPostProcess::CLOSING)
+				{
+					MorphologicalOp(maskData, xSize, ySize, sliceNumber, { {1,1,1}, {1,1,1}, {1,1,1} }, true); // Erosion
+					MorphologicalOp(maskData, xSize, ySize, sliceNumber, { {1,1,1}, {1,1,1}, {1,1,1} }, false); // Dilation
+				}
 			}
 		}
 
 		return std::make_shared<VolumeFileDcm>(m_Path, reference.GetSize(), FileDataType::Float, reference.GetVolumeParams(), maskData);
 	}
 
-	glm::ivec2 StructureFileDcm::HandleDuplicatesNearestNeighbour(const VolumeFileDcm& reference, glm::vec3 currentRCS, glm::vec3 currentVoxel) const
+	glm::ivec2 StructureFileDcm::HandleDuplicatesNearestNeighbour(const VolumeFileDcm& reference, glm::vec3 currentRCS, glm::vec3 currentVoxel)
 	{
 		auto [xSize, ySize, zSize] = reference.GetSize();
 		float minDist = std::numeric_limits<float>::max();
@@ -180,7 +193,7 @@ namespace med
 		return substituteVoxel;
 	}
 
-	std::vector<glm::ivec2> StructureFileDcm::HandleDuplicatesLineToNextBresenahm(const const VolumeFileDcm& reference, glm::vec3 start, glm::vec3 end) const
+	std::vector<glm::ivec2> StructureFileDcm::HandleDuplicatesLineToNextBresenahm(const const VolumeFileDcm& reference, glm::vec3 start, glm::vec3 end)
 	{
 		std::vector<glm::ivec2> res{};
 		int dX = end.x - start.x;
@@ -245,7 +258,7 @@ namespace med
 		return res;
 	}
 
-	void StructureFileDcm::MorphologicalOp(std::vector<glm::vec4>& data, int xSize, int ySize, int sliceNumber, std::vector<std::vector<uint8_t>> structureElement, std::array<int, 4> contourIDs, bool doErosion)
+	void StructureFileDcm::MorphologicalOp(std::vector<glm::vec4>& data, int xSize, int ySize, int sliceNumber, std::vector<std::vector<uint8_t>> structureElement, bool doErosion)
 	{
 		if (structureElement.size() == 0 || structureElement[0].size() == 0)
 		{
@@ -256,6 +269,7 @@ namespace med
 		if (structureElement.size() % 2 == 0 || structureElement[0].size() % 2 == 0)
 		{
 			LOG_ERROR("Cannot determine the middle point in structure element, skipping");
+			return;
 		}
 
 		auto coord3D = [&](int x, int y)
@@ -270,17 +284,17 @@ namespace med
 
 		int offy = structureElement.size() / 2;
 		int offx = structureElement[0].size() / 2;
-		// Iterator to the begining of the sliceNumber, since data is 3D array with 1D represenation we have to jump to the current slice, (-1 as we index from 0)
-		std::vector<glm::vec4>::const_iterator begin = data.begin() + coord3D(xSize, ySize) - 1;
-		// We jump to the begining of the slice and then jump to the end, xSize*ySize is the number of elements in the slice (-1 as we index from 0)
-		std::vector<glm::vec4>::const_iterator end = data.begin() + coord3D(xSize, ySize) - 1 + (xSize * ySize) - 1;
+		// Iterator to the begining of the sliceNumber, since data is 3D array with 1D represenation we have to jump to the current slice
+		std::vector<glm::vec4>::const_iterator begin = data.begin() + coord3D(xSize, ySize) * sliceNumber;
+		// We jump to the begining of the slice and then jump to the end, xSize*ySize is the number of elements in the slice
+		std::vector<glm::vec4>::const_iterator end = data.begin() + coord3D(xSize, ySize) * sliceNumber + (xSize * ySize);
 		// Altered stores the slice, where we compute the morphological operation
 		std::vector<glm::vec4> altered(begin, end);
 		
 		assert(altered.size() == xSize * ySize);
 
-		// Move this inside
-		for (int cId = 0; cId < contourIDs.size(); ++cId)
+		// Do this for every user picked contour, move this to the inside of for loop for cache friendly access
+		for (int cId = 0; cId < m_ActiveContourIDs.size(); ++cId)
 		{
 			for (int y = offy; y < ySize - offy; ++y)
 			{
