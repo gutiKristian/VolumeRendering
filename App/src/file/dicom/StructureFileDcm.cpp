@@ -145,8 +145,8 @@ namespace med
 				// Process the created image
 				if (postProcessOpt & ContourPostProcess::CLOSING)
 				{
-					MorphologicalOp(maskData, xSize, ySize, sliceNumber, { {1,1,1}, {1,1,1}, {1,1,1} }, true); // Erosion
 					MorphologicalOp(maskData, xSize, ySize, sliceNumber, { {1,1,1}, {1,1,1}, {1,1,1} }, false); // Dilation
+					MorphologicalOp(maskData, xSize, ySize, sliceNumber, { {1,1,1}, {1,1,1}, {1,1,1} }, true); // Erosion
 				}
 			}
 		}
@@ -272,9 +272,9 @@ namespace med
 			return;
 		}
 
-		auto coord3D = [&](int x, int y)
+		auto coord3D = [&](int x, int y, int z)
 			{
-				return sliceNumber * ySize * xSize + y * xSize + x;
+				return z * ySize * xSize + y * xSize + x;
 			};
 
 		auto coord2D = [&](int x, int y)
@@ -284,16 +284,16 @@ namespace med
 
 		int offy = structureElement.size() / 2;
 		int offx = structureElement[0].size() / 2;
+
 		// Iterator to the begining of the sliceNumber, since data is 3D array with 1D represenation we have to jump to the current slice
-		std::vector<glm::vec4>::const_iterator begin = data.begin() + coord3D(xSize, ySize) * sliceNumber;
+		std::vector<glm::vec4>::const_iterator begin = data.begin() + coord3D(xSize, ySize, sliceNumber - 1);
 		// We jump to the begining of the slice and then jump to the end, xSize*ySize is the number of elements in the slice
-		std::vector<glm::vec4>::const_iterator end = data.begin() + coord3D(xSize, ySize) * sliceNumber + (xSize * ySize);
+		std::vector<glm::vec4>::const_iterator end = data.begin() + coord3D(xSize, ySize, sliceNumber);
 		// Altered stores the slice, where we compute the morphological operation
 		std::vector<glm::vec4> altered(begin, end);
 		
 		assert(altered.size() == xSize * ySize);
 
-		// Do this for every user picked contour, move this to the inside of for loop for cache friendly access
 		for (int cId = 0; cId < m_ActiveContourIDs.size(); ++cId)
 		{
 			for (int y = offy; y < ySize - offy; ++y)
@@ -313,22 +313,16 @@ namespace med
 
 							int index = coord2D(x + j, y + i);
 
-							if (doErosion)
+							if (doErosion && altered[index][cId] == 0)
 							{
-								if (altered[index][cId] == 0)
-								{
-									hasMissed = true;
-									break;
-								}
+								hasMissed = true;
+								break;
 							}
-							else
+							else if (!doErosion && altered[index][cId] == 1)
 							{
 								// Dilation
-								if (altered[index][cId] == 1)
-								{
-									hasHit = true;
-									break;
-								}
+								hasHit = true;
+								break;
 							}
 
 						}
@@ -337,7 +331,7 @@ namespace med
 							break;
 					}
 
-					int dataCoord = coord3D(x, y);
+					int dataCoord = coord3D(x, y, sliceNumber);
 
 					if (hasMissed)
 					{
