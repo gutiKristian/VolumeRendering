@@ -229,19 +229,11 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var colorRT: vec3f = textureSample(tfRtColor, samplerLin, densityRT).rgb;
 
 		// Colors
-		// var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
-		var color: vec3f = maskVol.rgb;
+		var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
 		
 		// Opacities
 		// var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
-		// var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, current_position, ray.start, dst.a);
-		var opacity: f32 = 0.0;
-
-		if color.r > 0 || color.g > 0
-		{
-			opacity = 0.5;
-		}
-
+		var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, current_position, ray.start, dst.a);
 
 		// Blending
 		var src: vec4<f32> = vec4f(color.r, color.g, color.b, opacity);
