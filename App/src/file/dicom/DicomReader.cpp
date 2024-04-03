@@ -18,7 +18,7 @@ namespace med
 	const dcm::Tag kInstanceNumber = 0x00200013;
 	const dcm::Tag kImagePositionPatient = 0x00200032;
 	const dcm::Tag kImageOrientationPatient = 0x00200037;
-	const dcm::Tag kSliceThickness = 0x00200050;
+	const dcm::Tag kSliceThickness = 0x00180050;
 	const dcm::Tag kFrameOfReference = 0x00200052;
 
 
@@ -58,6 +58,7 @@ namespace med
 			throw new std::exception("No dicom files found!");
 		}
 
+
 		// Reading
 		for (const auto& file : paths)
 		{
@@ -69,6 +70,7 @@ namespace med
 
 				if (firstRun)
 				{
+					m_Params.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
 					PreAllocateMemory(numberOfFiles, isDir);
 				}
 				firstRun = false;
@@ -141,7 +143,7 @@ namespace med
 		StructVisitor visitor;
 		f.Accept(visitor);
 
-		return std::make_unique<StructureFileDcm>(visitor.Params, visitor.ContourData);
+		return std::make_unique<StructureFileDcm>(name, visitor.Params, visitor.ContourData);
 	}
 
 	DicomModality DicomReader::CheckModality(const std::filesystem::path& name)
@@ -170,6 +172,8 @@ namespace med
 		DicomVolumeParams currentParams;
 
 		currentParams.FrameOfReference = f.GetString(kFrameOfReference);
+
+		currentParams.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
 
 		f.GetUint16(dcm::tags::kRows, &currentParams.X);
 		f.GetUint16(dcm::tags::kColumns, &currentParams.Y);

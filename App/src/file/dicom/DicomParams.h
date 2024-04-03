@@ -9,7 +9,7 @@ namespace med
 {
 	enum class DicomModality
 	{
-		UNKNOWN, CT, RTSTRUCT, RTDOSE, MR
+		UNKNOWN, CT, RTSTRUCT, RTDOSE, MR, CONTOURMASK
 	};
 
 	struct DicomBaseParams
@@ -34,7 +34,7 @@ namespace med
 		double SliceThickness = 0.0;									// (0018,0050) Slice Thickness
 		std::array<double, 3> ImagePositionPatient{ 0.0 };				// (0020,0032) Image Position (Patient)
 		std::array<double, 6> ImageOrientationPatient{ 0.0 };			// (0020,0037) Image Orientation (Patient)
-		std::array<double, 2> PixelSpacing{ 0.0 };						// (0028,0030) Pixel Spacing
+		std::array<double, 2> PixelSpacing{ 0.0 };						// (0028,0030) Pixel Spacing -- ROW//COL
 	};
 
 

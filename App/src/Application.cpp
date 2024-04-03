@@ -251,6 +251,7 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_TexDataMask, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 		
 		// Reinit pipelines
@@ -408,9 +409,11 @@ namespace med {
 	{
 		LOG_INFO("Loading files...");
 		DicomReader reader;
-		std::unique_ptr<StructureFileDcm> contourFile = reader.ReadStructFile("assets\\716^716_716_RTst_2013-04-02_230000_716-1-01_OCM.BladderShell_n1__00000/");
-		std::unique_ptr<VolumeFileDcm> ctFile = reader.ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000");
+		std::unique_ptr<StructureFileDcm> contourFile = reader.ReadStructFile("assets\\716^716_716_RTst_2013-04-02_230000_716-1-01_OCM.BladderShell_n1__00000\\");
+		std::unique_ptr<VolumeFileDcm> ctFile = reader.ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
 		std::unique_ptr<VolumeFileDcm> rtDoseFile = reader.ReadVolumeFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\2.16.840.1.114362.1.6.5.9.16309.10765415608.432686722.485.282.dcm");
+		auto volumeMask = contourFile->Create3DMask(*ctFile, { 2, 0, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM | ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING);
+		
 		LOG_INFO("Done");
 
 		ctFile->PreComputeGradient(true);
@@ -431,6 +434,8 @@ namespace med {
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");
 		p_TexDataAcom = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), rtDoseFile->GetVoidPtr(), WGPUTextureDimension_3D, rtDoseFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "RTDose data texture");
+		p_TexDataMask = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), volumeMask->GetVoidPtr(), WGPUTextureDimension_3D, volumeMask->GetSize(),
+			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Contour 3D mask");
 
 		p_TexStartPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEndPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
@@ -478,6 +483,7 @@ namespace med {
 		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroupTextures.AddTexture(*p_TexDataMask, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
 		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);

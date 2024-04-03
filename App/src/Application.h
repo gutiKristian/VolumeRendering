@@ -107,6 +107,8 @@ namespace med {
 		// Binding 1
 		std::shared_ptr<Texture> p_TexDataMain = nullptr;
 		std::shared_ptr<Texture> p_TexDataAcom = nullptr;
+		std::shared_ptr<Texture> p_TexDataMask = nullptr;
+
 		std::shared_ptr<Texture> p_TexStartPos = nullptr;
 		std::shared_ptr<Texture> p_TexEndPos = nullptr;
 
