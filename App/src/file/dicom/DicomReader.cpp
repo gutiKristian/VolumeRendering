@@ -255,6 +255,11 @@ namespace med
 
 	std::vector<std::filesystem::path> DicomReader::SortDicomSlices(const std::vector<std::filesystem::path>& paths) const
 	{
+		if (paths.size() < 2)
+		{
+			return paths;
+		}
+
 		std::vector< std::pair<int, std::filesystem::path> > pairs;
 		std::vector<std::filesystem::path> result;
 
