@@ -22,14 +22,14 @@ namespace med
 		 * @param name path to the file
 		 * @return VolumeFileDcm object with the data
 		 */
-		[[nodiscard]] std::shared_ptr<VolumeFileDcm> ReadVolumeFile(std::filesystem::path name);
+		[[nodiscard]] static std::shared_ptr<VolumeFileDcm> ReadVolumeFile(std::filesystem::path name);
 
 		/**
 		 * @brief Reads the dicom file and stores the data in the StructureFile object, is used for parsing contours
 		 * @param name path to the file
 		 * @return StructureFileDcm object with the data
 		 */
-		[[nodiscard]] std::shared_ptr<StructureFileDcm> ReadStructFile(std::filesystem::path name);
+		[[nodiscard]] static std::shared_ptr<StructureFileDcm> ReadStructFile(std::filesystem::path name);
 
 		/*
 		* @brief Retrieve modality of a file
@@ -48,6 +48,14 @@ namespace med
 		* @ return modality (uppercase string)
 		*/
 		[[nodiscard]] static std::string ResolveModality(DicomModality modality);
+
+		/**
+		 * @brief Sorts the dicom files by the Instance number tag, if one file is missing this tag, same vector is returned
+		 * @param paths dicom files
+		 * @return sorted paths in ascending order
+		 */
+		[[nodiscard]] static std::vector<std::filesystem::path> SortDicomSlices(const std::vector<std::filesystem::path>& paths);
+
 		[[nodiscard]] static bool IsDicomFile(const std::filesystem::path& path);
 	private:
 		/**
@@ -65,12 +73,6 @@ namespace med
 		 * @param f opened dicom file
 		 */
 		void ReadData(const dcm::DicomFile& f);
-		/**
-		 * @brief Sorts the dicom files by the Instance number tag, if one file is missing this tag, same vector is returned
-		 * @param paths dicom files
-		 * @return sorted paths in ascending order
-		 */
-		[[nodiscard]] std::vector<std::filesystem::path> SortDicomSlices(const std::vector<std::filesystem::path>& paths) const;
 
 		/**
 		 * @brief Initiliazes file type based on allocated bits tag in dicom file.

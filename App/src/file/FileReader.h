@@ -43,7 +43,7 @@ namespace med
 		}
 
         template <typename T>
-        size_t GetMaxNumber(const std::vector<T>& vec)
+        [[nodiscard]] static size_t GetMaxNumber(const std::vector<T>& vec)
         {
             if constexpr (std::is_same_v<T, glm::vec4>)
             {
@@ -59,12 +59,12 @@ namespace med
             }
         }
 
-		size_t GetMaxUsedBits(size_t maxNumber)
+		[[nodiscard]] static size_t GetMaxUsedBits(size_t maxNumber)
 		{
 			return std::bit_width(maxNumber);
 		}
 
-		bool IsDirectory(const std::filesystem::path& path)
+		[[nodiscard]] static bool IsDirectory(const std::filesystem::path& path)
 		{
 			return std::filesystem::is_directory(path);
 		}

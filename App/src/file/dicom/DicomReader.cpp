@@ -24,9 +24,8 @@ namespace med
 
 	std::shared_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
 	{
-		bool firstRun = true;
-		m_Data = std::vector<glm::vec4>();
-		m_Params = DicomVolumeParams();
+		DicomReader reader;
+		bool firstRun = true; // First file
 
 		// Full path
 		name = s_Path / name;
@@ -66,16 +65,16 @@ namespace med
 
 			if (f.Load())
 			{
-				ReadDicomVolumeVariables(f);
+				reader.ReadDicomVolumeVariables(f);
 
 				if (firstRun)
 				{
-					m_Params.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
-					PreAllocateMemory(numberOfFiles, isDir);
+					reader.m_Params.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
+					reader.PreAllocateMemory(numberOfFiles, isDir);
 				}
 				firstRun = false;
 
-				ReadData(f);
+				reader.ReadData(f);
 			}
 			else
 			{
@@ -86,13 +85,13 @@ namespace med
 
 		if (isDir)
 		{
-			m_Params.Z = numberOfFiles;
+			reader.m_Params.Z = numberOfFiles;
 		}
 
-		auto n = GetMaxNumber<glm::vec4>(m_Data);
+		auto n = GetMaxNumber<glm::vec4>(reader.m_Data);
 		auto bits = GetMaxUsedBits(n);
-		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size = { m_Params.X, m_Params.Y, m_Params.Z };
-		return std::make_unique<VolumeFileDcm>(s_Path / name, size, m_FileDataType, m_Params, m_Data);
+		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size = { reader.m_Params.X, reader.m_Params.Y, reader.m_Params.Z };
+		return std::make_shared<VolumeFileDcm>(s_Path / name, size, reader.m_FileDataType, reader.m_Params, reader.m_Data);
 	}
 
 	std::shared_ptr<StructureFileDcm> DicomReader::ReadStructFile(std::filesystem::path name)
@@ -143,7 +142,7 @@ namespace med
 		StructVisitor visitor;
 		f.Accept(visitor);
 
-		return std::make_unique<StructureFileDcm>(name, visitor.Params, visitor.ContourData);
+		return std::make_shared<StructureFileDcm>(name, visitor.Params, visitor.ContourData);
 	}
 
 	DicomModality DicomReader::CheckModality(const std::filesystem::path& name)
@@ -253,7 +252,7 @@ namespace med
 		}
 	}
 
-	std::vector<std::filesystem::path> DicomReader::SortDicomSlices(const std::vector<std::filesystem::path>& paths) const
+	std::vector<std::filesystem::path> DicomReader::SortDicomSlices(const std::vector<std::filesystem::path>& paths)
 	{
 		if (paths.size() < 2)
 		{
