@@ -22,7 +22,7 @@ namespace med
 	const dcm::Tag kFrameOfReference = 0x00200052;
 
 
-	std::unique_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
+	std::shared_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
 	{
 		bool firstRun = true;
 		m_Data = std::vector<glm::vec4>();
@@ -95,7 +95,7 @@ namespace med
 		return std::make_unique<VolumeFileDcm>(s_Path / name, size, m_FileDataType, m_Params, m_Data);
 	}
 
-	std::unique_ptr<StructureFileDcm> DicomReader::ReadStructFile(std::filesystem::path name)
+	std::shared_ptr<StructureFileDcm> DicomReader::ReadStructFile(std::filesystem::path name)
 	{
 		name = s_Path / name;
 		// Handling directory and file extension

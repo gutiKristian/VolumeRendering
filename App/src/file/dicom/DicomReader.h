@@ -18,17 +18,35 @@ namespace med
 	{
 	public:
 		/**
-		 * @brief Reads the dicom file and stores the data in the VolumeFileDcm object
+		 * @brief Reads the dicom file and stores the data in the VolumeFileDcm object, used for parsing image data
 		 * @param name path to the file
 		 * @return VolumeFileDcm object with the data
 		 */
-		[[nodiscard]] std::unique_ptr<VolumeFileDcm> ReadVolumeFile(std::filesystem::path name);
+		[[nodiscard]] std::shared_ptr<VolumeFileDcm> ReadVolumeFile(std::filesystem::path name);
 
-		[[nodiscard]] std::unique_ptr<StructureFileDcm> ReadStructFile(std::filesystem::path name);
+		/**
+		 * @brief Reads the dicom file and stores the data in the StructureFile object, is used for parsing contours
+		 * @param name path to the file
+		 * @return StructureFileDcm object with the data
+		 */
+		[[nodiscard]] std::shared_ptr<StructureFileDcm> ReadStructFile(std::filesystem::path name);
 
-
+		/*
+		* @brief Retrieve modality of a file
+		* @return DicomModality enum
+		*/
 		[[nodiscard]] static DicomModality CheckModality(const std::filesystem::path& name);
+		
+		/*
+		* @brief Transfers string modaility to DicomModality enum, not case sensitive
+		* @ return DicomModality enum
+		*/
 		[[nodiscard]] static DicomModality ResolveModality(std::string modality);
+		
+		/*
+		* @brief Resolves enum DicomModality to string
+		* @ return modality (uppercase string)
+		*/
 		[[nodiscard]] static std::string ResolveModality(DicomModality modality);
 		[[nodiscard]] static bool IsDicomFile(const std::filesystem::path& path);
 	private:
