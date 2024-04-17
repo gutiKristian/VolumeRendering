@@ -23,22 +23,6 @@
 
 #include "miniapps/include/BasicVolumeApp.h"
 
-#define MED_BEGIN_TAB_BAR(name) \
-	if (ImGui::BeginTabBar(name)) \
-	{
-
-#define MED_END_TAB_BAR \
-		ImGui::EndTabBar(); \
-	}
-
-#define MED_BEGIN_TAB_ITEM(name) \
-	if (ImGui::BeginTabItem(name)) \
-	{
-
-#define MED_END_TAB_ITEM \
-		ImGui::EndTabItem(); \
-	}
-
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
 	#include <emscripten/html5.h>
