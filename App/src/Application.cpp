@@ -21,6 +21,8 @@
 
 #include "tf/LinearInterpolation.h"
 
+#include "miniapps/include/BasicVolumeApp.h"
+
 #define MED_BEGIN_TAB_BAR(name) \
 	if (ImGui::BeginTabBar(name)) \
 	{
@@ -90,13 +92,10 @@ namespace med {
 
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
 		p_UStepsCount->UpdateBuffer(queue, 0, &m_StepsCount, sizeOfInt);
-		p_ULight1->UpdateBuffer(queue, 0, &m_Light1, sizeof(Light));
 
-		// Update transfer functions, update is initiated by the TF itself when needed
-		p_OpacityTf->UpdateTexture();
-		p_ColorTf->UpdateTexture();
-		p_OpacityTfRT->UpdateTexture();
-		p_ColorTfRT->UpdateTexture();
+		p_App->OnUpdate(ts);
+
+		//p_ULight1->UpdateBuffer(queue, 0, &m_Light1, sizeof(Light));
 	}
 
 	void Application::OnRender()
@@ -137,7 +136,7 @@ namespace med {
 
 		p_RenderPipelineEnd->Bind(passRayEnd);
 		p_VBCube->Bind(passRayEnd);
-		m_BGroupCamera.Bind(passRayEnd);
+		m_BGroupProxy.Bind(passRayEnd);
 		wgpuRenderPassEncoderSetIndexBuffer(passRayEnd, p_IBCube->GetBufferPtr(), WGPUIndexFormat_Uint16, 0, p_IBCube->GetSize());
 		wgpuRenderPassEncoderDrawIndexed(passRayEnd, p_IBCube->GetCount(), 1, 0, 0, 0);
 		wgpuRenderPassEncoderEnd(passRayEnd);
@@ -214,8 +213,8 @@ namespace med {
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
 		ImGui::End();
 
-		ImGui::Begin("Transfer function");
-		OnTfRender();
+		ImGui::Begin("MiniApp");
+		p_App->OnImGuiRender();
 		ImGui::End();
 
 	}
@@ -242,7 +241,9 @@ namespace med {
 		// Reinit bindgroups and pipelines
 		InitializeBindGroups();
 		InitializeRenderPipelines();
+		
 		p_App->OnResize(m_Width, m_Height, m_Builder);
+
 		p_RenderPipeline = m_Builder.BuildPipeline();
 	}
 
@@ -250,6 +251,7 @@ namespace med {
 	{
 		LOG_INFO("On end");
 		ImGuiLayer::Destroy();
+		p_App->OnEnd();
 	}
 
 	void Application::Run()
@@ -525,43 +527,4 @@ namespace med {
 		}
 	}
 
-	void Application::OnTfRender()
-	{
-		MED_BEGIN_TAB_BAR("Tf settings")
-
-		MED_BEGIN_TAB_ITEM("TF Plot")
-
-		p_OpacityTf->Render();
-		p_ColorTf->Render();
-	
-		MED_END_TAB_ITEM
-		
-		MED_BEGIN_TAB_ITEM("RTDose TF")
-		p_OpacityTfRT->Render();
-		p_ColorTfRT->Render();
-		MED_END_TAB_ITEM
-
-		MED_BEGIN_TAB_ITEM("Colormaps")
-		auto numberOfCm = ImPlot::GetColormapCount();
-		// On purpose skipping those first 4
-		for (auto i = 4; i < numberOfCm; ++i)
-		{
-
-			ImGui::Text("%s", ImPlot::GetColormapName(i));
-			ImGui::SameLine(75.0f);
-			std::string id = "##" + std::to_string(i);
-			if (ImPlot::ColormapButton(id.c_str(), ImVec2(-1, 0), i))
-			{
-				// context expected to exist
-				ImPlot::GetCurrentContext()->Style.Colormap = i;
-				ImPlot::BustColorCache();
-			}
-		}
-
-		MED_END_TAB_ITEM
-
-		MED_END_TAB_BAR
-
-
-	}
 }

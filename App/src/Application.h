@@ -13,7 +13,7 @@
 #include "tf/OpacityTf.h"
 #include "tf/ColorTf.h"
 #include "file/VolumeFile.h"
-#include "miniapps/include/MiniApp.h"
+#include "miniapps/include/BasicVolumeApp.h"
 
 #include <memory>
 
@@ -76,11 +76,6 @@ namespace med {
 		/*Event helpers*/
 		void ToggleMouse(int key, bool toggle);
 
-        /*
-         * Updates the y values between control points based on interpolation method.
-         */
-        void OnTfRender();
-
 	private:
 #if defined(PLATFORM_WEB)
 		static int EMSRedraw(double time, void* userData);
@@ -109,22 +104,14 @@ namespace med {
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
 		std::shared_ptr<UniformBuffer> p_UCameraPos = nullptr;
 
-		// Binding 1
-		std::shared_ptr<Texture> p_TexDataMain = nullptr;
-		std::shared_ptr<Texture> p_TexDataAcom = nullptr;
-		std::shared_ptr<Texture> p_TexDataMask = nullptr;
-
 		std::shared_ptr<Texture> p_TexStartPos = nullptr;
 		std::shared_ptr<Texture> p_TexEndPos = nullptr;
 
-		// Binding 2
 		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
 		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
-		
-		// Binding 3
+
 		std::shared_ptr<UniformBuffer> p_ULight1 = nullptr;
 
-		// Pipelines
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineStart = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineEnd = nullptr;
@@ -132,7 +119,6 @@ namespace med {
 		BindGroup m_BGroupDefaultApp;
 		BindGroup m_BGroupProxy;
 		
-
 		std::shared_ptr<VertexBuffer> p_VBCube = nullptr;
 		std::shared_ptr<IndexBuffer> p_IBCube = nullptr;
 
@@ -204,7 +190,7 @@ namespace med {
 			.Specular = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f}
 		};
 
-		std::unique_ptr<MiniApp> p_App = nullptr;
+		std::unique_ptr<MiniApp> p_App = std::make_unique<BasicVolumeApp>();
 	};
 
 }

@@ -22,6 +22,7 @@ struct Ray
 	length: f32
 }
 
+// Default bindings
 @group(0) @binding(0) var<uniform> camera: CameraData;
 @group(0) @binding(1) var<uniform> cameraPosition: vec3f;
 @group(0) @binding(2) var samplerLin: sampler;
@@ -31,7 +32,10 @@ struct Ray
 @group(0) @binding(6) var texRayStart: texture_2d<f32>;
 @group(0) @binding(7) var texRayEnd: texture_2d<f32>;
 
+// App
 @group(1) @binding(0) var textMain: texture_3d<f32>;
+@group(1) @binding(1) var tfOpacity: texture_1d<f32>;
+@group(1) @binding(2) var tfColor: texture_1d<f32>;
 
 @vertex
 fn vs_main(@builtin(vertex_index) vID: u32, @location(0) vertexCoord: vec3f, @location(1) textureCoord: vec3f) -> Fragment {
@@ -95,8 +99,8 @@ fn jitter(co: vec2<f32>) -> f32
 
 
 // Either upload max value for dataset as uniform or upload already normalised data (had some gradient troubles)
-const DENSITY_FACTOR_CT = 1/4095.0;
-const DENSITY_FACTOR_RT = 1/32767.0;
+const DENSITY_FACTOR_CT: f32 = f32(1/4095.0);
+const DENSITY_FACTOR_RT: f32 = f32(1/32767.0);
 
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
@@ -131,52 +135,33 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	}
 
 	// Iteration params -- Default
-	var step_size: f32 = 0.01;
+	var stepSize: f32 = 0.01;
 
  	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
 	// apply jitter using screen space coordinates, we could divide it (jitter input) by resolution to keep it same across all res.
-	var current_position: vec3<f32> = ray.start.xyz + ray.direction * step_size * jitter(in.position.xy); 
-	var step: vec3<f32> = ray.direction * step_size;
+	var currentPosition: vec3<f32> = ray.start.xyz + ray.direction * stepSize * jitter(in.position.xy);
+	var step: vec3<f32> = ray.direction * stepSize;
  
 	var dst: vec4<f32> = vec4<f32>(0.0);
 
 	for (var i: i32 = 0; i < stepsCount; i++)
 	{
 		// Volume sampling
-		var ctVolume: vec4f = textureSample(textMain, samplerLin, current_position);
-		var rtVolume: vec4f = textureSample(texAcom, samplerLin, current_position);
-		var maskVol: vec4f = textureSample(textMask, samplerNN, current_position);
-
-		// When working with gradients, we need to be careful about in what form we have them from cpu
-		var gradient: vec3f = ctVolume.rgb;
-		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR_CT;
-		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR_RT;
+		var volumeSample: vec4f = textureSample(textMain, samplerLin, currentPosition);
+		var density: f32 = volumeSample.a * DENSITY_FACTOR_CT;
 
 		// Transfer function sampling
-		var opacityCT: f32 = textureSample(tfCtOpacity, samplerLin, densityCT).r;
-		var colorCT: vec3f = textureSample(tfCtColor, samplerLin, densityCT).rgb;
-
-		var opacityRT: f32 = textureSample(tfRtOpacity, samplerLin, densityRT).r;
-		var colorRT: vec3f = textureSample(tfRtColor, samplerLin, densityRT).rgb;
-
-		// Colors
-		var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
+		var opacity: f32 = textureSample(tfOpacity, samplerLin, density).r;
+		var color: vec3f = textureSample(tfColor, samplerLin, density).rgb;
 		
-		// Opacities
-		// var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
-		var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, current_position, ray.start, dst.a);
-
-		// Blending
-		var src: vec4<f32> = vec4f(color.r, color.g, color.b, opacity);
-
-		if IsInSampleCoords(current_position) && dst.a < 1.0
+		if IsInSampleCoords(currentPosition) && dst.a < 1.0
 		{
-			dst = FrontToBackBlend(src, dst); 
+			// Blending
+			dst = FrontToBackBlend(vec4f(color.r, color.g, color.b, opacity), dst); 
 		}
 
 		// Advance ray
-		current_position = current_position + step;
-		wordlCoords = wordlCoords + step;
+		currentPosition = currentPosition + step;
 	}
 
 	return dst;
