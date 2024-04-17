@@ -71,6 +71,8 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
+		p_App->OnStart(m_Builder);
+		p_RenderPipeline = m_Builder.BuildPipeline();
 	}
 
 	void Application::OnUpdate(base::Timestep ts)
@@ -121,7 +123,7 @@ namespace med {
 
 		p_RenderPipelineStart->Bind(passRayEntrance);
 		p_VBCube->Bind(passRayEntrance);
-		m_BGroupCamera.Bind(passRayEntrance);
+		m_BGroupProxy.Bind(passRayEntrance);
 		wgpuRenderPassEncoderSetIndexBuffer(passRayEntrance, p_IBCube->GetBufferPtr(), WGPUIndexFormat_Uint16, 0, p_IBCube->GetSize());
 		wgpuRenderPassEncoderDrawIndexed(passRayEntrance, p_IBCube->GetCount(), 1, 0, 0, 0);
 		wgpuRenderPassEncoderEnd(passRayEntrance);
@@ -179,10 +181,8 @@ namespace med {
 
 		p_RenderPipeline->Bind(pass);
 		p_VBCube->Bind(pass);
-		m_BGroupCamera.Bind(pass);
-		m_BGroupTextures.Bind(pass);
-		m_BGroupImGui.Bind(pass);
-		m_BGroupLights.Bind(pass);
+		m_BGroupDefaultApp.Bind(pass);
+		p_App->OnRender(pass);
 		wgpuRenderPassEncoderDrawIndexed(pass, p_IBCube->GetCount(), 1, 0, 0, 0);
 		wgpuRenderPassEncoderEnd(pass);
 		BindGroup::ResetBindSlotsIndices();
@@ -239,23 +239,11 @@ namespace med {
 		p_TexStartPos = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEndPos = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 
-		// Reinitialize bind group
-		m_BGroupTextures = BindGroup();
-		m_BGroupTextures.AddTexture(*p_TexDataMain, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		m_BGroupTextures.AddSampler(*p_Sampler);
-		m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddSampler(*p_SamplerNN);
-		m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_TexDataMask, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
-		
-		// Reinit pipelines
+		// Reinit bindgroups and pipelines
+		InitializeBindGroups();
 		InitializeRenderPipelines();
+		p_App->OnResize(m_Width, m_Height, m_Builder);
+		p_RenderPipeline = m_Builder.BuildPipeline();
 	}
 
 	void Application::OnEnd()
@@ -302,6 +290,7 @@ namespace med {
 					{
 						LOG_WARN("Pipeline refresh requested");
 						InitializeRenderPipelines();
+						p_App->IntializePipeline(m_Builder);
 					}
 					else
 					{
@@ -384,7 +373,7 @@ namespace med {
 
 	void Application::InitializeUniforms()
 	{
-		LOG_INFO("Initializing uniforms");
+		LOG_INFO("Initializing default Application uniforms");
 
 		const auto device = base::GraphicsContext::GetDevice();
 		const auto queue = base::GraphicsContext::GetQueue();
@@ -392,58 +381,46 @@ namespace med {
 		glm::mat4 dummy_model{ 1.0f };
 		constexpr float UNIFORM_CAMERA_SIZE = sizeof(float) * 16 * 5; // float * mat4 *  card({Model, View, Proj, InverseProj, InverseView})
 		p_UCamera = UniformBuffer::CreateFromData(device, queue, static_cast<void*>(&dummy_model),
-			/* float * mat4 *  MVP IP IV = */ sizeof(float) * 16 * 5, 0, false, "Camera Uniform");
-		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16, &m_Camera.GetViewMatrix(), sizeof(float) * 16);
-		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 2, &m_Camera.GetProjectionMatrix(), sizeof(float) * 16);
-		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 3, &m_Camera.GetInverseViewMatrix(), sizeof(float) * 16);
-		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 4, &m_Camera.GetInverseProjectionMatrix(), sizeof(float) * 16);
-
-
+			/* float * mat4 *  MVP IP IV = */ sizeof(float) * 16 * 5, 0, false, "Camera Uniform");		
 		p_UCameraPos =	UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 		p_UFragmentMode = UniformBuffer::CreateFromData(device, queue, &m_FragmentMode, sizeof(int));
 		p_UStepsCount = UniformBuffer::CreateFromData(device, queue, &m_StepsCount, sizeof(int));
 		p_ULight1 = UniformBuffer::CreateFromData(device, queue, &m_Light1, sizeof(Light));
+
+		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16, &m_Camera.GetViewMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 2, &m_Camera.GetProjectionMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 3, &m_Camera.GetInverseViewMatrix(), sizeof(float) * 16);
+		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 4, &m_Camera.GetInverseProjectionMatrix(), sizeof(float) * 16);
 	}
 
 	void Application::InitializeTextures()
 	{
-		LOG_INFO("Loading files");
+		/*LOG_INFO("Loading files");
 
 		auto contourFile = DicomReader::ReadStructFile("assets\\716^716_716_RTst_2013-04-02_230000_716-1-01_OCM.BladderShell_n1__00000\\");
 		auto ctFile = DicomReader::ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
 		auto rtDoseFile = DicomReader::ReadVolumeFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01\\");
-		auto volumeMask = contourFile->Create3DMask(*ctFile, { 2, 0, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM | ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING);
+		auto volumeMask = contourFile->Create3DMask(*ctFile, { 2, 0, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM | ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING);*/
 		
-		LOG_INFO("Done");
-
-		ctFile->PreComputeGradient(true);
-		//rtDoseFile->PreComputeGradient(true);
-
-		// For now hardcode the depth, later we will get it from the file
-		p_OpacityTf = std::make_unique<OpacityTF>(256);
-		p_ColorTf = std::make_unique<ColorTF>(256);
-		
-		p_OpacityTfRT = std::make_unique<OpacityTF>(256);
-		p_ColorTfRT = std::make_unique<ColorTF>(256);
-
 		// Disabled for now
 		//p_OpacityTf->ActivateHistogram(*ctFile);
 
-		LOG_INFO("Initializing textures");
+		/*LOG_INFO("Initializing textures");
 		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");
 		p_TexDataAcom = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), rtDoseFile->GetVoidPtr(), WGPUTextureDimension_3D, rtDoseFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "RTDose data texture");
 		p_TexDataMask = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), volumeMask->GetVoidPtr(), WGPUTextureDimension_3D, volumeMask->GetSize(),
-			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Contour 3D mask");
+			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Contour 3D mask");*/
 
+		LOG_INFO("Initializing proxy-geometry render attachments");
 		p_TexStartPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEndPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 	}
 
 	void Application::InitializeVertexBuffers()
 	{
-		LOG_INFO("Initializing vertex buffers");
+		LOG_INFO("Initializing proxy geometry vertex buffer");
 		p_VBCube = VertexBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_CubeVertexData, sizeof(m_CubeVertexData), 0, false, "Cube VertexBuffer");
 		//. XYZ
 		p_VBCube->AddVertexAttribute({
@@ -461,76 +438,76 @@ namespace med {
 
 	void Application::InitializeIndexBuffers()
 	{
-		LOG_INFO("Initializing index buffers");
+		LOG_INFO("Initializing proxy geometry index buffer");
 		p_IBCube = IndexBuffer::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_CubeIndexData,
 			sizeof(m_CubeIndexData), sizeof(m_CubeIndexData) / sizeof(uint16_t));
 	}
 
 	void Application::InitializeBindGroups()
 	{
-		LOG_INFO("Initializing bind groups");
-		m_BGroupCamera.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
-		m_BGroupCamera.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
-		m_BGroupCamera.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+		LOG_INFO("Initializing default Application BindGroup");
+		m_BGroupDefaultApp.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddSampler(*p_Sampler);
+		m_BGroupDefaultApp.AddSampler(*p_SamplerNN);
+		m_BGroupDefaultApp.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddBuffer(*p_UStepsCount, WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupDefaultApp.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		m_BGroupDefaultApp.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
-		m_BGroupTextures.AddTexture(*p_TexDataMain, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		m_BGroupTextures.AddSampler(*p_Sampler);
-		m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddSampler(*p_SamplerNN);
-		m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.AddTexture(*p_TexDataMask, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+		m_BGroupProxy.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
+		m_BGroupProxy.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
+		m_BGroupProxy.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+		//m_BGroupTextures.AddTexture(*p_TexDataMain, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		//m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		//m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
+		//m_BGroupTextures.AddSampler(*p_Sampler);
+		//m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		//m_BGroupTextures.AddSampler(*p_SamplerNN);
+		//m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		//m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		//m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		//m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		//m_BGroupTextures.AddTexture(*p_TexDataMask, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		//m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
-		m_BGroupImGui.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
-		m_BGroupImGui.AddBuffer(*p_UStepsCount, WGPUShaderStage_Fragment);
-		m_BGroupImGui.FinalizeBindGroup(base::GraphicsContext::GetDevice());
-
-		m_BGroupLights.AddBuffer(*p_ULight1, WGPUShaderStage_Fragment);
-		m_BGroupLights.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+		//m_BGroupLights.AddBuffer(*p_ULight1, WGPUShaderStage_Fragment);
+		//m_BGroupLights.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 	}
 
 	void Application::InitializeRenderPipelines()
 	{
 		LOG_INFO("Initializing render pipelines");
-		//Hardcode for now
-		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
-			FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "simple.wgsl"));
 
+		// Main pipeline camera, basic ui
+		{
+			m_Builder = PipelineBuilder();
+			m_Builder.DepthTexMagic(m_Width, m_Height);
+			m_Builder.AddBuffer(*p_VBCube);
+			m_Builder.AddBindGroup(m_BGroupDefaultApp);
+			m_Builder.SetFrontFace(WGPUFrontFace_CCW);
+			m_Builder.SetCullFace(WGPUCullMode_Back);
+		}
 
-		PipelineBuilder builder;
-		builder.DepthTexMagic(m_Width, m_Height);
-		builder.AddBuffer(*p_VBCube);
-		builder.AddBindGroup(m_BGroupCamera);
-		builder.AddBindGroup(m_BGroupTextures);
-		builder.AddBindGroup(m_BGroupImGui);
-		builder.AddBindGroup(m_BGroupLights);
-		builder.AddShaderModule(shaderModule);
-		builder.SetFrontFace(WGPUFrontFace_CCW);
-		builder.SetCullFace(WGPUCullMode_Back);
-		//builder.SetCullFace(WGPUCullMode_Front);
-		p_RenderPipeline = builder.BuildPipeline();
+		// proxy pipelines
+		{
+			WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
+				FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "rayCoords.wgsl"));
 
-		WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
-			FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "rayCoords.wgsl"));
+			PipelineBuilder builderAtt;
+			builderAtt.AddBuffer(*p_VBCube);
+			builderAtt.AddBindGroup(m_BGroupProxy);
+			builderAtt.AddShaderModule(shaderModuleAtt);
+			builderAtt.SetFrontFace(WGPUFrontFace_CCW);
+			builderAtt.SetColorTargetFormat(WGPUTextureFormat_RGBA32Float);
 
-		PipelineBuilder builderAtt;
-		builderAtt.AddBuffer(*p_VBCube);
-		builderAtt.AddBindGroup(m_BGroupCamera);
-		builderAtt.AddShaderModule(shaderModuleAtt);
-		builderAtt.SetFrontFace(WGPUFrontFace_CCW);
-		builderAtt.SetColorTargetFormat(WGPUTextureFormat_RGBA32Float);
+			builderAtt.SetCullFace(WGPUCullMode_Back);
+			p_RenderPipelineStart = builderAtt.BuildPipeline();
 
-		builderAtt.SetCullFace(WGPUCullMode_Back);
-		p_RenderPipelineStart = builderAtt.BuildPipeline();
-
-		builderAtt.SetCullFace(WGPUCullMode_Front);
-		p_RenderPipelineEnd = builderAtt.BuildPipeline();
-
+			builderAtt.SetCullFace(WGPUCullMode_Front);
+			p_RenderPipelineEnd = builderAtt.BuildPipeline();
+		}
 	}
 
 	void Application::ToggleMouse(int key, bool toggle)

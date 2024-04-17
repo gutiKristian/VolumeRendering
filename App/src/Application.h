@@ -13,6 +13,7 @@
 #include "tf/OpacityTf.h"
 #include "tf/ColorTf.h"
 #include "file/VolumeFile.h"
+#include "miniapps/include/MiniApp.h"
 
 #include <memory>
 
@@ -26,7 +27,8 @@ namespace med {
 		Application();
 		~Application();
 		/*
-		 * Application data initialization
+		 * Application, default primitives initialization
+		 * Calls MiniApp initialization as well
 		*/
 		void OnStart();
 		/*
@@ -99,6 +101,9 @@ namespace med {
 		bool m_ShouldRotate = false;
 		bool m_ShouldZoom = false;
 		
+		// Main Pipeline
+		PipelineBuilder m_Builder;
+
 		// Uniforms
 		// Binding 0
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
@@ -124,10 +129,9 @@ namespace med {
 		std::shared_ptr<RenderPipeline> p_RenderPipelineStart = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineEnd = nullptr;
 
-		BindGroup m_BGroupCamera;
-		BindGroup m_BGroupTextures;
-		BindGroup m_BGroupImGui;
-		BindGroup m_BGroupLights;
+		BindGroup m_BGroupDefaultApp;
+		BindGroup m_BGroupProxy;
+		
 
 		std::shared_ptr<VertexBuffer> p_VBCube = nullptr;
 		std::shared_ptr<IndexBuffer> p_IBCube = nullptr;
@@ -199,6 +203,8 @@ namespace med {
 			.Diffuse = glm::vec4{1.0f, 1.0f, 1.0f, 0.0f},
 			.Specular = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f}
 		};
+
+		std::unique_ptr<MiniApp> p_App = nullptr;
 	};
 
 }
