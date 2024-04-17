@@ -1,5 +1,24 @@
 #include <cstdint>
+#include <imgui/imgui.h>
+#include "implot.h"
+#include "implot_internal.h"
 #include "../../renderer/PipelineBuilder.h"
+
+#define MED_BEGIN_TAB_BAR(name) \
+	if (ImGui::BeginTabBar(name)) \
+	{
+
+#define MED_END_TAB_BAR \
+		ImGui::EndTabBar(); \
+	}
+
+#define MED_BEGIN_TAB_ITEM(name) \
+	if (ImGui::BeginTabItem(name)) \
+	{
+
+#define MED_END_TAB_ITEM \
+		ImGui::EndTabItem(); \
+	}
 
 namespace med
 {
