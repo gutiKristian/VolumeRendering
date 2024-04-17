@@ -14,7 +14,6 @@ namespace med
 		LOG_INFO("OnStart BasicVolumeMiniApp");
 
 		auto ctFile = DicomReader::ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
-		ctFile->PreComputeGradient(true);
 
 		p_OpacityTf = std::make_unique<OpacityTF>(256);
 		p_ColorTf = std::make_unique<ColorTF>(256);
