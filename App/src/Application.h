@@ -67,6 +67,7 @@ namespace med {
 		void InitializeVertexBuffers();
 		void InitializeIndexBuffers();
 		void InitializeBindGroups();
+
 		/*
 		* Initializes pipelines that are used during the runtime
 		* This function is called also on resize when pipelines need to be rebuilt
@@ -99,7 +100,6 @@ namespace med {
 		// Main Pipeline
 		PipelineBuilder m_Builder;
 
-		// Uniforms
 		// Binding 0
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
 		std::shared_ptr<UniformBuffer> p_UCameraPos = nullptr;
@@ -109,8 +109,6 @@ namespace med {
 
 		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
 		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
-
-		std::shared_ptr<UniformBuffer> p_ULight1 = nullptr;
 
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineStart = nullptr;
@@ -124,6 +122,8 @@ namespace med {
 
 		std::shared_ptr<Sampler> p_Sampler = nullptr;
         std::shared_ptr<Sampler> p_SamplerNN = nullptr;
+
+		std::unique_ptr<MiniApp> p_App = std::make_unique<BasicVolumeApp>();
 
 		// -----------------------------------------
 		float m_CubeVertexData[48] = {
@@ -152,18 +152,10 @@ namespace med {
 		bool m_IsRightClicked = false;
 		float m_LastX = 0.0f;
 		float m_LastY = 0.0f;
-		
-		// TF
-		std::unique_ptr<OpacityTF> p_OpacityTf = nullptr;
-		std::unique_ptr<ColorTF> p_ColorTf = nullptr;
-
-		std::unique_ptr<OpacityTF> p_OpacityTfRT = nullptr;
-		std::unique_ptr<ColorTF> p_ColorTfRT = nullptr;
-
-
+	
 		// ImGui
 		int m_FragmentMode = 0;
-		int m_StepsCount = 100;
+		int m_StepsCount = 200;
 
 		const char* m_FragModes[5] =
 		{
@@ -190,7 +182,6 @@ namespace med {
 			.Specular = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f}
 		};
 
-		std::unique_ptr<MiniApp> p_App = std::make_unique<BasicVolumeApp>();
 	};
 
 }

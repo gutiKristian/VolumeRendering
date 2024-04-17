@@ -94,8 +94,6 @@ namespace med {
 		p_UStepsCount->UpdateBuffer(queue, 0, &m_StepsCount, sizeOfInt);
 
 		p_App->OnUpdate(ts);
-
-		//p_ULight1->UpdateBuffer(queue, 0, &m_Light1, sizeof(Light));
 	}
 
 	void Application::OnRender()
