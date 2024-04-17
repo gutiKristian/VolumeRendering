@@ -29,7 +29,7 @@ namespace med
 		IntializePipeline(pipeline);
 	}
 
-	void BasicVolumeApp::OnUpdate()
+	void BasicVolumeApp::OnUpdate(base::Timestep ts)
 	{
 		p_OpacityTf->UpdateTexture();
 		p_ColorTf->UpdateTexture();

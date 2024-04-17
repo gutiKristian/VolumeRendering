@@ -12,7 +12,7 @@ namespace med
 	class BasicVolumeApp : public MiniApp
 	{
 		void OnStart(PipelineBuilder& pipeline) override;
-		void OnUpdate() override;
+		void OnUpdate(base::Timestep ts) override;
 		void OnRender(const WGPURenderPassEncoder pass) override;
 		void OnEnd() override;
 		void OnImGuiRender() const override;

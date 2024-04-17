@@ -2,6 +2,8 @@
 #include <imgui/imgui.h>
 #include "implot.h"
 #include "implot_internal.h"
+
+#include "Base/Timestep.h"
 #include "../../renderer/PipelineBuilder.h"
 
 #define MED_BEGIN_TAB_BAR(name) \
@@ -26,7 +28,7 @@ namespace med
 	{
 	public:
 		virtual void OnStart(PipelineBuilder& pipeline) = 0;
-		virtual void OnUpdate() = 0;
+		virtual void OnUpdate(base::Timestep ts) = 0;
 		virtual void OnRender(WGPURenderPassEncoder pass) = 0;
 		virtual void OnEnd() = 0;
 		virtual void OnImGuiRender() const = 0;
