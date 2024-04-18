@@ -33,7 +33,7 @@ namespace med
 		virtual void OnRender(WGPURenderPassEncoder pass) = 0;
 		virtual void OnEnd() = 0;
 		virtual void OnImGuiRender() const = 0;
-		virtual void OnResize(uint32_t width, uint32_t height, PipelineBuilder&) {}
+		virtual void OnResize(uint32_t width, uint32_t height, PipelineBuilder& pipeline) { IntializePipeline(pipeline); }
 		virtual void IntializePipeline(PipelineBuilder& pipeline) = 0;
 	};
 }

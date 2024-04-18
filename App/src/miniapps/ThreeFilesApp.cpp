@@ -62,6 +62,7 @@ namespace med
 
 	void ThreeFilesApp::OnImGuiRender() const
 	{
+		ImGui::Begin("MiniApp");
 
 		MED_BEGIN_TAB_BAR("BasicVolumeRendering")
 
@@ -76,6 +77,8 @@ namespace med
 		MED_END_TAB_ITEM
 
 		MED_END_TAB_BAR
+
+		ImGui::End();
 	}
 
 	void ThreeFilesApp::OnResize(uint32_t width, uint32_t height, PipelineBuilder& pipeline)

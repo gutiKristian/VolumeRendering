@@ -196,10 +196,7 @@ namespace med {
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
 		ImGui::End();
 
-		ImGui::Begin("MiniApp");
 		p_App->OnImGuiRender();
-		ImGui::End();
-
 	}
 
 	void Application::OnResize(uint32_t width, uint32_t height)
@@ -413,6 +410,7 @@ namespace med {
 	void Application::InitializeBindGroups()
 	{
 		LOG_INFO("Initializing default Application BindGroup");
+		m_BGroupDefaultApp = BindGroup();
 		m_BGroupDefaultApp.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddSampler(*p_Sampler);
@@ -423,6 +421,7 @@ namespace med {
 		m_BGroupDefaultApp.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupDefaultApp.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
+		m_BGroupProxy = BindGroup();
 		m_BGroupProxy.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupProxy.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupProxy.FinalizeBindGroup(base::GraphicsContext::GetDevice());

@@ -59,6 +59,9 @@ namespace med
 
 		[[nodiscard]] static bool IsDicomFile(const std::filesystem::path& path);
 
+		/*
+		* Is not made for sequences. Further abstraction is not made as other library might be used in the future.
+		*/
 		[[nodiscard]] static std::optional<std::string> GetTag(std::filesystem::path path, dcm::Tag tag);
 		[[nodiscard]] static std::optional<std::string> GetTag(const dcm::DataSet& file, dcm::Tag tag);
 
