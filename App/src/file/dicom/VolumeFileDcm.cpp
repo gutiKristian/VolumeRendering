@@ -23,6 +23,17 @@ namespace med
 		return other.GetBaseParams().FrameOfReference == m_Params.FrameOfReference;
 	}
 
+	bool VolumeFileDcm::CompareOrientation(const VolumeFileDcm& other) const
+	{
+		auto otherOrientation = other.GetVolumeParams().ImageOrientationPatient;
+		int res = 0;
+		for (int i = 0; i < otherOrientation.size(); ++i)
+		{
+			res += otherOrientation[i] * m_Params.ImageOrientationPatient[i];
+		}
+		return res != 0;
+	}
+
 	DicomVolumeParams VolumeFileDcm::GetVolumeParams() const
 	{
 		return m_Params;
