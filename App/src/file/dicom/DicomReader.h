@@ -11,6 +11,7 @@
 #include <array>
 #include <memory>
 #include <variant>
+#include <optional>
 
 namespace med
 {
@@ -57,6 +58,11 @@ namespace med
 		[[nodiscard]] static std::vector<std::filesystem::path> SortDicomSlices(const std::vector<std::filesystem::path>& paths);
 
 		[[nodiscard]] static bool IsDicomFile(const std::filesystem::path& path);
+
+		[[nodiscard]] static std::optional<std::string> GetTag(std::filesystem::path path, dcm::Tag tag);
+		[[nodiscard]] static std::optional<std::string> GetTag(const dcm::DataSet& file, dcm::Tag tag);
+
+
 	private:
 		/**
 		 * @brief Reads all necessary tags from the dicom file
