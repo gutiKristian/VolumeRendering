@@ -65,10 +65,10 @@ namespace med
 
 			if (f.Load())
 			{
-				reader.ReadDicomVolumeVariables(f);
 
 				if (firstRun)
 				{
+					reader.ReadDicomVolumeVariables(f);
 					reader.m_Params.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
 					reader.PreAllocateMemory(numberOfFiles, isDir);
 				}
