@@ -10,6 +10,7 @@ namespace med
 {
 	class ThreeFilesApp : public MiniApp
 	{
+	public:
 		void OnStart(PipelineBuilder& pipeline) override;
 		void OnUpdate(base::Timestep ts) override;
 		void OnRender(const WGPURenderPassEncoder pass) override;

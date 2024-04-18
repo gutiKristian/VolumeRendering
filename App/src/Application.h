@@ -15,6 +15,7 @@
 #include "file/VolumeFile.h"
 #include "miniapps/include/BasicVolumeApp.h"
 #include "miniapps/include/ThreeFilesApp.h"
+#include "miniapps/include/DicomInfoApp.h"
 
 #include <memory>
 
@@ -124,7 +125,7 @@ namespace med {
 		std::shared_ptr<Sampler> p_Sampler = nullptr;
         std::shared_ptr<Sampler> p_SamplerNN = nullptr;
 
-		std::unique_ptr<MiniApp> p_App = std::make_unique<ThreeFilesApp>();
+		std::unique_ptr<MiniApp> p_App = nullptr;
 
 		// -----------------------------------------
 		float m_CubeVertexData[48] = {

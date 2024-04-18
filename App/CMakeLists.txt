@@ -59,9 +59,11 @@ add_executable(App
 	
 	"src/miniapps/include/MiniApp.h"
 	"src/miniapps/include/BasicVolumeApp.h"
-	"src/miniapps/BasicVolumeApp.cpp"
 	"src/miniapps/include/ThreeFilesApp.h"
-	"src/miniapps/ThreeFilesApp.cpp")
+	"src/miniapps/include/DicomInfoApp.h"
+	"src/miniapps/BasicVolumeApp.cpp"
+	"src/miniapps/ThreeFilesApp.cpp"
+	"src/miniapps/DicomInfoApp.cpp")
 
 target_compile_definitions(App
 	PRIVATE
