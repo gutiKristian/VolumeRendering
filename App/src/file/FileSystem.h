@@ -8,10 +8,10 @@
 
 namespace med
 {
-	class FileReader
+	class FileSystem
 	{
 	protected:
-		FileReader() = default;
+		FileSystem() = default;
 	public:
 		
 		/*

@@ -13,6 +13,9 @@
 #include "tf/OpacityTf.h"
 #include "tf/ColorTf.h"
 #include "file/VolumeFile.h"
+#include "miniapps/include/BasicVolumeApp.h"
+#include "miniapps/include/ThreeFilesApp.h"
+#include "miniapps/include/DicomInfoApp.h"
 
 #include <memory>
 
@@ -26,7 +29,8 @@ namespace med {
 		Application();
 		~Application();
 		/*
-		 * Application data initialization
+		 * Application, default primitives initialization
+		 * Calls MiniApp initialization as well
 		*/
 		void OnStart();
 		/*
@@ -65,6 +69,7 @@ namespace med {
 		void InitializeVertexBuffers();
 		void InitializeIndexBuffers();
 		void InitializeBindGroups();
+
 		/*
 		* Initializes pipelines that are used during the runtime
 		* This function is called also on resize when pipelines need to be rebuilt
@@ -73,11 +78,6 @@ namespace med {
 
 		/*Event helpers*/
 		void ToggleMouse(int key, bool toggle);
-
-        /*
-         * Updates the y values between control points based on interpolation method.
-         */
-        void OnTfRender();
 
 	private:
 #if defined(PLATFORM_WEB)
@@ -99,41 +99,33 @@ namespace med {
 		bool m_ShouldRotate = false;
 		bool m_ShouldZoom = false;
 		
-		// Uniforms
+		// Main Pipeline
+		PipelineBuilder m_Builder;
+
 		// Binding 0
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
 		std::shared_ptr<UniformBuffer> p_UCameraPos = nullptr;
 
-		// Binding 1
-		std::shared_ptr<Texture> p_TexDataMain = nullptr;
-		std::shared_ptr<Texture> p_TexDataAcom = nullptr;
-		std::shared_ptr<Texture> p_TexDataMask = nullptr;
-
 		std::shared_ptr<Texture> p_TexStartPos = nullptr;
 		std::shared_ptr<Texture> p_TexEndPos = nullptr;
 
-		// Binding 2
 		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
 		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
-		
-		// Binding 3
-		std::shared_ptr<UniformBuffer> p_ULight1 = nullptr;
 
-		// Pipelines
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineStart = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineEnd = nullptr;
 
-		BindGroup m_BGroupCamera;
-		BindGroup m_BGroupTextures;
-		BindGroup m_BGroupImGui;
-		BindGroup m_BGroupLights;
-
+		BindGroup m_BGroupDefaultApp;
+		BindGroup m_BGroupProxy;
+		
 		std::shared_ptr<VertexBuffer> p_VBCube = nullptr;
 		std::shared_ptr<IndexBuffer> p_IBCube = nullptr;
 
 		std::shared_ptr<Sampler> p_Sampler = nullptr;
         std::shared_ptr<Sampler> p_SamplerNN = nullptr;
+
+		std::unique_ptr<MiniApp> p_App = nullptr;
 
 		// -----------------------------------------
 		float m_CubeVertexData[48] = {
@@ -162,18 +154,10 @@ namespace med {
 		bool m_IsRightClicked = false;
 		float m_LastX = 0.0f;
 		float m_LastY = 0.0f;
-		
-		// TF
-		std::unique_ptr<OpacityTF> p_OpacityTf = nullptr;
-		std::unique_ptr<ColorTF> p_ColorTf = nullptr;
-
-		std::unique_ptr<OpacityTF> p_OpacityTfRT = nullptr;
-		std::unique_ptr<ColorTF> p_ColorTfRT = nullptr;
-
-
+	
 		// ImGui
 		int m_FragmentMode = 0;
-		int m_StepsCount = 100;
+		int m_StepsCount = 200;
 
 		const char* m_FragModes[5] =
 		{
@@ -182,22 +166,6 @@ namespace med {
 			"Front faces",
 			"Back Faces",
 			"Texture coordinates"
-		};
-
-		// Directional, although we need only rgb, padding is added for alignment -> wgpu aligns to 16 bytes
-		struct Light
-		{
-			glm::vec4 Position{ 0.0f };
-			glm::vec4 Ambient{ 0.0f };
-			glm::vec4 Diffuse{ 0.0f };
-			glm::vec4 Specular{ 0.0f };
-		};
-
-		Light m_Light1{
-			.Position = {5.0f, 5.0f, -5.0f, 1.0f},
-			.Ambient = glm::vec4{0.1f},
-			.Diffuse = glm::vec4{1.0f, 1.0f, 1.0f, 0.0f},
-			.Specular = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f}
 		};
 	};
 

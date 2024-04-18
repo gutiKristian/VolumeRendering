@@ -65,10 +65,9 @@ namespace med
 
 			if (f.Load())
 			{
-				reader.ReadDicomVolumeVariables(f);
-
 				if (firstRun)
 				{
+					reader.ReadDicomVolumeVariables(f);
 					reader.m_Params.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
 					reader.PreAllocateMemory(numberOfFiles, isDir);
 				}
@@ -203,18 +202,12 @@ namespace med
 
 		f.GetString(dcm::tags::kPixelSpacing, &str);
 		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
-		
-		if (m_Params.X != 0 && m_Params.Y != 0)
-		{
-			// Do the checks, only if we have data in multiple files
-		}
-
+	
 		// All good, update the current parameters
 		m_Params = currentParams;
 
 		// Update the file type, based on this information we can allocate memory
 		ResolveFileType();
-
 	}
 
 	bool DicomReader::PreAllocateMemory(std::size_t frames, bool isDir)
@@ -315,6 +308,39 @@ namespace med
 	bool DicomReader::IsDicomFile(const std::filesystem::path& path)
 	{
 		return path.extension() == ".dcm";
+	}
+
+	std::optional<std::string> DicomReader::GetTag(std::filesystem::path path, dcm::Tag tag)
+	{
+		std::string err{};
+		if (!IsDicomFile(path))
+		{
+			err = "GetTag: " + path.string() + " is not a DICOM file";
+			LOG_ERROR(err.c_str());
+			return std::nullopt;
+		}
+
+		dcm::DicomFile f(path.c_str());
+		if (!f.Load())
+		{
+			err = "GetTag: Cannot load: " + path.string();
+			LOG_ERROR(err.c_str());
+			return std::nullopt;
+		}
+		return GetTag(f, tag);
+	}
+
+	std::optional<std::string> DicomReader::GetTag(const dcm::DataSet& file, dcm::Tag tag)
+	{
+		auto element = file.Get(tag);
+
+		if (!element)
+		{
+			LOG_WARN("Tag not found");
+			return std::nullopt;
+		}
+
+		return element->GetString();
 	}
 	
 	std::string DicomReader::ResolveModality(DicomModality modality)

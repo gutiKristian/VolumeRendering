@@ -1,11 +1,11 @@
-#include "FileReader.h"
+#include "FileSystem.h"
 #include <fstream>
 
 namespace med
 {
-	std::filesystem::path FileReader::s_Path = std::filesystem::current_path() / ".." / ".." / ".." / ".." / "App";
+	std::filesystem::path FileSystem::s_Path = std::filesystem::current_path() / ".." / ".." / ".." / ".." / "App";
 
-	std::string FileReader::ReadFile(const std::filesystem::path& name)
+	std::string FileSystem::ReadFile(const std::filesystem::path& name)
 	{
 		std::string buffer;
 		std::ifstream file(s_Path / name);

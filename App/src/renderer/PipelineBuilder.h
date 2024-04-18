@@ -1,3 +1,5 @@
+#pragma once
+
 #include "webgpu/webgpu.h"
 #include "RenderPipeline.h"
 #include "VertexBuffer.h"

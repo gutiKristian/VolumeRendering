@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../FileReader.h"
+#include "../FileSystem.h"
 #include "VolumeFileDcm.h"
 #include "StructureFileDcm.h"
 #include "DicomParams.h"
@@ -11,10 +11,11 @@
 #include <array>
 #include <memory>
 #include <variant>
+#include <optional>
 
 namespace med
 {
-	class DicomReader : public FileReader
+	class DicomReader : public FileSystem
 	{
 	public:
 		/**
@@ -57,6 +58,14 @@ namespace med
 		[[nodiscard]] static std::vector<std::filesystem::path> SortDicomSlices(const std::vector<std::filesystem::path>& paths);
 
 		[[nodiscard]] static bool IsDicomFile(const std::filesystem::path& path);
+
+		/*
+		* Is not made for sequences. Further abstraction is not made as other library might be used in the future.
+		*/
+		[[nodiscard]] static std::optional<std::string> GetTag(std::filesystem::path path, dcm::Tag tag);
+		[[nodiscard]] static std::optional<std::string> GetTag(const dcm::DataSet& file, dcm::Tag tag);
+
+
 	private:
 		/**
 		 * @brief Reads all necessary tags from the dicom file

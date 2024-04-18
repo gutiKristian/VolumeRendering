@@ -30,8 +30,8 @@ add_executable(App
 	"src/renderer/IndexBuffer.cpp"
 	
 	"src/file/FileDataType.h"
-	"src/file/FileReader.h"
-	"src/file/FileReader.cpp"
+	"src/file/FileSystem.h"
+	"src/file/FileSystem.cpp"
 	"src/file/VolumeFile.cpp"
 	"src/file/VolumeFile.h"
 
@@ -43,7 +43,9 @@ add_executable(App
 	"src/file/dicom/IDicomFile.h"
 	"src/file/dicom/StructureFileDcm.h"
 	"src/file/dicom/StructureFileDcm.cpp"
-	
+	"src/file/dicom/StructVisitor.h"
+	"src/file/dicom/DicomParseUtil.h"
+
 	"src/file/dat/DatReader.h"
 	"src/file/dat/DatReader.cpp"
 		
@@ -53,7 +55,15 @@ add_executable(App
 	"src/tf/ColorTf.h"
 	"src/tf/ColorTf.cpp"
 	"src/tf/OpacityTf.h"
-	"src/tf/OpacityTf.cpp" "src/file/dicom/StructVisitor.h" "src/file/dicom/DicomParseUtil.h")
+	"src/tf/OpacityTf.cpp"
+	
+	"src/miniapps/include/MiniApp.h"
+	"src/miniapps/include/BasicVolumeApp.h"
+	"src/miniapps/include/ThreeFilesApp.h"
+	"src/miniapps/include/DicomInfoApp.h"
+	"src/miniapps/BasicVolumeApp.cpp"
+	"src/miniapps/ThreeFilesApp.cpp"
+	"src/miniapps/DicomInfoApp.cpp")
 
 target_compile_definitions(App
 	PRIVATE
