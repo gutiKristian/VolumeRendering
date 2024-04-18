@@ -32,11 +32,21 @@ namespace med
 		StructureFileDcm(std::filesystem::path path, DicomStructParams params, std::vector<std::vector<std::vector<float>>> data);
 		
 	public:
-		DicomBaseParams GetBaseParams() const override;
-		DicomModality GetModality() const override;
-		bool CompareFrameOfReference(const IDicomFile& other) const override;
+		/*
+		* @brief Creates a volume file (volume mask) from the contour data.
+		* @param other: Reference dicom file, file from which this contours were generated
+		* @param contourIDs: IDs of contours to be included inside the max, up to 4 contours can be selected
+		* @param postProcess: What post process actions should be performed on the data.
+		* 
+		*/
 		std::shared_ptr<VolumeFileDcm> Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, ContourPostProcess duplicateOption);
+		
+		/* IDicom Interface */
+		DicomBaseParams GetBaseParams() const override;
 
+		DicomModality GetModality() const override;
+
+		bool CompareFrameOfReference(const IDicomFile& other) const override;
 	private:		
 		/*
 		* @brief Given point in the RCS and its voxel space mapping we find nearest point to this concrete point.

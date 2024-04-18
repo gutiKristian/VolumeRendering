@@ -71,7 +71,7 @@ namespace med
 		// uint8_t is enough for mask data but beacuse of VolumeFile implementation we need to use glm::vec4 for now!
 		//std::vector<std::array<uint8_t, 4>> maskData(xSize * ySize * zSize, { 0, 0, 0, 0 });
 
-		// We assume that the ImagePositionPatient is stored from the first slice
+		// We assume that the ImagePositionPatient is stored from the first slice (if the data was divided into multiple files)
 		auto [ox, oy, oz] = reference.GetVolumeParams().ImagePositionPatient;
 		auto [sx, sy] = reference.GetVolumeParams().PixelSpacing;
 		auto sz = reference.GetVolumeParams().SliceThickness;
