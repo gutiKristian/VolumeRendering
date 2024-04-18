@@ -14,6 +14,7 @@
 #include "tf/ColorTf.h"
 #include "file/VolumeFile.h"
 #include "miniapps/include/BasicVolumeApp.h"
+#include "miniapps/include/ThreeFilesApp.h"
 
 #include <memory>
 
@@ -123,7 +124,7 @@ namespace med {
 		std::shared_ptr<Sampler> p_Sampler = nullptr;
         std::shared_ptr<Sampler> p_SamplerNN = nullptr;
 
-		std::unique_ptr<MiniApp> p_App = std::make_unique<BasicVolumeApp>();
+		std::unique_ptr<MiniApp> p_App = std::make_unique<ThreeFilesApp>();
 
 		// -----------------------------------------
 		float m_CubeVertexData[48] = {
@@ -165,23 +166,6 @@ namespace med {
 			"Back Faces",
 			"Texture coordinates"
 		};
-
-		// Directional, although we need only rgb, padding is added for alignment -> wgpu aligns to 16 bytes
-		struct Light
-		{
-			glm::vec4 Position{ 0.0f };
-			glm::vec4 Ambient{ 0.0f };
-			glm::vec4 Diffuse{ 0.0f };
-			glm::vec4 Specular{ 0.0f };
-		};
-
-		Light m_Light1{
-			.Position = {5.0f, 5.0f, -5.0f, 1.0f},
-			.Ambient = glm::vec4{0.1f},
-			.Diffuse = glm::vec4{1.0f, 1.0f, 1.0f, 0.0f},
-			.Specular = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f}
-		};
-
 	};
 
 }

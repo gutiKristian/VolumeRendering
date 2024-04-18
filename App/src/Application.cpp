@@ -275,6 +275,7 @@ namespace med {
 						LOG_WARN("Pipeline refresh requested");
 						InitializeRenderPipelines();
 						p_App->IntializePipeline(m_Builder);
+						p_RenderPipeline = m_Builder.BuildPipeline();
 					}
 					else
 					{
@@ -369,7 +370,6 @@ namespace med {
 		p_UCameraPos =	UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 		p_UFragmentMode = UniformBuffer::CreateFromData(device, queue, &m_FragmentMode, sizeof(int));
 		p_UStepsCount = UniformBuffer::CreateFromData(device, queue, &m_StepsCount, sizeof(int));
-		p_ULight1 = UniformBuffer::CreateFromData(device, queue, &m_Light1, sizeof(Light));
 
 		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16, &m_Camera.GetViewMatrix(), sizeof(float) * 16);
 		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 2, &m_Camera.GetProjectionMatrix(), sizeof(float) * 16);
@@ -379,24 +379,6 @@ namespace med {
 
 	void Application::InitializeTextures()
 	{
-		/*LOG_INFO("Loading files");
-
-		auto contourFile = DicomReader::ReadStructFile("assets\\716^716_716_RTst_2013-04-02_230000_716-1-01_OCM.BladderShell_n1__00000\\");
-		auto ctFile = DicomReader::ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
-		auto rtDoseFile = DicomReader::ReadVolumeFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01\\");
-		auto volumeMask = contourFile->Create3DMask(*ctFile, { 2, 0, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM | ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING);*/
-		
-		// Disabled for now
-		//p_OpacityTf->ActivateHistogram(*ctFile);
-
-		/*LOG_INFO("Initializing textures");
-		p_TexDataMain = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
-			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");
-		p_TexDataAcom = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), rtDoseFile->GetVoidPtr(), WGPUTextureDimension_3D, rtDoseFile->GetSize(),
-			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "RTDose data texture");
-		p_TexDataMask = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), volumeMask->GetVoidPtr(), WGPUTextureDimension_3D, volumeMask->GetSize(),
-			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Contour 3D mask");*/
-
 		LOG_INFO("Initializing proxy-geometry render attachments");
 		p_TexStartPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEndPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
@@ -443,21 +425,6 @@ namespace med {
 		m_BGroupProxy.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupProxy.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupProxy.FinalizeBindGroup(base::GraphicsContext::GetDevice());
-		//m_BGroupTextures.AddTexture(*p_TexDataMain, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		//m_BGroupTextures.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		//m_BGroupTextures.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
-		//m_BGroupTextures.AddSampler(*p_Sampler);
-		//m_BGroupTextures.AddTexture(*p_OpacityTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		//m_BGroupTextures.AddSampler(*p_SamplerNN);
-		//m_BGroupTextures.AddTexture(*p_TexDataAcom, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		//m_BGroupTextures.AddTexture(*p_ColorTf->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		//m_BGroupTextures.AddTexture(*p_OpacityTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		//m_BGroupTextures.AddTexture(*p_ColorTfRT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		//m_BGroupTextures.AddTexture(*p_TexDataMask, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
-		//m_BGroupTextures.FinalizeBindGroup(base::GraphicsContext::GetDevice());
-
-		//m_BGroupLights.AddBuffer(*p_ULight1, WGPUShaderStage_Fragment);
-		//m_BGroupLights.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 	}
 
 	void Application::InitializeRenderPipelines()
