@@ -35,6 +35,9 @@ namespace med
 		std::array<double, 3> ImagePositionPatient{ 0.0 };				// (0020,0032) Image Position (Patient)
 		std::array<double, 6> ImageOrientationPatient{ 0.0 };			// (0020,0037) Image Orientation (Patient)
 		std::array<double, 2> PixelSpacing{ 0.0 };						// (0028,0030) Pixel Spacing -- ROW//COL
+		
+		// Mine params
+		std::string MainAxis{};
 	};
 
 

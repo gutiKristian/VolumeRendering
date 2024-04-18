@@ -43,6 +43,16 @@ namespace med
 
 	private:
 		void InitializeTransformMatrices();
+		
+		/*
+		 * @brief Calculate the main axis of the volume based on the DICOM image orientation.
+		 *
+		 * This function calculates the main axis of the volume represented by the DICOM image
+		 * based on the orientation information stored in the ImageOrientationPatient tag.
+		 * The resulting main axis is stored in the m_Params.MainAxis member variable.
+		 * @note This function assumes that the ImageOrientationPatient tag has been properly set.
+		 */
+		void CalcMainAxis();
 
 	private:
 		glm::mat4x4 m_PixelToRCS{ 1.0f };

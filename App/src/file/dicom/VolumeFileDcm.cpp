@@ -1,4 +1,6 @@
 #include "VolumeFileDcm.h"
+#include <glm/glm.hpp>
+#include "Base/Log.h"
 
 namespace med
 {
@@ -6,6 +8,7 @@ namespace med
 		FileDataType type, DicomVolumeParams params, std::vector<glm::vec4>& data) : VolumeFile(path, size, type, data), m_Params(params)
 	{
 		InitializeTransformMatrices();
+		CalcMainAxis();
 	}
 
 	DicomBaseParams VolumeFileDcm::GetBaseParams() const
@@ -78,5 +81,34 @@ namespace med
 
 		m_PixelToRCS = T;
 		m_RCSToPixel = glm::inverse(T);
+	}
+
+	void VolumeFileDcm::CalcMainAxis()
+	{
+		auto thisOrientation = m_Params.ImageOrientationPatient;
+
+		glm::vec3 rowDir(thisOrientation[0], thisOrientation[1], thisOrientation[2]);
+		glm::vec3 colDir(thisOrientation[3], thisOrientation[4], thisOrientation[5]);
+
+		glm::vec3 res = glm::cross(rowDir, colDir);
+
+		if (res == glm::vec3(0, 0, 0))
+		{
+			m_Params.MainAxis = "X";
+		}
+		else if (res == glm::vec3(0, 1, 0))
+		{
+			m_Params.MainAxis = "Y";
+		}
+		else if (res == glm::vec3(0, 0, 1))
+		{
+			m_Params.MainAxis = "Z";
+		}
+		else
+		{
+			// ???
+			LOG_CRITICAL("Calculate Main Axis, unexpected result!");
+		}
+		
 	}
 }
