@@ -65,7 +65,6 @@ namespace med
 
 			if (f.Load())
 			{
-
 				if (firstRun)
 				{
 					reader.ReadDicomVolumeVariables(f);

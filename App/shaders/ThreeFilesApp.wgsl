@@ -214,7 +214,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		// Volume sampling
 		var ctVolume: vec4f = textureSample(textureCT, samplerLin, currentPoistion);
 		var rtVolume: vec4f = textureSample(textureRT, samplerLin, currentPoistion);
-		var maskVol: vec4f = textureSample(textureMask, samplerNN, currentPoistion);
+		var maskVol: vec4f = textureSample(textureMask, samplerLin, currentPoistion);
 
 		// When working with gradients, we need to be careful whether we initiated pre-calculation in OnStart
 		var gradient: vec3f = ctVolume.rgb;
@@ -227,13 +227,19 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 		var opacityRT: f32 = textureSample(tfOpacityRT, samplerLin, densityRT).r;
 		var colorRT: vec3f = textureSample(tfColorRT, samplerLin, densityRT).rgb;
-
 		
 		if IsInSampleCoords(currentPoistion) && dst.a < 1.0
-		{
+		{            
             // Colors
             var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
             var opacity: f32 = opacityCT;
+            var maskV: f32 = maskVol.r;
+
+            if maskV > 0
+            {
+                color = vec3f(1, 0.5, 0.5);
+                opacity = 1;
+            }
 
             // Opacities
             // var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
@@ -241,7 +247,8 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
             // Blending
 		    var src: vec4<f32> = vec4f(color.r, color.g, color.b, opacity);
-			dst = FrontToBackBlend(src, dst); 
+		
+        	dst = FrontToBackBlend(src, dst); 
 		}
 
 		// Advance ray
