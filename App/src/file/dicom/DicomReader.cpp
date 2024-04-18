@@ -65,10 +65,10 @@ namespace med
 
 			if (f.Load())
 			{
-				reader.ReadDicomVolumeVariables(f);
 
 				if (firstRun)
 				{
+					reader.ReadDicomVolumeVariables(f);
 					reader.m_Params.Modality = ResolveModality(f.GetString(dcm::tags::kModality));
 					reader.PreAllocateMemory(numberOfFiles, isDir);
 				}
@@ -203,18 +203,12 @@ namespace med
 
 		f.GetString(dcm::tags::kPixelSpacing, &str);
 		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
-		
-		if (m_Params.X != 0 && m_Params.Y != 0)
-		{
-			// Do the checks, only if we have data in multiple files
-		}
-
+	
 		// All good, update the current parameters
 		m_Params = currentParams;
 
 		// Update the file type, based on this information we can allocate memory
 		ResolveFileType();
-
 	}
 
 	bool DicomReader::PreAllocateMemory(std::size_t frames, bool isDir)
