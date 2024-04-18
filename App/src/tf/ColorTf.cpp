@@ -5,7 +5,7 @@
 #include "Base/Base.h"
 #include "Base/GraphicsContext.h"
 #include "TfUtils.h"
-#include "../file/FileReader.h"
+#include "../file/FileSystem.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include <cassert>
@@ -149,7 +149,7 @@ namespace med
 
 			if (ImGui::Button("Save Color TF preset"))
 			{
-				std::string s = (FileReader::GetDefaultPath() / "assets" / "colormap1").string();
+				std::string s = (FileSystem::GetDefaultPath() / "assets" / "colormap1").string();
 				Save(s);
 			}
 

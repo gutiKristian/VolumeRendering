@@ -10,7 +10,7 @@
 #include "Base/Timer.h"
 #include "Base/GraphicsContext.h"
 
-#include "file/FileReader.h"
+#include "file/FileSystem.h"
 #include "file/dicom/DicomReader.h"
 #include "file/dicom/VolumeFileDcm.h"
 
@@ -445,7 +445,7 @@ namespace med {
 		// proxy pipelines
 		{
 			WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
-				FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "rayCoords.wgsl"));
+				FileSystem::ReadFile(FileSystem::GetDefaultPath() / "shaders" / "rayCoords.wgsl"));
 
 			PipelineBuilder builderAtt;
 			builderAtt.AddBuffer(*p_VBCube);

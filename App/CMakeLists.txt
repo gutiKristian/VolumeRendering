@@ -30,8 +30,8 @@ add_executable(App
 	"src/renderer/IndexBuffer.cpp"
 	
 	"src/file/FileDataType.h"
-	"src/file/FileReader.h"
-	"src/file/FileReader.cpp"
+	"src/file/FileSystem.h"
+	"src/file/FileSystem.cpp"
 	"src/file/VolumeFile.cpp"
 	"src/file/VolumeFile.h"
 

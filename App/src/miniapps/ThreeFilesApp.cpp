@@ -1,6 +1,6 @@
 #include "include/ThreeFilesApp.h"
 #include "../Shader.h"
-#include "../file/FileReader.h"
+#include "../file/FileSystem.h"
 #include "../file/dicom/DicomReader.h"
 #include "Base/Log.h"
 
@@ -87,7 +87,7 @@ namespace med
 	void ThreeFilesApp::IntializePipeline(PipelineBuilder& pipeline)
 	{
 		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
-			FileReader::ReadFile(FileReader::GetDefaultPath() / "shaders" / "ThreeFilesApp.wgsl"));
+			FileSystem::ReadFile(FileSystem::GetDefaultPath() / "shaders" / "ThreeFilesApp.wgsl"));
 		pipeline.AddShaderModule(shaderModule);
 		pipeline.AddBindGroup(m_BGroup);
 	}

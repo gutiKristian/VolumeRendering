@@ -5,7 +5,7 @@
 #include "Base/GraphicsContext.h"
 #include "implot/implot.h"
 #include "implot_internal.h"
-#include "../file/FileReader.h"
+#include "../file/FileSystem.h"
 
 #include <cassert>
 #include <fstream>
@@ -117,7 +117,7 @@ namespace med
 
 			if (ImGui::Button("Save opacity TF preset"))
 			{
-				std::string str = (FileReader::GetDefaultPath() / "assets" / "opacity1").string();
+				std::string str = (FileSystem::GetDefaultPath() / "assets" / "opacity1").string();
 				Save(str);
 			}
 

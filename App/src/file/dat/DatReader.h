@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../FileReader.h"
+#include "../FileSystem.h"
 #include "../VolumeFile.h"
 
 #include <filesystem>
 
 namespace med
 {
-	class DatImpl : public FileReader
+	class DatImpl : public FileSystem
 	{
 	public:
 

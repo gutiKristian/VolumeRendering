@@ -332,6 +332,7 @@ namespace med
 		{
 			err = "GetTag: Cannot load: " + path.string();
 			LOG_ERROR(err.c_str());
+			return std::nullopt;
 		}
 		return GetTag(f, tag);
 	}
