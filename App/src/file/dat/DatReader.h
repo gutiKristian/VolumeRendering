@@ -1,13 +1,11 @@
 #pragma once
 
-#include "../FileSystem.h"
 #include "../VolumeFile.h"
-
 #include <filesystem>
 
 namespace med
 {
-	class DatImpl : public FileSystem
+	class DatImpl
 	{
 	public:
 

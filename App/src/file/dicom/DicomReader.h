@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../FileSystem.h"
 #include "VolumeFileDcm.h"
 #include "StructureFileDcm.h"
 #include "DicomParams.h"
@@ -15,7 +14,7 @@
 
 namespace med
 {
-	class DicomReader : public FileSystem
+	class DicomReader
 	{
 	public:
 		/**

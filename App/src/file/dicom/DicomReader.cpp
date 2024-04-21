@@ -7,11 +7,12 @@
 #include "DicomParams.h"
 #include "DicomParseUtil.h"
 #include "StructVisitor.h"
+#include "../FileSystem.h"
+
 
 #include <cassert>
 #include <string>
 #include <cctype>
-
 
 namespace med
 {
@@ -28,15 +29,15 @@ namespace med
 		bool firstRun = true; // First file
 
 		// Full path
-		name = s_Path / name;
+		name = FileSystem::GetDefaultPath() / name;
 		
 		// Init
-		bool isDir = IsDirectory(name);
+		bool isDir = FileSystem::IsDirectory(name);
 		std::vector<std::filesystem::path> paths;
 
 		if (isDir)
 		{
-			paths = SortDicomSlices(ListDirFiles(name, /*extension=*/".dcm"));
+			paths = SortDicomSlices(FileSystem::ListDirFiles(name, /*extension=*/".dcm"));
 		}
 		else
 		{
@@ -87,19 +88,19 @@ namespace med
 			reader.m_Params.Z = numberOfFiles;
 		}
 
-		auto n = GetMaxNumber<glm::vec4>(reader.m_Data);
-		auto bits = GetMaxUsedBits(n);
+		auto n = FileSystem::GetMaxNumber<glm::vec4>(reader.m_Data);
+		auto bits = FileSystem::GetMaxUsedBits(n);
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size = { reader.m_Params.X, reader.m_Params.Y, reader.m_Params.Z };
-		return std::make_shared<VolumeFileDcm>(s_Path / name, size, reader.m_FileDataType, reader.m_Params, reader.m_Data);
+		return std::make_shared<VolumeFileDcm>(FileSystem::GetDefaultPath() / name, size, reader.m_FileDataType, reader.m_Params, reader.m_Data);
 	}
 
 	std::shared_ptr<StructureFileDcm> DicomReader::ReadStructFile(std::filesystem::path name)
 	{
-		name = s_Path / name;
+		name = FileSystem::GetDefaultPath() / name;
 		// Handling directory and file extension
-		if (IsDirectory(name))
+		if (FileSystem::IsDirectory(name))
 		{
-			auto files = ListDirFiles(name, ".dcm");
+			auto files = FileSystem::ListDirFiles(name, ".dcm");
 			
 			if (files.empty())
 			{
