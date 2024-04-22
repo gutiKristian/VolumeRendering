@@ -1,6 +1,7 @@
 #include "StructureFileDcm.h"
 #include "Base/Base.h"
 
+#include <glm/glm.hpp>
 #include <string>
 #include <cassert>
 #include <limits>
@@ -43,6 +44,10 @@ namespace med
 		}
 
 		std::vector<int> finalContours{};
+
+		std::vector<std::vector<int>> sliceNumbers{};
+		std::vector<std::vector<glm::ivec2>> seeds{};
+
 		for (auto id : contourIDs)
 		{
 			if (id < 0 || id >= m_Data.size())
@@ -58,8 +63,10 @@ namespace med
 			{
 				// Existing contours
 				finalContours.push_back(id - 1);
+				sliceNumbers.push_back({});
 			}
 		}
+
 		m_ActiveContourIDs = finalContours;
 
 		// cast reference to VolumeFileDcm
@@ -142,6 +149,9 @@ namespace med
 					maskData[index][l] = 1;
 				}
 
+				// Contour l is defined on slice sliceNumber
+				sliceNumbers[l].push_back(sliceNumber);
+
 				// Process the created image
 				if (postProcessOpt & ContourPostProcess::CLOSING)
 				{
@@ -151,7 +161,9 @@ namespace med
 			}
 		}
 
-		return std::make_shared<VolumeFileDcm>(m_Path, reference.GetSize(), FileDataType::Float, reference.GetVolumeParams(), maskData);
+		auto file = std::make_shared<VolumeFileDcm>(m_Path, reference.GetSize(), FileDataType::Float, reference.GetVolumeParams(), maskData);
+		file->SetContourSliceNumbers(sliceNumbers);
+		return file;
 	}
 
 	glm::ivec2 StructureFileDcm::HandleDuplicatesNearestNeighbour(const VolumeFileDcm& reference, glm::vec3 currentRCS, glm::vec3 currentVoxel)

@@ -37,7 +37,6 @@ namespace med
 		* @param other: Reference dicom file, file from which this contours were generated
 		* @param contourIDs: IDs of contours to be included inside the max, up to 4 contours can be selected
 		* @param postProcess: What post process actions should be performed on the data.
-		* 
 		*/
 		std::shared_ptr<VolumeFileDcm> Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, ContourPostProcess duplicateOption);
 		

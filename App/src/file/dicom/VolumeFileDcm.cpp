@@ -42,6 +42,17 @@ namespace med
 		return m_Params;
 	}
 
+	void VolumeFileDcm::FillContour()
+	{
+		for (const auto& map : m_CtrSliceNum)
+		{
+			for (auto [slice, objects] : map)
+			{
+				auto seeds = FindSeeds(slice, objects);
+			}
+		}
+	}
+
 	glm::vec3 VolumeFileDcm::PixelToRCSTransform(glm::vec2 coord) const
 	{
 		glm::vec4 res = m_PixelToRCS * glm::vec4(coord.x, coord.y, 0.0f, 1.0f);
@@ -52,6 +63,20 @@ namespace med
 	{
 		glm::vec4 res = m_RCSToPixel * glm::vec4(coord, 1.0f);
 		return glm::vec2(res.x, res.y);
+	}
+
+	void VolumeFileDcm::SetContourSliceNumbers(std::vector<std::vector<int>> sliceNumbers)
+	{
+		for (const auto& vec : sliceNumbers)
+		{
+			std::map<int, int> objectCount{};
+
+			for (const auto& i : vec)
+			{
+				objectCount[i]++;
+			}
+			m_CtrSliceNum.push_back(objectCount);
+		}
 	}
 
 	void VolumeFileDcm::InitializeTransformMatrices()
@@ -110,5 +135,18 @@ namespace med
 			LOG_CRITICAL("Calculate Main Axis, unexpected result!");
 		}
 		
+	}
+
+	void VolumeFileDcm::FindSeeds(int slice, int objects)
+	{
+		// We basically try to cast a ray along the x-axis (row) and count the intersections
+		auto [xSize, ySize, _] = m_Size;
+		
+
+		
+	}
+
+	void VolumeFileDcm::FloodFill(int slice, glm::ivec2 seed)
+	{
 	}
 }
