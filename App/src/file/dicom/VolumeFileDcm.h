@@ -33,6 +33,12 @@ namespace med
 		glm::vec3 PixelToRCSTransform(glm::vec2 coord) const;
 		glm::vec2 RCSToPixelTransform(glm::vec3 coord) const;
 		
+		/*
+		* @brief Method deduced from the upper two methods (not defined in the dicom spec.)
+		* Also returns the Z value for the pixel.
+		*/
+		glm::vec3 RCSToVoxelTransform(glm::vec3 coord) const;
+
 		/* IDicom Interface */
 		DicomBaseParams GetBaseParams() const override;
 		

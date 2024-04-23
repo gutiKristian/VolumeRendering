@@ -101,11 +101,11 @@ namespace med
 				{
 					// RCS -> Voxel
 					glm::vec3 contourPoint{ m_Data[cId][i][j], m_Data[cId][i][j + 1], m_Data[cId][i][j + 2] };
+					// glm::vec3 voxel = reference.RCSToVoxelTransform(contourPoint); <--- using the matrix and slice thickness
 					glm::vec3 voxel = (contourPoint - origin) / spacing;
 					voxel.z = std::fabs(voxel.z);
 					voxel = glm::round(voxel);
 					sliceNumber = static_cast<int>(voxel.z);
-
 					// 3D coordinates -> 1D coordinate; reference is the same size as the mask
 					int index = reference.GetIndexFrom3D(static_cast<int>(voxel.x), static_cast<int>(voxel.y), static_cast<int>(voxel.z));
 

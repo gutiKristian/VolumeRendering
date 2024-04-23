@@ -48,7 +48,7 @@ namespace med
 		{
 			for (auto [slice, objects] : map)
 			{
-				auto seeds = FindSeeds(slice, objects);
+				FindSeeds(slice, objects);
 			}
 		}
 	}
@@ -63,6 +63,13 @@ namespace med
 	{
 		glm::vec4 res = m_RCSToPixel * glm::vec4(coord, 1.0f);
 		return glm::vec2(res.x, res.y);
+	}
+
+	glm::vec3 VolumeFileDcm::RCSToVoxelTransform(glm::vec3 coord) const
+	{
+		glm::vec4 res = m_RCSToPixel * glm::vec4(coord, 1.0f);
+		res.z /= m_Params.SliceThickness;
+		return glm::vec3(res.x, res.y, res.z);
 	}
 
 	void VolumeFileDcm::SetContourSliceNumbers(std::vector<std::vector<int>> sliceNumbers)
