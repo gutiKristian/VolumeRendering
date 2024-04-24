@@ -54,14 +54,9 @@ namespace med
 		*/
 
 		/*
-		* @brief Fills the selected contours. Operation is done on the existing vector.
-		*/
-		void FillContour();
-
-		/*
 		* @brief Sets the variable that holds slice number. For instance for first contour the contour
 		* is present only in images (slices) 25, 26, 27 then this array looks like this [ [25, 26, 27] ]
-		* Drastically speeds up the flood filling algorithm as we dont have to look for the intersections in every slice.
+		* May speed up processing on images as some of them can be skipped.
 		*/
 		void SetContourSliceNumbers(std::vector<std::vector<int>> sliceNumbers);
 
@@ -81,27 +76,6 @@ namespace med
 		 * @note This function assumes that the ImageOrientationPatient tag has been properly set.
 		 */
 		void CalcMainAxis();
-
-
-		// ====== Private functions related to the Contours =======
-		
-		/*
-		* @brief Finds the starting point for the flood fill. Assumes that the contours are enclosed.
-		* This is naive implementation and might not work on some cases such as contour inside contour.
-		* This case is also pretty tricky as human interaction might be needed.
-		* @param slice: Basically index of the image in the 3D dataset
-		* @param objects: Number of objects (contours) in one image
-		* @return None, when seed is found flood fill is performed. If more objects are expected search continues.
-		*/
-		void FindSeeds(int slice, int objects);
-		
-		/*
-		* @brief Iterative flood fill algorithm.
-		* @param slice: index of the image inside the 3D data
-		* @param seeds: starting points
-		* @return None, all done on the existing vector
-		*/
-		void FloodFill(int slice, glm::ivec2 seed);
 
 	private:
 		glm::mat4x4 m_PixelToRCS{ 1.0f };
