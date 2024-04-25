@@ -1,9 +1,11 @@
 #include "StructureFileDcm.h"
 #include "Base/Base.h"
 
+#include <glm/glm.hpp>
 #include <string>
 #include <cassert>
 #include <limits>
+#include <queue>
 
 namespace med
 {
@@ -43,6 +45,9 @@ namespace med
 		}
 
 		std::vector<int> finalContours{};
+
+		std::vector<std::vector<int>> sliceNumbers{};
+
 		for (auto id : contourIDs)
 		{
 			if (id < 0 || id >= m_Data.size())
@@ -58,8 +63,10 @@ namespace med
 			{
 				// Existing contours
 				finalContours.push_back(id - 1);
+				sliceNumbers.push_back({});
 			}
 		}
+
 		m_ActiveContourIDs = finalContours;
 
 		// cast reference to VolumeFileDcm
@@ -89,16 +96,19 @@ namespace med
 				assert(m_Data[cId][i].size() % 3 == 0);
 				int sliceNumber = -1;
 
+				std::vector<float> yCoords{};
+				yCoords.reserve(m_Data[cId][i].size());
+
 				// Traverses images where contours are defined
 				for (size_t j = 0; j <= m_Data[cId][i].size() - 3; j += 3)
 				{
 					// RCS -> Voxel
 					glm::vec3 contourPoint{ m_Data[cId][i][j], m_Data[cId][i][j + 1], m_Data[cId][i][j + 2] };
+					// glm::vec3 voxel = reference.RCSToVoxelTransform(contourPoint); <--- using the matrix and slice thickness
 					glm::vec3 voxel = (contourPoint - origin) / spacing;
 					voxel.z = std::fabs(voxel.z);
 					voxel = glm::round(voxel);
 					sliceNumber = static_cast<int>(voxel.z);
-
 					// 3D coordinates -> 1D coordinate; reference is the same size as the mask
 					int index = reference.GetIndexFrom3D(static_cast<int>(voxel.x), static_cast<int>(voxel.y), static_cast<int>(voxel.z));
 
@@ -125,6 +135,7 @@ namespace med
 							{
 								glm::vec3 contourNext{ m_Data[cId][i][j + 3], m_Data[cId][i][j + 4], m_Data[cId][i][j + 5] };
 								glm::vec3 nextVoxel = glm::round((contourNext - origin) / spacing);
+								// add check if out of img
 								auto derivedVoxels = HandleDuplicatesLineToNextBresenahm(reference, voxel, nextVoxel);
 								assert(derivedVoxels.back().x == nextVoxel.x && derivedVoxels.back().y == nextVoxel.y && "Bresenham issue");
 
@@ -138,9 +149,14 @@ namespace med
 						}
 
 					}
+
+					yCoords.push_back(voxel.y);
 					// Activate point at index, l is the contour we are processing
 					maskData[index][l] = 1;
 				}
+
+				// Contour l is defined on slice sliceNumber
+				sliceNumbers[l].push_back(sliceNumber);
 
 				// Process the created image
 				if (postProcessOpt & ContourPostProcess::CLOSING)
@@ -148,10 +164,26 @@ namespace med
 					MorphologicalOp(maskData, xSize, ySize, sliceNumber, { {1,1,1}, {1,1,1}, {1,1,1} }, false); // Dilation
 					MorphologicalOp(maskData, xSize, ySize, sliceNumber, { {1,1,1}, {1,1,1}, {1,1,1} }, true); // Erosion
 				}
+
+				if (postProcessOpt & ContourPostProcess::FILL)
+				{
+					std::ranges::sort(yCoords);
+					glm::ivec2 seed = FindSeed(static_cast<int>(yCoords[yCoords.size() / 2]), xSize, ySize, sliceNumber, l, maskData);
+					if (seed.x == -1)
+					{
+						LOG_ERROR("Did not find the seed for fill.");
+					}
+					else
+					{
+						FloodFill(seed, xSize, ySize, sliceNumber, l, maskData);
+					}
+				}
 			}
 		}
 
-		return std::make_shared<VolumeFileDcm>(m_Path, reference.GetSize(), FileDataType::Float, reference.GetVolumeParams(), maskData);
+		auto file = std::make_shared<VolumeFileDcm>(m_Path, reference.GetSize(), FileDataType::Float, reference.GetVolumeParams(), maskData);
+		file->SetContourSliceNumbers(sliceNumbers);
+		return file;
 	}
 
 	glm::ivec2 StructureFileDcm::HandleDuplicatesNearestNeighbour(const VolumeFileDcm& reference, glm::vec3 currentRCS, glm::vec3 currentVoxel)
@@ -351,5 +383,88 @@ namespace med
 			}
 		}
 
+	}
+	
+	glm::vec2 StructureFileDcm::FindSeed(int yStart, int xSize, int ySize, int sliceNumber, int contourNumber, std::vector<glm::vec4>& data)
+	{
+		int yCurrent = yStart;
+		constexpr int MAGIC_THRESH = 5;
+
+		// Make VolumeFile get 3D static -- x, y, z, width, height
+		auto GI = [&](int x, int y, int z) -> int
+		{
+			return z * ySize * xSize + y * xSize + x;
+		};
+
+		// Explore only half of the image, we can do this as we start in the middle of the contour
+		while (yCurrent >= 0 && yCurrent < ySize)
+		{
+			for (int x = 0; x < xSize; ++x)
+			{
+				int i = GI(x, yCurrent, sliceNumber);
+
+				// Default, no contour found
+				if (data[i][contourNumber] == 0)
+					continue;
+				if (data[i][contourNumber] == 1)
+				{
+					int numOfOnes = 0;
+					// shoot ray
+					while (x < xSize)
+					{
+						int ii = GI(x, yCurrent, sliceNumber);
+						if (data[ii][contourNumber] == 1)
+						{
+							++numOfOnes;
+						} 
+						else if (data[ii][contourNumber] == 0 && numOfOnes < MAGIC_THRESH)
+						{
+							// We should be inside, magic threshold is here to account for wider edges
+							return glm::ivec2(x, yCurrent);
+						}
+						else if (data[ii][contourNumber] == 0 && numOfOnes >= MAGIC_THRESH)
+						{
+							// We might have passed already filled contour
+							break;
+						}
+						++x;
+					}
+
+				}
+
+
+			}
+			++yCurrent;
+		}
+
+
+		return glm::vec2(-1, -1);
+	}
+
+	void StructureFileDcm::FloodFill(glm::ivec2 seed, int xSize, int ySize, int sliceNumber, int contourNumber, std::vector<glm::vec4>& data)
+	{
+		auto GI = [&](int x, int y, int z) -> int
+		{
+			return z * ySize * xSize + y * xSize + x;
+		};
+
+		std::queue<glm::ivec2> q;
+		q.push(seed);
+		
+		while (!q.empty())
+		{
+			glm::ivec2 current = q.front();
+			q.pop();
+
+			int index = GI(current.x, current.y, sliceNumber);// boundaries checked on the next line so it will be caught but later
+			if (current.x >= 0 && current.y >= 0 && current.x < xSize && current.y < ySize && data[index][contourNumber] == 0)
+			{
+				data[index][contourNumber] = 1;
+				q.push(glm::ivec2(current.x - 1, current.y));
+				q.push(glm::ivec2(current.x + 1, current.y));
+				q.push(glm::ivec2(current.x, current.y - 1));
+				q.push(glm::ivec2(current.x, current.y + 1));
+			}
+		}
 	}
 }

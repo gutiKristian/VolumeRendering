@@ -42,6 +42,7 @@ namespace med
 		return m_Params;
 	}
 
+
 	glm::vec3 VolumeFileDcm::PixelToRCSTransform(glm::vec2 coord) const
 	{
 		glm::vec4 res = m_PixelToRCS * glm::vec4(coord.x, coord.y, 0.0f, 1.0f);
@@ -52,6 +53,27 @@ namespace med
 	{
 		glm::vec4 res = m_RCSToPixel * glm::vec4(coord, 1.0f);
 		return glm::vec2(res.x, res.y);
+	}
+
+	glm::vec3 VolumeFileDcm::RCSToVoxelTransform(glm::vec3 coord) const
+	{
+		glm::vec4 res = m_RCSToPixel * glm::vec4(coord, 1.0f);
+		res.z /= m_Params.SliceThickness;
+		return glm::vec3(res.x, res.y, res.z);
+	}
+
+	void VolumeFileDcm::SetContourSliceNumbers(std::vector<std::vector<int>> sliceNumbers)
+	{
+		for (const auto& vec : sliceNumbers)
+		{
+			std::map<int, int> objectCount{};
+
+			for (const auto& i : vec)
+			{
+				objectCount[i]++;
+			}
+			m_CtrSliceNum.push_back(objectCount);
+		}
 	}
 
 	void VolumeFileDcm::InitializeTransformMatrices()

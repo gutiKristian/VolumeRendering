@@ -17,8 +17,9 @@ namespace med
 		NEAREST_NEIGHBOUR = 1 << 1,
 		RECONSTRUCT_BRESENHAM = 1 << 2,
 		CLOSING = 1 << 3,
+		FILL = 1 << 4,
 
-		PROCESS_NON_DUPLICATES = 1 << 4
+		PROCESS_NON_DUPLICATES = 1 << 5
 	};
 
 	inline ContourPostProcess operator|(ContourPostProcess a, ContourPostProcess b)
@@ -37,7 +38,6 @@ namespace med
 		* @param other: Reference dicom file, file from which this contours were generated
 		* @param contourIDs: IDs of contours to be included inside the max, up to 4 contours can be selected
 		* @param postProcess: What post process actions should be performed on the data.
-		* 
 		*/
 		std::shared_ptr<VolumeFileDcm> Create3DMask(const IDicomFile& other, std::array<int, 4> contourIDs, ContourPostProcess duplicateOption);
 		
@@ -76,6 +76,10 @@ namespace med
 		*/
 		void MorphologicalOp(std::vector<glm::vec4>& data, int xSize, int ySize, int sliceNumber,
 			std::vector<std::vector<uint8_t>> structureElement, bool doErosion);
+
+		glm::vec2 FindSeed(int yStart, int xSize, int ySize, int sliceNumber, int contourNumber, std::vector<glm::vec4>& data);
+		void FloodFill(glm::ivec2 seed, int xSize, int ySize, int sliceNumber, int contourNumber, std::vector<glm::vec4>& data);
+
 
 	private:
 		std::filesystem::path m_Path;
