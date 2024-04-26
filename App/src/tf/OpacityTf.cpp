@@ -42,12 +42,6 @@ namespace med
 			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Opacity TF");
 	}
 
-	std::shared_ptr<Texture> OpacityTF::GetTexture() const
-	{
-		assert(p_Texture != nullptr && "Texture is not initialized");
-		return p_Texture;
-	}
-
 	// Maybe in the future refactor: HandleClick, HandleDrag
 	void OpacityTF::Render()
 	{
@@ -258,5 +252,10 @@ namespace med
 				static_cast<float>(m_ControlPoints[controlPointIndex].y), m_YPoints[successorIndex]);
 		}
 		m_ShouldUpdate = true;
+	}
+
+	std::string OpacityTF::GetType() const
+	{
+		return "opacity";
 	}
 }

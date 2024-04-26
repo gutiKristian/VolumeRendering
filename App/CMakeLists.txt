@@ -63,7 +63,7 @@ add_executable(App
 	"src/miniapps/include/DicomInfoApp.h"
 	"src/miniapps/BasicVolumeApp.cpp"
 	"src/miniapps/ThreeFilesApp.cpp"
-	"src/miniapps/DicomInfoApp.cpp")
+	"src/miniapps/DicomInfoApp.cpp" "src/tf/TransferFunction.h" "src/tf/TransferFunction.cpp")
 
 target_compile_definitions(App
 	PRIVATE

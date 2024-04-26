@@ -38,13 +38,7 @@ namespace med
 		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_Colors.data(), WGPUTextureDimension_1D, {m_DataDepth, 1, 1},
 						WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Color TF");
 	}
-	
-	std::shared_ptr<Texture> ColorTF::GetTexture() const
-	{
-		assert(p_Texture != nullptr && "Texture is not initialized");
-		return p_Texture;
-	}
-	
+		
 	void ColorTF::Render()
 	{
 		assert(m_ControlCol.size() == m_ControlPos.size() && "Number of control points colors don't match with number of positions");
@@ -273,5 +267,10 @@ namespace med
 			updateIntervalValues(m_ControlPos[cpId].x, m_ControlPos[cpId + 1].x, m_ControlCol[cpId], m_Colors[successorIndex]);
 		}
 		m_ShouldUpdate = true;
+	}
+
+	std::string ColorTF::GetType() const
+	{
+		return "color";
 	}
 } // namespace med
