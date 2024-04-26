@@ -21,6 +21,9 @@ namespace med
 	const dcm::Tag kImageOrientationPatient = 0x00200037;
 	const dcm::Tag kSliceThickness = 0x00180050;
 	const dcm::Tag kFrameOfReference = 0x00200052;
+	const dcm::Tag kLargestPixelValue = 0x00280107;
+	const dcm::Tag kSmallestPixelValue = 0x00280106;
+
 
 
 	std::shared_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
@@ -203,6 +206,9 @@ namespace med
 
 		f.GetString(dcm::tags::kPixelSpacing, &str);
 		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
+
+		currentParams.LargesPixelValue = ParseStringToNumArr<int, 1>(GetTag(f, kLargestPixelValue).value_or("0")).back();
+		currentParams.SmallestPixelValue = ParseStringToNumArr<int, 1>(GetTag(f, kSmallestPixelValue).value_or("0")).back();
 	
 		// All good, update the current parameters
 		m_Params = currentParams;
@@ -334,14 +340,28 @@ namespace med
 	std::optional<std::string> DicomReader::GetTag(const dcm::DataSet& file, dcm::Tag tag)
 	{
 		auto element = file.Get(tag);
+		std::stringstream ss{};
+		std::string res{};
 
 		if (!element)
 		{
-			LOG_WARN("Tag not found");
+			tag.Print(ss);
+			res = "Tag: " + ss.str() + " not found!";
+			LOG_WARN(res.c_str());
 			return std::nullopt;
 		}
 
-		return element->GetString();
+		std::string result = element->GetString();
+
+		if (result.size() == 0 || result == "0")
+		{
+			tag.Print(ss);
+			res = "Tag: " + ss.str() + " found, but size is 0 or value is 0";
+			LOG_WARN(res.c_str());
+			return std::nullopt;
+		}
+
+		return result;
 	}
 	
 	std::string DicomReader::ResolveModality(DicomModality modality)
