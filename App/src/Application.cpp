@@ -57,7 +57,7 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
-		p_App = std::make_unique<ThreeFilesApp>();
+		p_App = std::make_unique<BasicVolumeApp>();
 		p_App->OnStart(m_Builder);
 		p_RenderPipeline = m_Builder.BuildPipeline();
 	}
