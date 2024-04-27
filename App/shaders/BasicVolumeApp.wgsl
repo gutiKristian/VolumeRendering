@@ -98,10 +98,6 @@ fn jitter(co: vec2<f32>) -> f32
 }
 
 
-// Either upload max value for dataset as uniform or upload already normalised data (had some gradient troubles)
-const DENSITY_FACTOR_CT: f32 = f32(1/4095.0);
-const DENSITY_FACTOR_RT: f32 = f32(1/32767.0);
-
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 {
@@ -148,7 +144,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	{
 		// Volume sampling
 		var volumeSample: vec4f = textureSample(textMain, samplerLin, currentPosition);
-		var density: f32 = volumeSample.a * DENSITY_FACTOR_CT;
+		var density: f32 = volumeSample.a;
 
 		// Transfer function sampling
 		var opacity: f32 = textureSample(tfOpacity, samplerLin, density).r;
