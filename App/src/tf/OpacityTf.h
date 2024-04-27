@@ -11,10 +11,13 @@
 
 namespace med
 {
-	// In the future create a base class for transfer functions, to avoid code duplication
 	class OpacityTF : public TransferFunction
 	{
 	public:
+		/*
+		* @brief Create TF controlling the opacity.
+		* @param desiredTfResolution: Resultion of the texture for the TF representation, 0 means use MAXIMAL range.
+		*/
 		explicit OpacityTF(int desiredTfResolution);
 
 		/*

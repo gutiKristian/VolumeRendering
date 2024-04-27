@@ -16,9 +16,9 @@ namespace med
 			LOG_WARN("Max data value is greater than max texture 1D size, clamping to max texture size");
 			m_TextureResolution = maxTex1Dsize;
 		}
-		else if (m_TextureResolution == 0)
+		else if (m_TextureResolution <= 0)
 		{
-			LOG_INFO("Texture resolution is 0, using maximum possible.");
+			LOG_INFO("Texture resolution will be set to maximum possible range.");
 			std::string s = "Texture resolution set to: " + std::to_string(maxTex1Dsize);
 			LOG_INFO(s.c_str());
 			m_TextureResolution = maxTex1Dsize;

@@ -12,6 +12,10 @@ namespace med
 	class ColorTF : public TransferFunction
 	{
 	public:
+		/*
+		* @brief Create TF controlling the color.
+		* @param desiredTfResolution: Resultion of the texture for the TF representation, 0 means use MAXIMAL range.
+		*/
 		explicit ColorTF(int desiredTfResolution);
 
 		void Render() override;
