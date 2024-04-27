@@ -206,8 +206,9 @@ namespace med
 		f.GetString(dcm::tags::kPixelSpacing, &str);
 		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
 
-		f.GetInt32(kLargestPixelValue, &currentParams.LargestPixelValue);
-		f.GetInt32(kSmallestPixelValue, &currentParams.SmallestPixelValue);
+		std::uint16_t a = 0;
+		f.GetUint16(kLargestPixelValue, &currentParams.LargestPixelValue);
+		f.GetUint16(kSmallestPixelValue, &currentParams.SmallestPixelValue);
 
 		// All good, update the current parameters
 		m_Params = currentParams;

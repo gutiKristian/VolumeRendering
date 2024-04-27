@@ -31,8 +31,8 @@ namespace med
 		std::uint16_t BitsStored = 0;									// (0028,0101) Bits Stored
 		std::uint16_t  BitsAllocated = 0;								// (0028,0100) Bits Allocated
 		std::int16_t NumberOfFrames = 0;								// (0028,0008) Number of Frames
-		std::int32_t LargestPixelValue = 0;								// (0028,0107) Largest Image Pixel Value Attribute
-		std::int32_t SmallestPixelValue = 0;							// (0028,0106) Smallest Image Pixel Value Attribute
+		std::uint16_t LargestPixelValue = 0;							// (0028,0107) Largest Image Pixel Value Attribute
+		std::uint16_t SmallestPixelValue = 0;							// (0028,0106) Smallest Image Pixel Value Attribute
 		double SliceThickness = 0.0;									// (0018,0050) Slice Thickness
 		std::array<double, 3> ImagePositionPatient{ 0.0 };				// (0020,0032) Image Position (Patient)
 		std::array<double, 6> ImageOrientationPatient{ 0.0 };			// (0020,0037) Image Orientation (Patient)
