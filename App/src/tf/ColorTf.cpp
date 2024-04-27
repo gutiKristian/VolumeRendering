@@ -17,13 +17,7 @@ namespace med
 
 	ColorTF::ColorTF(int desiredTfResolution)
 	{
-		m_TextureResolution = desiredTfResolution;
-		size_t maxTex1DSize = base::GraphicsContext::GetLimits().maxTextureDimension1D;
-		if (m_TextureResolution > maxTex1DSize)
-		{
-			LOG_WARN("Max value is greater than maximum texture 1D size, clamping to maximum size");
-			m_TextureResolution = maxTex1DSize;
-		}
+		ResolveResolution(desiredTfResolution);
 
 		auto color1 = glm::vec4(0.0, 0.0, 0.0, 1.0);
 		auto color2 = glm::vec4(1.0, 1.0, 1.0, 1.0);

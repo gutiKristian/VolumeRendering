@@ -15,13 +15,7 @@ namespace med
 {
 	OpacityTF::OpacityTF(int desiredTfResolution)
 	{
-		m_TextureResolution = desiredTfResolution;
-		size_t maxTex1Dsize = base::GraphicsContext::GetLimits().maxTextureDimension1D;
-		if (maxTex1Dsize < m_TextureResolution)
-		{
-			LOG_WARN("Max data value is greater than max texture 1D size, clamping to max texture size");
-			m_TextureResolution = maxTex1Dsize;
-		}
+		ResolveResolution(desiredTfResolution);
 
 		m_XPoints.resize(m_TextureResolution, 0.0f);
 		m_YPoints.resize(m_TextureResolution, 0.0f);
