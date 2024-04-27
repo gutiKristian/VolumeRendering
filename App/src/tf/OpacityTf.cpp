@@ -13,32 +13,32 @@
 
 namespace med
 {
-	OpacityTF::OpacityTF(int desiredTfResolution) : m_DataDepth(desiredTfResolution)
+	OpacityTF::OpacityTF(int desiredTfResolution) : m_TextureResolution(desiredTfResolution)
 	{
 		size_t maxTex1Dsize = base::GraphicsContext::GetLimits().maxTextureDimension1D;
-		if (maxTex1Dsize < m_DataDepth)
+		if (maxTex1Dsize < m_TextureResolution)
 		{
 			LOG_WARN("Max data value is greater than max texture 1D size, clamping to max texture size");
-			m_DataDepth = maxTex1Dsize;
+			m_TextureResolution = maxTex1Dsize;
 		}
 
-		m_XPoints.resize(m_DataDepth, 0.0f);
-		m_YPoints.resize(m_DataDepth, 0.0f);
+		m_XPoints.resize(m_TextureResolution, 0.0f);
+		m_YPoints.resize(m_TextureResolution, 0.0f);
 
 		m_ControlPoints.emplace_back(0.0, 0.0);
-		m_ControlPoints.emplace_back(m_DataDepth - 1.0, 1.0);
+		m_ControlPoints.emplace_back(m_TextureResolution - 1.0, 1.0);
 
-		std::vector<float> result = LinearInterpolation::Generate<float>(0, m_DataDepth - 1, 0.0f, 1.0f, 1);
-		assert(result.size() == m_DataDepth && "Size of generated TF does not match");
+		std::vector<float> result = LinearInterpolation::Generate<float>(0, m_TextureResolution - 1, 0.0f, 1.0f, 1);
+		assert(result.size() == m_TextureResolution && "Size of generated TF does not match");
 
 		// Fill for plotting
-		for (size_t i = 0; i < m_DataDepth; ++i)
+		for (size_t i = 0; i < m_TextureResolution; ++i)
 		{
 			m_XPoints[i] = i;
 			m_YPoints[i] = result[i];
 		}
 
-		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_YPoints.data(), WGPUTextureDimension_1D, {m_DataDepth, 1, 1},
+		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_YPoints.data(), WGPUTextureDimension_1D, {m_TextureResolution, 1, 1},
 			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Opacity TF");
 	}
 
@@ -51,14 +51,14 @@ namespace med
 			ImPlot::SetupAxes("Voxel value", "Alpha");
 
 			// Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
-			ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, m_DataDepth - 1.0);
+			ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, m_TextureResolution - 1.0);
 			ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
 
 			// Plot histogram
 			if (!m_Histogram.empty())
 			{
 				ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, .25f);
-				ImPlot::PlotShaded("##Histogram", m_XPoints.data(), m_Histogram.data(), m_DataDepth);
+				ImPlot::PlotShaded("##Histogram", m_XPoints.data(), m_Histogram.data(), m_TextureResolution);
 				ImPlot::PopStyleVar();
 			}
 			
@@ -77,12 +77,12 @@ namespace med
 				{
 					// This point is being dragged and we will work with it below
 					draggedId = id;
-					TfUtils::CheckDragBounds(draggedId, m_ControlPoints, m_DataDepth);
+					TfUtils::CheckDragBounds(draggedId, m_ControlPoints, m_TextureResolution);
 				}
 			}
 
 			// Plot transfer function
-			ImPlot::PlotLine("Tf", m_XPoints.data(), m_YPoints.data(), m_DataDepth);
+			ImPlot::PlotLine("Tf", m_XPoints.data(), m_YPoints.data(), m_TextureResolution);
 
 			// Drag event
 			if (isDragging)
@@ -133,7 +133,7 @@ namespace med
 	{
 		// Based on mapping that's gonna be used in shader
 		// this function will create histogram of data, (divide either by max value or 2^used bits) then multiplied by desired resolution
-		m_Histogram.resize(m_DataDepth, 0.0f);
+		m_Histogram.resize(m_TextureResolution, 0.0f);
 		const auto& data = file.GetVecReference();
 		auto [xSize, ySize, slices] = file.GetSize();
 		const size_t size = xSize * ySize * slices;
