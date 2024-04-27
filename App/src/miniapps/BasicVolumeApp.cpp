@@ -13,11 +13,13 @@ namespace med
 	{
 		LOG_INFO("OnStart BasicVolumeMiniApp");
 
-		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\HumanHead\\");
+		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
 		ctFile->NormalizeData();
 
 		p_OpacityTf = std::make_unique<OpacityTF>(256);
 		p_ColorTf = std::make_unique<ColorTF>(256);
+
+		p_OpacityTf->ActivateHistogram(*ctFile);
 
 		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");

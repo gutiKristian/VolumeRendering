@@ -126,17 +126,28 @@ namespace med
 
 	void OpacityTF::ActivateHistogram(const VolumeFile& file)
 	{
-		// Based on mapping that's gonna be used in shader
 		// this function will create histogram of data, (divide either by max value or 2^used bits) then multiplied by desired resolution
 		m_Histogram.resize(m_TextureResolution, 0.0f);
 		const auto& data = file.GetVecReference();
 		auto [xSize, ySize, slices] = file.GetSize();
 		const size_t size = xSize * ySize * slices;
 		float maxVal = 0.0f;
+		// If data are not normalized, normalize and convert to texture range, this is pre-computed factor
+		const float factor = m_TextureResolution / file.GetMaxNumber();
+		
 		for (std::uint32_t i = 0; i < size; ++i)
 		{
 			// glm::vec4().a -> density (rgb are reserved for gradient)
-			auto value = static_cast<int>(data[i].a);
+			int value = 0;
+			if (file.IsNormalized())
+			{
+				value = static_cast<int>(data[i].a * m_TextureResolution);
+			}
+			else
+			{
+				value = static_cast<int>(data[i].a * factor);
+			}
+			
 			++m_Histogram[value];
 		}
 		maxVal = std::log10(size);
