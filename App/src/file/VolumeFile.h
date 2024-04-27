@@ -55,6 +55,9 @@ namespace med
 		*/
 		void NormalizeData();
 
+		bool IsNormalized() const;
+		bool HasGradient() const;
+
 		/*
 		* @brief Get size/dimension of the input data.
 		*/
@@ -100,6 +103,7 @@ namespace med
 
 	protected:
 		bool m_HasGradient = false;
+		bool m_IsNormalized = false;
 
 		FileDataType m_FileDataType = FileDataType::Undefined;
 		std::filesystem::path m_Path{};

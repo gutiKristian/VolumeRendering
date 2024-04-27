@@ -105,10 +105,23 @@ namespace med
 
 	void VolumeFile::NormalizeData()
 	{
+		if (m_IsNormalized)
+			return;
 		for (auto& vec : m_Data)
 		{
 			vec.a /= GetMaxNumber();
 		}
+		m_IsNormalized = true;
+	}
+
+	bool VolumeFile::IsNormalized() const
+	{
+		return m_IsNormalized;
+	}
+
+	bool VolumeFile::HasGradient() const
+	{
+		return m_HasGradient;
 	}
 
 	void VolumeFile::PreComputeGradient(bool normToZeroOne)
