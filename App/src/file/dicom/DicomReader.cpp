@@ -170,6 +170,7 @@ namespace med
 
 	void DicomReader::ReadDicomVolumeVariables(const dcm::DicomFile& f)
 	{
+		// String: AE, AS, CS, DA, TM, DT, DS, IS, LO, ST, LT, UT, PN, SH, UC, UI, UR,
 		// Read the parameters
 		DicomVolumeParams currentParams;
 
@@ -207,9 +208,9 @@ namespace med
 		f.GetString(dcm::tags::kPixelSpacing, &str);
 		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
 
-		currentParams.LargesPixelValue = ParseStringToNumArr<int, 1>(GetTag(f, kLargestPixelValue).value_or("0")).back();
-		currentParams.SmallestPixelValue = ParseStringToNumArr<int, 1>(GetTag(f, kSmallestPixelValue).value_or("0")).back();
-	
+		f.GetInt32(kLargestPixelValue, &currentParams.LargesPixelValue);
+		f.GetInt32(kSmallestPixelValue, &currentParams.SmallestPixelValue);
+
 		// All good, update the current parameters
 		m_Params = currentParams;
 
@@ -315,53 +316,6 @@ namespace med
 	bool DicomReader::IsDicomFile(const std::filesystem::path& path)
 	{
 		return path.extension() == ".dcm";
-	}
-
-	std::optional<std::string> DicomReader::GetTag(std::filesystem::path path, dcm::Tag tag)
-	{
-		std::string err{};
-		if (!IsDicomFile(path))
-		{
-			err = "GetTag: " + path.string() + " is not a DICOM file";
-			LOG_ERROR(err.c_str());
-			return std::nullopt;
-		}
-
-		dcm::DicomFile f(path.c_str());
-		if (!f.Load())
-		{
-			err = "GetTag: Cannot load: " + path.string();
-			LOG_ERROR(err.c_str());
-			return std::nullopt;
-		}
-		return GetTag(f, tag);
-	}
-
-	std::optional<std::string> DicomReader::GetTag(const dcm::DataSet& file, dcm::Tag tag)
-	{
-		auto element = file.Get(tag);
-		std::stringstream ss{};
-		std::string res{};
-
-		if (!element)
-		{
-			tag.Print(ss);
-			res = "Tag: " + ss.str() + " not found!";
-			LOG_WARN(res.c_str());
-			return std::nullopt;
-		}
-
-		std::string result = element->GetString();
-
-		if (result.size() == 0 || result == "0")
-		{
-			tag.Print(ss);
-			res = "Tag: " + ss.str() + " found, but size is 0 or value is 0";
-			LOG_WARN(res.c_str());
-			return std::nullopt;
-		}
-
-		return result;
 	}
 	
 	std::string DicomReader::ResolveModality(DicomModality modality)
