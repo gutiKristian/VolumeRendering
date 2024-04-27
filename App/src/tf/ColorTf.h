@@ -22,7 +22,6 @@ namespace med
 	private:
 		void UpdateColors(int cpId);
 	private:
-		int m_TextureResolution;
 		int m_ClickedCpId = -1;
 		std::vector<glm::vec4> m_Colors{};
 		// Control points positions and colors

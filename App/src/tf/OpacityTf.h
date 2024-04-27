@@ -47,7 +47,6 @@ namespace med
 		*/
 		void UpdateYPoints(int controlPointIndex);
 	private:
-		int m_TextureResolution;
 		std::vector<float> m_XPoints{};
 		std::vector<float> m_YPoints{};
 		std::vector<float> m_Histogram{};

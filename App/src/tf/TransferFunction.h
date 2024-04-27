@@ -21,6 +21,7 @@ namespace med
 
 	protected:
 		std::shared_ptr<Texture> p_Texture = nullptr;
+		int m_TextureResolution = 0;
 		bool m_ShouldUpdate = false;
 	};
 }

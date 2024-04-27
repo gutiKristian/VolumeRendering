@@ -13,8 +13,9 @@
 
 namespace med
 {
-	OpacityTF::OpacityTF(int desiredTfResolution) : m_TextureResolution(desiredTfResolution)
+	OpacityTF::OpacityTF(int desiredTfResolution)
 	{
+		m_TextureResolution = desiredTfResolution;
 		size_t maxTex1Dsize = base::GraphicsContext::GetLimits().maxTextureDimension1D;
 		if (maxTex1Dsize < m_TextureResolution)
 		{

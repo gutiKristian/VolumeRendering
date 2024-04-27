@@ -15,8 +15,9 @@
 namespace med
 {
 
-	ColorTF::ColorTF(int desiredTfResolution) : m_TextureResolution(desiredTfResolution)
+	ColorTF::ColorTF(int desiredTfResolution)
 	{
+		m_TextureResolution = desiredTfResolution;
 		size_t maxTex1DSize = base::GraphicsContext::GetLimits().maxTextureDimension1D;
 		if (m_TextureResolution > maxTex1DSize)
 		{
