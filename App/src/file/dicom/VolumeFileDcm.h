@@ -48,7 +48,6 @@ namespace med
 		
 		DicomVolumeParams GetVolumeParams() const;
 
-
 		/*
 		*  ================ These are contour related things, in the future ContourDcm could extend this VolumeFileDcm class ===================
 		*/
@@ -80,6 +79,12 @@ namespace med
 	private:
 		glm::mat4x4 m_PixelToRCS{ 1.0f };
 		glm::mat4x4 m_RCSToPixel{ 1.0f };
+		
+		// Dicom's BitsStored leaves room for additional information or to accommodate data from systems that may acquire data at higher bit depths in the future
+		// therefore it's overshoot to 16bits, but as we want to use the TF as much as possible and be compatible with as many files as possible we use closest bit depth
+		// if we would have used the max value of a file to use TF to the max, we would have to do linear mappings to the interval of this to use this file's TF
+		// now we just divide by 2^m_CustomBitWidth (but we also know that CT values have some meaning, this is morelikely to happen for MRI)
+
 		DicomVolumeParams m_Params;
 
 		// ContourDcm class (see FillContour docstring)
