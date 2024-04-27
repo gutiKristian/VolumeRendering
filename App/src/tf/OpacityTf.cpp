@@ -43,7 +43,7 @@ namespace med
 		if (ImPlot::BeginPlot("##optfplot"))
 		{
 			// This sets up axes 1
-			ImPlot::SetupAxes("Voxel value", "Alpha");
+			ImPlot::SetupAxes("Voxel value", "Alpha", 0, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit);
 
 			// Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
 			ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, m_TextureResolution - 1.0);
