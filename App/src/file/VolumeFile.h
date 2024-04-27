@@ -5,8 +5,9 @@
 #include <utility>
 #include <vector>
 #include <tuple>
+#include <glm/glm.hpp>
 
-#include "glm/glm.hpp"
+#include "FileSystem.h"
 
 namespace med
 {
@@ -20,7 +21,10 @@ namespace med
 	public:
 		VolumeFile() = default;
 		VolumeFile(std::filesystem::path path, std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size,
-			FileDataType type, std::vector<glm::vec4>& data) : m_Path(std::move(path)), m_Size(size), m_FileDataType(type), m_Data(std::move(data)) {}
+			FileDataType type, std::vector<glm::vec4>& data);
+		VolumeFile(std::filesystem::path path, std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size,
+			FileDataType type, std::vector<glm::vec4>& data, size_t maxNumber);
+
 		virtual ~VolumeFile() = default;
 
 	protected:
@@ -35,6 +39,8 @@ namespace med
 
 		void SetMaxNumber(size_t maxNumber);
 	
+		size_t GetMaxNumber(const std::vector<glm::vec4>& vec);
+	
 	public:
 		/**
 		 * @brief Computes gradient using finite differences.
@@ -42,6 +48,12 @@ namespace med
 		 */
 		void PreComputeGradient(bool normToZeroOne=false);
 		void PreComputeGradientSobel();
+		
+		/*
+		* @brief Normalizes the density values to [0, 1] interval.
+		* Gradient values are untouched if already pre-computed.
+		*/
+		void NormalizeData();
 
 		/*
 		* @brief Get size/dimension of the input data.
@@ -60,7 +72,13 @@ namespace med
 
 		[[nodiscard]] const std::vector<glm::vec4>& GetVecReference() const;
 
+		/*
+		* @brief Maximum number within the dataset. Used in normalization.
+		* Note for dicom it is: 1 << GetMaxUsedBitDepth().
+		*/
 		[[nodiscard]] size_t GetMaxNumber() const;
+
+		[[nodiscard]] int GetMaxUsedBitDepth() const;
 
 		/**
 		 * @brief Maps 3D coordinate to the 1D data.
@@ -89,7 +107,8 @@ namespace med
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> m_Size{ 0, 0, 0 };
 
 		size_t m_MaxNumber = 0;
-		
+		int m_CustomBitWidth = 0;
+
 		std::vector<glm::vec4> m_Data{};
 		std::vector<float> m_DataSqueezed{};
 		//TODO: Uploads to the gpu are 4x bigger rn, in the future use templates or when really needed use squeezed arr
