@@ -91,8 +91,6 @@ namespace med
 			reader.m_Params.Z = numberOfFiles;
 		}
 
-		auto n = FileSystem::GetMaxNumber<glm::vec4>(reader.m_Data);
-		auto bits = FileSystem::GetMaxUsedBits(n);
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size = { reader.m_Params.X, reader.m_Params.Y, reader.m_Params.Z };
 		return std::make_shared<VolumeFileDcm>(FileSystem::GetDefaultPath() / name, size, reader.m_FileDataType, reader.m_Params, reader.m_Data);
 	}
@@ -208,7 +206,7 @@ namespace med
 		f.GetString(dcm::tags::kPixelSpacing, &str);
 		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
 
-		f.GetInt32(kLargestPixelValue, &currentParams.LargesPixelValue);
+		f.GetInt32(kLargestPixelValue, &currentParams.LargestPixelValue);
 		f.GetInt32(kSmallestPixelValue, &currentParams.SmallestPixelValue);
 
 		// All good, update the current parameters
