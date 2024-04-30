@@ -25,11 +25,10 @@ namespace med
 		void Load(const std::string& name) override;
 	private:
 		void UpdateColors(int cpId);
+		void UpdateYAxis(int cpId) override;
 	private:
 		int m_ClickedCpId = -1;
 		std::vector<glm::vec4> m_Colors{};
-		// Control points positions and colors
-		std::vector<glm::dvec2> m_ControlPos{};
 		std::vector<glm::vec4> m_ControlCol{};
 		bool m_HasClicked = false;
 	};

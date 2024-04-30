@@ -49,11 +49,12 @@ namespace med
 		* @brief Recalculate the interval between control points
 		*/
 		void UpdateYPoints(int controlPointIndex);
+
+		void UpdateYAxis(int cpId) override;
+
 	private:
 		std::vector<float> m_XPoints{};
 		std::vector<float> m_YPoints{};
 		std::vector<float> m_Histogram{};
-		std::vector<glm::dvec2> m_ControlPoints{};
-
 	};
 }

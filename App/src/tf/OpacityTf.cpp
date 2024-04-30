@@ -97,11 +97,7 @@ namespace med
 				std::string str = "Clicked in plot:" + std::to_string(static_cast<int>(mousePos.x)) + ", " + std::to_string(mousePos.y);
 				LOG_TRACE(str.c_str());
 
-				int index = TfUtils::AddControlPoint(mousePos.x, mousePos.y, m_ControlPoints);
-				if (index != -1)
-				{
-					UpdateYPoints(index);
-				}
+				int index = AddControlPoint(mousePos.x, mousePos.y);
 			}
 
 			if (ImGui::Button("Save opacity TF preset"))
@@ -256,6 +252,42 @@ namespace med
 			auto successorIndex = static_cast<size_t>(m_ControlPoints[controlPointIndex + 1].x);
 			updateIntervalValues(m_ControlPoints[controlPointIndex].x, m_ControlPoints[controlPointIndex + 1].x,
 				static_cast<float>(m_ControlPoints[controlPointIndex].y), m_YPoints[successorIndex]);
+		}
+		m_ShouldUpdate = true;
+	}
+
+	void OpacityTF::UpdateYAxis(int cpId)
+	{
+		assert(cpId >= 0 && cpId < m_ControlPoints.size() && "Control point index is out of bounds");
+		// Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
+		auto updateIntervalValues = [&](double cx1, double cx2, float cy1, float cy2)
+			{
+				int x0 = static_cast<int>(cx1);
+				int x1 = static_cast<int>(cx2);
+
+				std::vector<float> result = LinearInterpolation::Generate<float, int>(x0, x1, cy1, cy2, 1);
+				assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
+
+				for (size_t i = 0; i <= std::abs(x1 - x0); ++i)
+				{
+					m_YPoints[i + x0] = result[i];
+				}
+			};
+
+		// Update control interval between control point below and current
+		if (cpId - 1 >= 0)
+		{
+			auto predecessorIndex = static_cast<size_t>(m_ControlPoints[cpId - 1].x);
+			updateIntervalValues(m_ControlPoints[cpId - 1].x, m_ControlPoints[cpId].x,
+				m_YPoints[predecessorIndex], static_cast<float>(m_ControlPoints[cpId].y));
+		}
+
+		// Update control interval between current control point and control point above
+		if (cpId + 1 < m_ControlPoints.size())
+		{
+			auto successorIndex = static_cast<size_t>(m_ControlPoints[cpId + 1].x);
+			updateIntervalValues(m_ControlPoints[cpId].x, m_ControlPoints[cpId + 1].x,
+				static_cast<float>(m_ControlPoints[cpId].y), m_YPoints[successorIndex]);
 		}
 		m_ShouldUpdate = true;
 	}
