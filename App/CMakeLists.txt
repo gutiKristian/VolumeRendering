@@ -56,14 +56,19 @@ add_executable(App
 	"src/tf/ColorTf.cpp"
 	"src/tf/OpacityTf.h"
 	"src/tf/OpacityTf.cpp"
-	
+	"src/tf/TransferFunction.h"
+	"src/tf/TransferFunction.cpp"
+
 	"src/miniapps/include/MiniApp.h"
 	"src/miniapps/include/BasicVolumeApp.h"
 	"src/miniapps/include/ThreeFilesApp.h"
 	"src/miniapps/include/DicomInfoApp.h"
 	"src/miniapps/BasicVolumeApp.cpp"
 	"src/miniapps/ThreeFilesApp.cpp"
-	"src/miniapps/DicomInfoApp.cpp" "src/tf/TransferFunction.h" "src/tf/TransferFunction.cpp")
+	"src/miniapps/DicomInfoApp.cpp"
+	"src/miniapps/include/TFCalibrationApp.h"
+	"src/miniapps/TFCalibrationApp.cpp"
+)
 
 target_compile_definitions(App
 	PRIVATE
