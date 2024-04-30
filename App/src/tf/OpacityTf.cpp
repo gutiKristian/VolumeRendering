@@ -160,7 +160,12 @@ namespace med
 	{
 		// Create file with this structure first line is [opacity] second line is number of control points and then x y values
 		std::ofstream file(name);
-		file << "[opacity]\n";
+		file << GetType() << "\n";
+		file << "resolution\n";
+		file << GetTextureResolution() << "\n";
+		file << "data range\n";
+		file << GetDataRange() << "\n";
+		file << "control points number";
 		file << m_ControlPoints.size() << "\n";
 		for (const auto& cp : m_ControlPoints)
 		{

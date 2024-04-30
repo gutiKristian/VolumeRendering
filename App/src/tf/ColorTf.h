@@ -24,7 +24,6 @@ namespace med
 		void Save(const std::string& name) override;
 		void Load(const std::string& name) override;
 	private:
-		void UpdateColors(int cpId);
 		void UpdateYAxis(int cpId) override;
 	private:
 		int m_ClickedCpId = -1;

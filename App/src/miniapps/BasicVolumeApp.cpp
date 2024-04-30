@@ -19,6 +19,7 @@ namespace med
 		p_OpacityTf = std::make_unique<OpacityTF>(256);
 		p_ColorTf = std::make_unique<ColorTF>(256);
 
+		p_OpacityTf->SetDataRange(ctFile->GetMaxNumber());
 		p_OpacityTf->ActivateHistogram(*ctFile);
 
 		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),

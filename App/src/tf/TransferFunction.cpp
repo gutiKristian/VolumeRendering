@@ -42,6 +42,16 @@ namespace med
 		return m_TextureResolution;
 	}
 
+	int TransferFunction::GetDataRange() const
+	{
+		return m_DataRange;
+	}
+
+	void TransferFunction::SetDataRange(int range)
+	{
+		m_DataRange = range;
+	}
+
 	int TransferFunction::AddControlPoint(double mouseX, double mouseY, bool updateOnAdd)
 	{
 		constexpr int CONTROL_POINT_EXISTS = -1;

@@ -45,12 +45,10 @@ namespace med
 		void Save(const std::string& name) override;
 		void Load(const std::string& name) override;
 	private:
-		/*
-		* @brief Recalculate the interval between control points
-		*/
-		void UpdateYPoints(int controlPointIndex);
-
-		void UpdateYAxis(int cpId) override;
+	/*
+	* @brief Recalculate the interval between control points
+	*/
+	void UpdateYAxis(int cpId) override;
 
 	private:
 		std::vector<float> m_XPoints{};

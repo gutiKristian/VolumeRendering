@@ -24,13 +24,40 @@ namespace med
 		void ResolveResolution(int resolution);
 	public:
 		std::shared_ptr<Texture> GetTexture() const;
+
+		/*
+		* @brief Get maximum possible resolution of 1D texture on current hardware.
+		*/
 		int GetMaxTextureResolution() const;
+
+		/*
+		* @brief Texture resolution, control points x-axis is bounded by this value.
+		*/
 		int GetTextureResolution() const;
+
+		/*
+		* @brief Get range of the data (file) on what is TF calibrated.
+		*/
+		int GetDataRange() const;
+
+		/*
+		* @brief Set range of the data (file) on what is TF calibrated.
+		* @param range: value used for normalization of the 
+		*/
+		void SetDataRange(int range);
+		
+		/*
+		* @brief Adds point to the TF
+		* @param mouseX: Click position within the plot
+		* @param mouseY: Click position within the plot
+		* @param updateOnAdd: Whether trigger recalculation of Y axis (1D TF)
+		*/
 		int AddControlPoint(double mouseX, double mouseY, bool updateOnAdd = true);
 	protected:
 		std::shared_ptr<Texture> p_Texture = nullptr;
 		std::vector<glm::dvec2> m_ControlPoints{};
 		int m_TextureResolution = 0;
+		int m_DataRange = 0;
 		bool m_ShouldUpdate = false;
 	};
 }

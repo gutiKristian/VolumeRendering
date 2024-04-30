@@ -163,7 +163,11 @@ namespace med
 		assert(m_ControlCol.size() == m_ControlPoints.size() && "Number of control points colors don't match with number of positions");
 		// Create file with this structure first line is [opacity] second line is number of control points and then x y values
 		std::ofstream file(name);
-		file << "[color]\n";
+		file << GetType() << "\n";
+		file << "resolution\n";
+		file << GetTextureResolution() << "\n";
+		file << "data range\n";
+		file << GetDataRange() << "\n";
 		file << m_ControlPoints.size() << "\n";
 		for (int i = 0; i < m_ControlCol.size(); ++i)
 		{
@@ -181,7 +185,7 @@ namespace med
 
 		std::getline(file, line);
 		
-		if (line != "[color]")
+		if (line != GetType())
 		{
 			LOG_ERROR("Invalid file format");
 			return;
