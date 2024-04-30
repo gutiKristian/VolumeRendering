@@ -22,6 +22,7 @@
 #include "tf/LinearInterpolation.h"
 
 #include "miniapps/include/BasicVolumeApp.h"
+#include "miniapps/include/TFCalibrationApp.h"
 
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>

@@ -1,14 +1,18 @@
 #include "VolumeFileDcm.h"
-#include <glm/glm.hpp>
 #include "Base/Log.h"
+#include "../FileSystem.h"
+
+#include <glm/glm.hpp>
 
 namespace med
 {
 	VolumeFileDcm::VolumeFileDcm(std::filesystem::path path, std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size, 
-		FileDataType type, DicomVolumeParams params, std::vector<glm::vec4>& data) : VolumeFile(path, size, type, data), m_Params(params)
+		FileDataType type, DicomVolumeParams params, std::vector<glm::vec4>& data) : VolumeFile(path, size, type, data, params.LargestPixelValue), m_Params(params)
 	{
 		InitializeTransformMatrices();
 		CalcMainAxis();
+		m_CustomBitWidth = FileSystem::GetMaxUsedBits(m_MaxNumber);
+		m_MaxNumber = (1 << m_CustomBitWidth) - 1;
 	}
 
 	DicomBaseParams VolumeFileDcm::GetBaseParams() const
@@ -41,7 +45,6 @@ namespace med
 	{
 		return m_Params;
 	}
-
 
 	glm::vec3 VolumeFileDcm::PixelToRCSTransform(glm::vec2 coord) const
 	{

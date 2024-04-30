@@ -1,33 +1,34 @@
 #pragma once
 
+#include "TransferFunction.h"
+#include "../renderer/Texture.h"
+
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "../renderer/Texture.h"
 
 namespace med
 {
-	class ColorTF
+	class ColorTF : public TransferFunction
 	{
 	public:
+		/*
+		* @brief Create TF controlling the color.
+		* @param desiredTfResolution: Resultion of the texture for the TF representation, 0 means use MAXIMAL range.
+		*/
 		explicit ColorTF(int desiredTfResolution);
 
-		std::shared_ptr<Texture> GetTexture() const;
-		void Render();
-		void UpdateTexture();
-		void Save(const std::string& name);
-		void Load(const std::string& name);
+		void Render() override;
+		std::string GetType() const override;
+		void UpdateTexture() override;
+		void Save(const std::string& name) override;
+		void Load(const std::string& name) override;
 	private:
-		void UpdateColors(int cpId);
+		void UpdateYAxis(int cpId) override;
 	private:
-		int m_DataDepth;
 		int m_ClickedCpId = -1;
-		std::shared_ptr<Texture> p_Texture = nullptr;
 		std::vector<glm::vec4> m_Colors{};
-		// Control points positions and colors
-		std::vector<glm::dvec2> m_ControlPos{};
 		std::vector<glm::vec4> m_ControlCol{};
-		bool m_ShouldUpdate = false;
 		bool m_HasClicked = false;
 	};
 }

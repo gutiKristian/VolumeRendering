@@ -1,18 +1,28 @@
-#include <vector>
+#pragma once
+
+#include "OpacityTf.h"
+#include "../file/VolumeFile.h"
+
 #include <glm/glm.hpp>
+#include <vector>
+#include <memory>
+#include <array>
 
 namespace med
 {
 	class TfUtils
 	{
 	public:
-		/*
-		* @brief Add a control point to the control points vector.
-		* If new control point is added, sorts the control points vector by x coordinate.
-		* @return The index of the added control point or -1 if already exists.
-		*/
-		static int AddControlPoint(double x, double y, std::vector<glm::dvec2>& cp);
-
 		static void CheckDragBounds(int index, std::vector<glm::dvec2>& controlPoints, int maxDataVal);
+		
+		/*
+		* @brief Calibrates transfer function based on the provided mask. The mask is usually a filled contour.
+		* @param mask: The mask which determines the areas where calibration is performed
+		* @param data: File used to generate the histogram inside the areas
+		* @param activeContours: As mask may have up to 4 contours, this param tells us which should be taken into account
+		* @param tfResolution: Resolution of the texture
+		* @return Calibrated TF, if some of the checks fail default OpacityTF is returned
+		*/
+		static std::unique_ptr<OpacityTF> CalibrateOpacityTF(std::shared_ptr<const VolumeFile> mask, std::shared_ptr<const VolumeFile> data, std::array<int, 4> activeContours, int tfResolution);
 	};
 }

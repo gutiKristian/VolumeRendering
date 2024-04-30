@@ -21,6 +21,9 @@ namespace med
 	const dcm::Tag kImageOrientationPatient = 0x00200037;
 	const dcm::Tag kSliceThickness = 0x00180050;
 	const dcm::Tag kFrameOfReference = 0x00200052;
+	const dcm::Tag kLargestPixelValue = 0x00280107;
+	const dcm::Tag kSmallestPixelValue = 0x00280106;
+
 
 
 	std::shared_ptr<VolumeFileDcm> DicomReader::ReadVolumeFile(std::filesystem::path name)
@@ -88,8 +91,6 @@ namespace med
 			reader.m_Params.Z = numberOfFiles;
 		}
 
-		auto n = FileSystem::GetMaxNumber<glm::vec4>(reader.m_Data);
-		auto bits = FileSystem::GetMaxUsedBits(n);
 		std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size = { reader.m_Params.X, reader.m_Params.Y, reader.m_Params.Z };
 		return std::make_shared<VolumeFileDcm>(FileSystem::GetDefaultPath() / name, size, reader.m_FileDataType, reader.m_Params, reader.m_Data);
 	}
@@ -167,6 +168,7 @@ namespace med
 
 	void DicomReader::ReadDicomVolumeVariables(const dcm::DicomFile& f)
 	{
+		// String: AE, AS, CS, DA, TM, DT, DS, IS, LO, ST, LT, UT, PN, SH, UC, UI, UR,
 		// Read the parameters
 		DicomVolumeParams currentParams;
 
@@ -203,7 +205,11 @@ namespace med
 
 		f.GetString(dcm::tags::kPixelSpacing, &str);
 		currentParams.PixelSpacing = ParseStringToNumArr<double, 2>(str);
-	
+
+		std::uint16_t a = 0;
+		f.GetUint16(kLargestPixelValue, &currentParams.LargestPixelValue);
+		f.GetUint16(kSmallestPixelValue, &currentParams.SmallestPixelValue);
+
 		// All good, update the current parameters
 		m_Params = currentParams;
 
@@ -309,39 +315,6 @@ namespace med
 	bool DicomReader::IsDicomFile(const std::filesystem::path& path)
 	{
 		return path.extension() == ".dcm";
-	}
-
-	std::optional<std::string> DicomReader::GetTag(std::filesystem::path path, dcm::Tag tag)
-	{
-		std::string err{};
-		if (!IsDicomFile(path))
-		{
-			err = "GetTag: " + path.string() + " is not a DICOM file";
-			LOG_ERROR(err.c_str());
-			return std::nullopt;
-		}
-
-		dcm::DicomFile f(path.c_str());
-		if (!f.Load())
-		{
-			err = "GetTag: Cannot load: " + path.string();
-			LOG_ERROR(err.c_str());
-			return std::nullopt;
-		}
-		return GetTag(f, tag);
-	}
-
-	std::optional<std::string> DicomReader::GetTag(const dcm::DataSet& file, dcm::Tag tag)
-	{
-		auto element = file.Get(tag);
-
-		if (!element)
-		{
-			LOG_WARN("Tag not found");
-			return std::nullopt;
-		}
-
-		return element->GetString();
 	}
 	
 	std::string DicomReader::ResolveModality(DicomModality modality)

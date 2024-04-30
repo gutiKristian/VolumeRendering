@@ -3,6 +3,22 @@
 
 namespace med
 {
+	VolumeFile::VolumeFile(std::filesystem::path path, std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size, FileDataType type, std::vector<glm::vec4>& data) : 
+		m_Path(std::move(path)), m_Size(size), m_FileDataType(type), m_Data(std::move(data))
+	{
+		m_MaxNumber = GetMaxNumber(m_Data);
+	}
+
+	VolumeFile::VolumeFile(std::filesystem::path path, std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> size, FileDataType type, std::vector<glm::vec4>& data, size_t maxNumber) :
+		m_Path(std::move(path)), m_Size(size), m_FileDataType(type), m_Data(std::move(data)), m_MaxNumber(maxNumber)
+	{
+		if (m_MaxNumber == 0)
+		{
+			m_MaxNumber = GetMaxNumber(m_Data);
+		}
+	}
+
+
 	void VolumeFile::SetData(std::vector<glm::vec4> &src)
 	{
 		m_Data = std::move(src);
@@ -28,9 +44,23 @@ namespace med
 		m_MaxNumber = maxNumber;
 	}
 
+	size_t VolumeFile::GetMaxNumber(const std::vector<glm::vec4>& vec, int index) const
+	{
+		const std::vector<glm::vec4>::const_iterator maxElement = std::max_element(vec.begin(), vec.end(), [&](const glm::vec4& a, const glm::vec4& b) {
+			return a[index] < b[index];
+		});
+
+		return maxElement != vec.end() ? (*maxElement)[index] : 0;
+	}
+
 	size_t VolumeFile::GetMaxNumber() const
 	{
 		return m_MaxNumber;
+	}
+
+	int VolumeFile::GetMaxUsedBitDepth() const
+	{
+		return m_CustomBitWidth;
 	}
 
 	void VolumeFile::PreComputeGradientSobel()
@@ -72,6 +102,27 @@ namespace med
 		}
 		m_HasGradient = true;
 		LOG_INFO("Done");
+	}
+
+	void VolumeFile::NormalizeData()
+	{
+		if (m_IsNormalized)
+			return;
+		for (auto& vec : m_Data)
+		{
+			vec.a /= GetMaxNumber();
+		}
+		m_IsNormalized = true;
+	}
+
+	bool VolumeFile::IsNormalized() const
+	{
+		return m_IsNormalized;
+	}
+
+	bool VolumeFile::HasGradient() const
+	{
+		return m_HasGradient;
 	}
 
 	void VolumeFile::PreComputeGradient(bool normToZeroOne)

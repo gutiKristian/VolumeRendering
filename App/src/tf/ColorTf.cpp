@@ -15,46 +15,35 @@
 namespace med
 {
 
-	ColorTF::ColorTF(int desiredTfResolution) : m_DataDepth(desiredTfResolution)
+	ColorTF::ColorTF(int desiredTfResolution)
 	{
-		size_t maxTex1DSize = base::GraphicsContext::GetLimits().maxTextureDimension1D;
-		if (m_DataDepth > maxTex1DSize)
-		{
-			LOG_WARN("Max value is greater than maximum texture 1D size, clamping to maximum size");
-			m_DataDepth = maxTex1DSize;
-		}
+		ResolveResolution(desiredTfResolution);
 
 		auto color1 = glm::vec4(0.0, 0.0, 0.0, 1.0);
 		auto color2 = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
-		m_Colors = LinearInterpolation::Generate<glm::vec4, int>(0, m_DataDepth - 1, color1, color2, 1);
+		m_Colors = LinearInterpolation::Generate<glm::vec4, int>(0, m_TextureResolution - 1, color1, color2, 1);
 
 		m_ControlCol.push_back(color1);
 		m_ControlCol.push_back(color2);
 
-		m_ControlPos.emplace_back(0.0, 0.5);
-		m_ControlPos.emplace_back(m_DataDepth - 1.0, 0.5);
+		m_ControlPoints.emplace_back(0.0, 0.5);
+		m_ControlPoints.emplace_back(m_TextureResolution - 1.0, 0.5);
 
-		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_Colors.data(), WGPUTextureDimension_1D, {m_DataDepth, 1, 1},
+		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_Colors.data(), WGPUTextureDimension_1D, {m_TextureResolution, 1, 1},
 						WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Color TF");
 	}
-	
-	std::shared_ptr<Texture> ColorTF::GetTexture() const
-	{
-		assert(p_Texture != nullptr && "Texture is not initialized");
-		return p_Texture;
-	}
-	
+		
 	void ColorTF::Render()
 	{
-		assert(m_ControlCol.size() == m_ControlPos.size() && "Number of control points colors don't match with number of positions");
+		assert(m_ControlCol.size() == m_ControlPoints.size() && "Number of control points colors don't match with number of positions");
 		auto cpSize = m_ControlCol.size();
 
 		if (ImPlot::BeginPlot("##gradient", ImVec2(-1, 150), ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoFrame))
 		{
 			ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_NoDecorations);
 			ImPlot::SetupAxisLimitsConstraints(ImAxis_Y1, 0.0, 1.0);
-			ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, m_DataDepth - 1);
+			ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, m_TextureResolution - 1);
 
 			// Plot is from 0 to 4095 on x axis and 0 to 1 on y axis
 			float xx = 1.0f;
@@ -75,7 +64,7 @@ namespace med
 			{
 				bool clickEvent = false;
 				bool held = false;
-				isDragging |= ImPlot::DragPoint(id, &m_ControlPos[id].x, &HEIGHT, ImVec4(0, 0, 255, 255), 4.0f, ImPlotDragToolFlags_Delayed, &clickEvent);
+				isDragging |= ImPlot::DragPoint(id, &m_ControlPoints[id].x, &HEIGHT, ImVec4(0, 0, 255, 255), 4.0f, ImPlotDragToolFlags_Delayed, &clickEvent);
 				m_HasClicked |= clickEvent;
 				
 				if (isDragging && draggedId == -1)
@@ -84,14 +73,14 @@ namespace med
 					{
 						// We don't want to drag the first and last control points
 						isDragging = false;
-						m_ControlPos[0].x = 0.0;
-						m_ControlPos[cpSize - 1].x = m_DataDepth - 1.0;
+						m_ControlPoints[0].x = 0.0;
+						m_ControlPoints[cpSize - 1].x = m_TextureResolution - 1.0;
 					}
 					else
 					{
 						// This point is being dragged and we will work with it below
 						draggedId = id;
-						TfUtils::CheckDragBounds(draggedId, m_ControlPos, m_DataDepth);
+						TfUtils::CheckDragBounds(draggedId, m_ControlPoints, m_TextureResolution);
 					}
 				}
 
@@ -107,7 +96,7 @@ namespace med
 			{
 				assert(draggedId != -1 && "Dragging event was unexpectedly fired and dragged id is invalid");
 				// Recalculate colors
-				UpdateColors(draggedId);
+				UpdateYAxis(draggedId);
 			}
 
 			// Do not open pop up if we are dragging or dragging has been done
@@ -122,7 +111,7 @@ namespace med
 				if (ImGui::ColorPicker4("Color", glm::value_ptr(m_ControlCol[m_ClickedCpId])))
 				{
 					// Recalculate colors
-					UpdateColors(m_ClickedCpId);
+					UpdateYAxis(m_ClickedCpId);
 				}
 				ImGui::EndPopup();
 			}
@@ -138,11 +127,13 @@ namespace med
 			if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
 			{
 				auto x = std::round(ImPlot::GetPlotMousePos().x);
-				int index = TfUtils::AddControlPoint(x, 0.5, m_ControlPos);
+				int index = AddControlPoint(x, 0.5, false);
+
 				if (index != -1)
 				{
 					m_ControlCol.emplace(m_ControlCol.begin() + index, m_Colors[static_cast<int>(x)]);
-					UpdateColors(index);
+					// manually trigger update
+					UpdateYAxis(index);
 				}
 				LOG_INFO("Added colormap cp");
 			}
@@ -169,14 +160,18 @@ namespace med
 
 	void ColorTF::Save(const std::string& name)
 	{
-		assert(m_ControlCol.size() == m_ControlPos.size() && "Number of control points colors don't match with number of positions");
+		assert(m_ControlCol.size() == m_ControlPoints.size() && "Number of control points colors don't match with number of positions");
 		// Create file with this structure first line is [opacity] second line is number of control points and then x y values
 		std::ofstream file(name);
-		file << "[color]\n";
-		file << m_ControlPos.size() << "\n";
+		file << GetType() << "\n";
+		file << "resolution\n";
+		file << GetTextureResolution() << "\n";
+		file << "data range\n";
+		file << GetDataRange() << "\n";
+		file << m_ControlPoints.size() << "\n";
 		for (int i = 0; i < m_ControlCol.size(); ++i)
 		{
-			file << m_ControlPos[i].x << " " << m_ControlPos[i].y << m_ControlCol[i].r << " " << m_ControlCol[i].g << " " << m_ControlCol[i].b << " " << m_ControlCol[i].a << "\n";
+			file << m_ControlPoints[i].x << " " << m_ControlPoints[i].y << m_ControlCol[i].r << " " << m_ControlCol[i].g << " " << m_ControlCol[i].b << " " << m_ControlCol[i].a << "\n";
 		}
 		file.close();
 	}
@@ -190,7 +185,7 @@ namespace med
 
 		std::getline(file, line);
 		
-		if (line != "[color]")
+		if (line != GetType())
 		{
 			LOG_ERROR("Invalid file format");
 			return;
@@ -228,19 +223,19 @@ namespace med
 		file.close();
 		
 		m_ControlCol = cpCol;
-		m_ControlPos = cpPos;
+		m_ControlPoints = cpPos;
 
 		// Jumping by 2 to avoid recalculation of the same interval
 		for (int i = 1; i < controlPoints; i+=2)
 		{
-			UpdateColors(i);
+			UpdateYAxis(i);
 		}
 
 		m_ShouldUpdate = true;
 		LOG_INFO("Color TF loaded");
 	}
 
-	void ColorTF::UpdateColors(int cpId)
+	void ColorTF::UpdateYAxis(int cpId)
 	{
 		assert(cpId >= 0 && cpId < m_ControlCol.size() && "Control point index is out of bounds");
 
@@ -249,7 +244,7 @@ namespace med
 			{
 				int x0 = static_cast<int>(cx1);
 				int x1 = static_cast<int>(cx2);
-				
+
 				std::vector<glm::vec4> result = LinearInterpolation::Generate<glm::vec4, int>(x0, x1, cy1, cy2, 1);
 				assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
 
@@ -262,16 +257,21 @@ namespace med
 		// Update control interval between control point below and current
 		if (cpId - 1 >= 0)
 		{
-			auto predecessorIndex = static_cast<int>(m_ControlPos[cpId - 1].x);
-			updateIntervalValues(m_ControlPos[cpId - 1].x, m_ControlPos[cpId].x, m_Colors[predecessorIndex], m_ControlCol[cpId]);
+			auto predecessorIndex = static_cast<int>(m_ControlPoints[cpId - 1].x);
+			updateIntervalValues(m_ControlPoints[cpId - 1].x, m_ControlPoints[cpId].x, m_Colors[predecessorIndex], m_ControlCol[cpId]);
 		}
 
 		// Update control interval between current control point and control point above
 		if (cpId + 1 < m_ControlCol.size())
 		{
-			auto successorIndex = static_cast<int>(m_ControlPos[cpId + 1].x);
-			updateIntervalValues(m_ControlPos[cpId].x, m_ControlPos[cpId + 1].x, m_ControlCol[cpId], m_Colors[successorIndex]);
+			auto successorIndex = static_cast<int>(m_ControlPoints[cpId + 1].x);
+			updateIntervalValues(m_ControlPoints[cpId].x, m_ControlPoints[cpId + 1].x, m_ControlCol[cpId], m_Colors[successorIndex]);
 		}
 		m_ShouldUpdate = true;
+	}
+
+	std::string ColorTF::GetType() const
+	{
+		return "color";
 	}
 } // namespace med
