@@ -96,7 +96,7 @@ namespace med
 			{
 				assert(draggedId != -1 && "Dragging event was unexpectedly fired and dragged id is invalid");
 				// Recalculate colors
-				UpdateColors(draggedId);
+				UpdateYAxis(draggedId);
 			}
 
 			// Do not open pop up if we are dragging or dragging has been done
@@ -111,7 +111,7 @@ namespace med
 				if (ImGui::ColorPicker4("Color", glm::value_ptr(m_ControlCol[m_ClickedCpId])))
 				{
 					// Recalculate colors
-					UpdateColors(m_ClickedCpId);
+					UpdateYAxis(m_ClickedCpId);
 				}
 				ImGui::EndPopup();
 			}
@@ -224,46 +224,11 @@ namespace med
 		// Jumping by 2 to avoid recalculation of the same interval
 		for (int i = 1; i < controlPoints; i+=2)
 		{
-			UpdateColors(i);
+			UpdateYAxis(i);
 		}
 
 		m_ShouldUpdate = true;
 		LOG_INFO("Color TF loaded");
-	}
-
-	void ColorTF::UpdateColors(int cpId)
-	{
-		assert(cpId >= 0 && cpId < m_ControlCol.size() && "Control point index is out of bounds");
-
-		// Takes x and y coordinate of two control points and execute linear interpolation between them, then copies to resulting array
-		auto updateIntervalValues = [&](double cx1, double cx2, glm::vec4 cy1, glm::vec4 cy2)
-			{
-				int x0 = static_cast<int>(cx1);
-				int x1 = static_cast<int>(cx2);
-				
-				std::vector<glm::vec4> result = LinearInterpolation::Generate<glm::vec4, int>(x0, x1, cy1, cy2, 1);
-				assert(result.size() - 1 == std::abs(x1 - x0) && "Size of generated vector does not match");
-
-				for (size_t i = 0; i <= std::abs(x1 - x0); ++i)
-				{
-					m_Colors[i + x0] = result[i];
-				}
-			};
-
-		// Update control interval between control point below and current
-		if (cpId - 1 >= 0)
-		{
-			auto predecessorIndex = static_cast<int>(m_ControlPoints[cpId - 1].x);
-			updateIntervalValues(m_ControlPoints[cpId - 1].x, m_ControlPoints[cpId].x, m_Colors[predecessorIndex], m_ControlCol[cpId]);
-		}
-
-		// Update control interval between current control point and control point above
-		if (cpId + 1 < m_ControlCol.size())
-		{
-			auto successorIndex = static_cast<int>(m_ControlPoints[cpId + 1].x);
-			updateIntervalValues(m_ControlPoints[cpId].x, m_ControlPoints[cpId + 1].x, m_ControlCol[cpId], m_Colors[successorIndex]);
-		}
-		m_ShouldUpdate = true;
 	}
 
 	void ColorTF::UpdateYAxis(int cpId)
