@@ -39,8 +39,6 @@ namespace med
 
 		void SetMaxNumber(size_t maxNumber);
 	
-		size_t GetMaxNumber(const std::vector<glm::vec4>& vec);
-	
 	public:
 		/**
 		 * @brief Computes gradient using finite differences.
@@ -80,6 +78,8 @@ namespace med
 		* Note for dicom it is: 1 << GetMaxUsedBitDepth().
 		*/
 		[[nodiscard]] size_t GetMaxNumber() const;
+
+		[[nodiscard]] size_t GetMaxNumber(const std::vector<glm::vec4>& vec, int index = 0) const;
 
 		[[nodiscard]] int GetMaxUsedBitDepth() const;
 

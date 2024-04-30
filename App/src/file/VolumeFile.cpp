@@ -44,12 +44,13 @@ namespace med
 		m_MaxNumber = maxNumber;
 	}
 
-	size_t VolumeFile::GetMaxNumber(const std::vector<glm::vec4>& vec)
+	size_t VolumeFile::GetMaxNumber(const std::vector<glm::vec4>& vec, int index) const
 	{
-		auto maxElement = std::max_element(vec.begin(), vec.end(), [](const glm::vec4& a, const glm::vec4& b) {
-			return a.r < b.r;
+		const std::vector<glm::vec4>::const_iterator maxElement = std::max_element(vec.begin(), vec.end(), [&](const glm::vec4& a, const glm::vec4& b) {
+			return a[index] < b[index];
 		});
-		return maxElement != vec.end() ? maxElement->r : 0;
+
+		return maxElement != vec.end() ? (*maxElement)[index] : 0;
 	}
 
 	size_t VolumeFile::GetMaxNumber() const
