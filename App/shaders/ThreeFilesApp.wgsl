@@ -42,8 +42,7 @@ struct Ray
 @group(0) @binding(3) var samplerNN: sampler;
 @group(0) @binding(4) var<uniform> fragmentMode: i32;
 @group(0) @binding(5) var<uniform> stepsCount: i32;
-@group(0) @binding(6) var texRayStart: texture_2d<f32>;
-@group(0) @binding(7) var texRayEnd: texture_2d<f32>;
+@group(0) @binding(6) var texRayEnd: texture_2d<f32>;
 
 @group(1) @binding(0) var textureCT: texture_3d<f32>;
 @group(1) @binding(1) var textureRT: texture_3d<f32>;

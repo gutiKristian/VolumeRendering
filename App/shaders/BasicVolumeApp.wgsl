@@ -29,8 +29,7 @@ struct Ray
 @group(0) @binding(3) var samplerNN: sampler;
 @group(0) @binding(4) var<uniform> fragmentMode: i32;
 @group(0) @binding(5) var<uniform> stepsCount: i32;
-@group(0) @binding(6) var texRayStart: texture_2d<f32>;
-@group(0) @binding(7) var texRayEnd: texture_2d<f32>;
+@group(0) @binding(6) var texRayEnd: texture_2d<f32>;
 
 // App
 @group(1) @binding(0) var textMain: texture_3d<f32>;
@@ -72,11 +71,11 @@ fn IsInSampleCoords(position: vec3<f32>) -> bool
 * @param screenSpaceCoord: screen space coordinates of the fragment, used to sample pre-rendered ray start and end
 * @return Ray: ray with start, end, direction and length
 */
-fn SetupRay(screenSpaceCoord: vec2<i32>) -> Ray
+fn SetupRay(screenSpaceCoord: vec2<i32>, start: vec3<f32>) -> Ray
 {
 	var ray: Ray;
 	// Ray setup
-	ray.start = textureLoad(texRayStart, screenSpaceCoord, 0).xyz;
+	ray.start = start;
 	ray.end = textureLoad(texRayEnd, screenSpaceCoord, 0).xyz;
 	ray.direction = normalize(ray.end.xyz - ray.start.xyz);
 	ray.length = length(ray.end.xyz - ray.start.xyz);
@@ -111,7 +110,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	var wordlCoords: vec3f = in.worldCoord.xyz;
 
 	// Ray setup
-	let ray: Ray = SetupRay(vec2<i32>(i32(in.position.x), i32(in.position.y)));
+	let ray: Ray = SetupRay(vec2<i32>(i32(in.position.x), i32(in.position.y)), in.textureCoord);
 
 	switch fragmentMode {
 	  case 1: {

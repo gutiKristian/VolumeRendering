@@ -106,15 +106,14 @@ namespace med {
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
 		std::shared_ptr<UniformBuffer> p_UCameraPos = nullptr;
 
-		std::shared_ptr<Texture> p_TexStartPos = nullptr;
 		std::shared_ptr<Texture> p_TexEndPos = nullptr;
 
 		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
 		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
 
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
-		std::shared_ptr<RenderPipeline> p_RenderPipelineStart = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineEnd = nullptr;
+		std::shared_ptr<RenderPipeline> p_RenderPipelineBackground = nullptr;
 
 		BindGroup m_BGroupDefaultApp;
 		BindGroup m_BGroupProxy;
