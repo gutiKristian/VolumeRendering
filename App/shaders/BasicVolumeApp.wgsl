@@ -29,7 +29,10 @@ struct Ray
 @group(0) @binding(3) var samplerNN: sampler;
 @group(0) @binding(4) var<uniform> fragmentMode: i32;
 @group(0) @binding(5) var<uniform> stepsCount: i32;
-@group(0) @binding(6) var texRayEnd: texture_2d<f32>;
+@group(0) @binding(6) var<uniform> clipX: vec2<f32>;
+@group(0) @binding(7) var<uniform> clipY: vec2<f32>;
+@group(0) @binding(8) var<uniform> clipZ: vec2<f32>;
+@group(0) @binding(9) var texRayEnd: texture_2d<f32>;
 
 // App
 @group(1) @binding(0) var textMain: texture_3d<f32>;
@@ -58,8 +61,8 @@ fn vs_main(@builtin(vertex_index) vID: u32, @location(0) vertexCoord: vec3f, @lo
 */
 fn IsInSampleCoords(position: vec3<f32>) -> bool
 {
-	var b_min: vec3<f32> = vec3<f32>(0.0, 0.0, 0.0);
-	var b_max: vec3<f32> = vec3<f32>(1.0, 1.0, 1.0);
+	var b_min: vec3<f32> = vec3<f32>(0.0 + clipX.x, 0.0 + clipY.x, 0.0 + clipZ.x);
+	var b_max: vec3<f32> = vec3<f32>(1.0 - clipX.y, 1.0 - clipY.y, 1.0 - clipZ.y);
 
 	return	position.x >= b_min.x && position.x <= b_max.x &&
 			position.y >= b_min.y && position.y <= b_max.y &&
@@ -79,6 +82,7 @@ fn SetupRay(screenSpaceCoord: vec2<i32>, start: vec3<f32>) -> Ray
 	ray.end = textureLoad(texRayEnd, screenSpaceCoord, 0).xyz;
 	ray.direction = normalize(ray.end.xyz - ray.start.xyz);
 	ray.length = length(ray.end.xyz - ray.start.xyz);
+
 	return ray;
 }
 

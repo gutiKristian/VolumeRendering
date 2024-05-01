@@ -78,6 +78,9 @@ namespace med {
 
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
 		p_UStepsCount->UpdateBuffer(queue, 0, &m_StepsCount, sizeOfInt);
+		p_UClipX->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsX), sizeof(glm::vec2));
+		p_UClipY->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsY), sizeof(glm::vec2));
+		p_UClipZ->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsZ), sizeof(glm::vec2));
 
 		p_App->OnUpdate(ts);
 	}
@@ -206,8 +209,15 @@ namespace med {
 	{
 		ImGui::Begin("Debug settings");
 		//ImPlot::ShowDemoWindow();
+		ImGui::ShowDemoWindow();
+
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
+		
+		ImGui::SliderFloat2("X", glm::value_ptr(m_ClipsX), 0.0f, 0.5f);
+		ImGui::SliderFloat2("Y", glm::value_ptr(m_ClipsY), 0.0f, 0.5f);
+		ImGui::SliderFloat2("Z", glm::value_ptr(m_ClipsZ), 0.0f, 0.5f);
+
 		ImGui::End();
 
 		p_App->OnImGuiRender();
@@ -381,6 +391,10 @@ namespace med {
 		p_UFragmentMode = UniformBuffer::CreateFromData(device, queue, &m_FragmentMode, sizeof(int));
 		p_UStepsCount = UniformBuffer::CreateFromData(device, queue, &m_StepsCount, sizeof(int));
 
+		p_UClipX = UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_ClipsX), sizeof(glm::vec2));
+		p_UClipY = UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_ClipsY), sizeof(glm::vec2));
+		p_UClipZ = UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_ClipsZ), sizeof(glm::vec2));
+
 		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16, &m_Camera.GetViewMatrix(), sizeof(float) * 16);
 		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 2, &m_Camera.GetProjectionMatrix(), sizeof(float) * 16);
 		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 3, &m_Camera.GetInverseViewMatrix(), sizeof(float) * 16);
@@ -428,6 +442,9 @@ namespace med {
 		m_BGroupDefaultApp.AddSampler(*p_SamplerNN);
 		m_BGroupDefaultApp.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UStepsCount, WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddBuffer(*p_UClipX, WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddBuffer(*p_UClipY, WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddBuffer(*p_UClipZ, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupDefaultApp.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 

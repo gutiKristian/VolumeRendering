@@ -99,12 +99,20 @@ namespace med {
 		bool m_ShouldRotate = false;
 		bool m_ShouldZoom = false;
 		
+		glm::vec2 m_ClipsX{ 0.0f };
+		glm::vec2 m_ClipsY{ 0.0f };
+		glm::vec2 m_ClipsZ{ 0.0f };
+
 		// Main Pipeline
 		PipelineBuilder m_Builder;
 
 		// Binding 0
 		std::shared_ptr<UniformBuffer> p_UCamera = nullptr;
 		std::shared_ptr<UniformBuffer> p_UCameraPos = nullptr;
+		std::shared_ptr<UniformBuffer> p_UClipX = nullptr;
+		std::shared_ptr<UniformBuffer> p_UClipY = nullptr;
+		std::shared_ptr<UniformBuffer> p_UClipZ = nullptr;
+
 
 		std::shared_ptr<Texture> p_TexEndPos = nullptr;
 
