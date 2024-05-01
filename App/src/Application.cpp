@@ -208,16 +208,11 @@ namespace med {
 	void Application::OnImGuiRender()
 	{
 		ImGui::Begin("Debug settings");
-		//ImPlot::ShowDemoWindow();
-		ImGui::ShowDemoWindow();
-
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
-		
 		ImGui::SliderFloat2("X", glm::value_ptr(m_ClipsX), 0.0f, 0.5f);
 		ImGui::SliderFloat2("Y", glm::value_ptr(m_ClipsY), 0.0f, 0.5f);
 		ImGui::SliderFloat2("Z", glm::value_ptr(m_ClipsZ), 0.0f, 0.5f);
-
 		ImGui::End();
 
 		p_App->OnImGuiRender();
