@@ -86,32 +86,59 @@ namespace med {
 	{
 		const WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(base::GraphicsContext::GetDevice(), nullptr);
 
-		// Ray end
+		// ---------- Background ----------
+		{
+			WGPURenderPassColorAttachment colorAttachmentsBackground = {
+				.view = wgpuSwapChainGetCurrentTextureView(base::GraphicsContext::GetSwapChain()),
+				.loadOp = WGPULoadOp_Clear,
+				.storeOp = WGPUStoreOp_Store,
+				.clearValue = {0.0, 0.0, 0.0, 1.0}
+			};
 
-		WGPURenderPassColorAttachment colorAttachmentsRay = {
-			.view = p_TexEndPos->GetTextureView(),
-			.loadOp = WGPULoadOp_Clear,
-			.storeOp = WGPUStoreOp_Store,
-			.clearValue = {0.0, 0.0, 0.0, 1.0}
-		};
+			WGPURenderPassDescriptor renderPassDescBackground = {
+				.label = "Background Renderpass",
+				.colorAttachmentCount = 1,
+				.colorAttachments = &colorAttachmentsBackground,
+				.depthStencilAttachment = nullptr
+			};
 
-		WGPURenderPassDescriptor renderPassDescRay = {
-			.label = "Ray end render pass",
-			.colorAttachmentCount = 1,
-			.colorAttachments = &colorAttachmentsRay,
-			.depthStencilAttachment = nullptr
-		};
+			WGPURenderPassEncoder pass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescBackground);
+			p_RenderPipelineBackground->Bind(pass);
 
-		const WGPURenderPassEncoder passRayEnd = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescRay);
+			wgpuRenderPassEncoderDraw(pass, 6, 1, 0, 0);
+			wgpuRenderPassEncoderEnd(pass);
+			wgpuRenderPassEncoderRelease(pass);
+		}
+		
+		// ---------- Ray end ----------
+		{
+			WGPURenderPassColorAttachment colorAttachmentsRay = {
+				.view = p_TexEndPos->GetTextureView(),
+				.loadOp = WGPULoadOp_Clear,
+				.storeOp = WGPUStoreOp_Store,
+				.clearValue = {0.0, 0.0, 0.0, 1.0}
+			};
 
-		p_RenderPipelineEnd->Bind(passRayEnd);
-		p_VBCube->Bind(passRayEnd);
-		m_BGroupProxy.Bind(passRayEnd);
-		wgpuRenderPassEncoderSetIndexBuffer(passRayEnd, p_IBCube->GetBufferPtr(), WGPUIndexFormat_Uint16, 0, p_IBCube->GetSize());
-		wgpuRenderPassEncoderDrawIndexed(passRayEnd, p_IBCube->GetCount(), 1, 0, 0, 0);
-		wgpuRenderPassEncoderEnd(passRayEnd);
-		BindGroup::ResetBindSlotsIndices();
+			WGPURenderPassDescriptor renderPassDescRay = {
+				.label = "Ray end render pass",
+				.colorAttachmentCount = 1,
+				.colorAttachments = &colorAttachmentsRay,
+				.depthStencilAttachment = nullptr
+			};
 
+			const WGPURenderPassEncoder passRayEnd = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescRay);
+
+			p_RenderPipelineEnd->Bind(passRayEnd);
+			p_VBCube->Bind(passRayEnd);
+			m_BGroupProxy.Bind(passRayEnd);
+			wgpuRenderPassEncoderSetIndexBuffer(passRayEnd, p_IBCube->GetBufferPtr(), WGPUIndexFormat_Uint16, 0, p_IBCube->GetSize());
+			wgpuRenderPassEncoderDrawIndexed(passRayEnd, p_IBCube->GetCount(), 1, 0, 0, 0);
+			wgpuRenderPassEncoderEnd(passRayEnd);
+			BindGroup::ResetBindSlotsIndices();
+
+			wgpuRenderPassEncoderRelease(passRayEnd);
+		}
+		
 		// -------------------
 
 		WGPURenderPassDepthStencilAttachment depthStencilAttachment{};
@@ -132,7 +159,7 @@ namespace med {
 
 		WGPURenderPassColorAttachment colorAttachments = {
 			.view = wgpuSwapChainGetCurrentTextureView(base::GraphicsContext::GetSwapChain()),
-			.loadOp = WGPULoadOp_Clear,
+			.loadOp = WGPULoadOp_Load,
 			.storeOp = WGPUStoreOp_Store,
 			.clearValue = {0.0, 0.0, 0.0, 1.0}
 		};
@@ -437,6 +464,14 @@ namespace med {
 			builderAtt.SetColorTargetFormat(WGPUTextureFormat_RGBA32Float);
 			builderAtt.SetCullFace(WGPUCullMode_Front);
 			p_RenderPipelineEnd = builderAtt.BuildPipeline();
+		}
+
+		{
+			WGPUShaderModule shaderModuleAtt = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
+				FileSystem::ReadFile(FileSystem::GetDefaultPath() / "shaders" / "fullscreen.wgsl"));
+			PipelineBuilder builderBackground;
+			builderBackground.AddShaderModule(shaderModuleAtt);
+			p_RenderPipelineBackground = builderBackground.BuildPipeline();
 		}
 	}
 

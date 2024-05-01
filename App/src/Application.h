@@ -113,6 +113,7 @@ namespace med {
 
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineEnd = nullptr;
+		std::shared_ptr<RenderPipeline> p_RenderPipelineBackground = nullptr;
 
 		BindGroup m_BGroupDefaultApp;
 		BindGroup m_BGroupProxy;
