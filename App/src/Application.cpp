@@ -86,35 +86,21 @@ namespace med {
 	{
 		const WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(base::GraphicsContext::GetDevice(), nullptr);
 
-		// Ray entrance
+		// Ray end
 
 		WGPURenderPassColorAttachment colorAttachmentsRay = {
-			.view = p_TexStartPos->GetTextureView(),
+			.view = p_TexEndPos->GetTextureView(),
 			.loadOp = WGPULoadOp_Clear,
 			.storeOp = WGPUStoreOp_Store,
 			.clearValue = {0.0, 0.0, 0.0, 1.0}
 		};
 
 		WGPURenderPassDescriptor renderPassDescRay = {
-			.label = "Ray entrance render pass",
+			.label = "Ray end render pass",
 			.colorAttachmentCount = 1,
 			.colorAttachments = &colorAttachmentsRay,
 			.depthStencilAttachment = nullptr
 		};
-
-		const WGPURenderPassEncoder passRayEntrance = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescRay);
-
-		p_RenderPipelineStart->Bind(passRayEntrance);
-		p_VBCube->Bind(passRayEntrance);
-		m_BGroupProxy.Bind(passRayEntrance);
-		wgpuRenderPassEncoderSetIndexBuffer(passRayEntrance, p_IBCube->GetBufferPtr(), WGPUIndexFormat_Uint16, 0, p_IBCube->GetSize());
-		wgpuRenderPassEncoderDrawIndexed(passRayEntrance, p_IBCube->GetCount(), 1, 0, 0, 0);
-		wgpuRenderPassEncoderEnd(passRayEntrance);
-		BindGroup::ResetBindSlotsIndices();
-
-		// Ray End
-		colorAttachmentsRay.view = p_TexEndPos->GetTextureView();
-		renderPassDescRay.label = "Ray end render pass";
 
 		const WGPURenderPassEncoder passRayEnd = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDescRay);
 
@@ -215,8 +201,6 @@ namespace med {
 		// Reinitialize swapchain
 		base::GraphicsContext::OnWindowResize(width, height);
 
-		// Reinitialize first pass render attachments
-		p_TexStartPos = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEndPos = Texture::CreateRenderAttachment(width, height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 
 		// Reinit bindgroups and pipelines
@@ -379,7 +363,6 @@ namespace med {
 	void Application::InitializeTextures()
 	{
 		LOG_INFO("Initializing proxy-geometry render attachments");
-		p_TexStartPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Front Faces Texture");
 		p_TexEndPos = Texture::CreateRenderAttachment(m_Width, m_Height, WGPUTextureUsage_TextureBinding, "Back Faces Texture");
 	}
 
@@ -418,7 +401,6 @@ namespace med {
 		m_BGroupDefaultApp.AddSampler(*p_SamplerNN);
 		m_BGroupDefaultApp.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UStepsCount, WGPUShaderStage_Fragment);
-		m_BGroupDefaultApp.AddTexture(*p_TexStartPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupDefaultApp.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupDefaultApp.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 
@@ -453,10 +435,6 @@ namespace med {
 			builderAtt.AddShaderModule(shaderModuleAtt);
 			builderAtt.SetFrontFace(WGPUFrontFace_CCW);
 			builderAtt.SetColorTargetFormat(WGPUTextureFormat_RGBA32Float);
-
-			builderAtt.SetCullFace(WGPUCullMode_Back);
-			p_RenderPipelineStart = builderAtt.BuildPipeline();
-
 			builderAtt.SetCullFace(WGPUCullMode_Front);
 			p_RenderPipelineEnd = builderAtt.BuildPipeline();
 		}
