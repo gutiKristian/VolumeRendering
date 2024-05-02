@@ -66,6 +66,19 @@ namespace med {
 		InitializeRenderPipelines();
 		p_App = std::make_unique<BasicVolLightApp>();
 		p_App->OnStart(m_Builder);
+
+		if (p_App->GetStepSize() != 0.0f)
+		{
+			LOG_INFO("Using MiniApp's required step size");
+			m_StepSize = p_App->GetStepSize();
+		}
+
+		if (p_App->GetStepsCount() != 0)
+		{
+			LOG_INFO("Using MiniApp's required step count");
+			m_StepsCount = p_App->GetStepsCount();
+		}
+
 		p_RenderPipeline = m_Builder.BuildPipeline();
 	}
 
@@ -222,7 +235,7 @@ namespace med {
 		{
 			ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 			ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
-			ImGui::SliderFloat("Step size", &m_StepSize, 0.001f, 1.0f);
+			ImGui::SliderFloat("Step size", &m_StepSize, 0.0001f, 0.01f, "%.5f");
 		}
 
 		ImGui::SeparatorText("Clipping");

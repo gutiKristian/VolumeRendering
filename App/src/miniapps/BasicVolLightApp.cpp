@@ -19,6 +19,9 @@ namespace med
 		ctFile->NormalizeData();
 		ctFile->PreComputeGradient(true);
 
+
+		ComputeRecommendedSteppingParams(*ctFile);
+		
 		p_OpacityTf = std::make_unique<OpacityTF>(256);
 		p_ColorTf = std::make_unique<ColorTF>(256);
 
