@@ -42,11 +42,12 @@ struct Ray
 @group(0) @binding(3) var samplerNN: sampler;
 @group(0) @binding(4) var<uniform> fragmentMode: i32;
 @group(0) @binding(5) var<uniform> stepsCount: i32;
-@group(0) @binding(6) var<uniform> clipX: vec2<f32>;
-@group(0) @binding(7) var<uniform> clipY: vec2<f32>;
-@group(0) @binding(8) var<uniform> clipZ: vec2<f32>;
-@group(0) @binding(9) var<uniform> toggles: vec4<i32>;
-@group(0) @binding(10) var texRayEnd: texture_2d<f32>;
+@group(0) @binding(6) var<uniform> stepsSize: f32;
+@group(0) @binding(7) var<uniform> clipX: vec2<f32>;
+@group(0) @binding(8) var<uniform> clipY: vec2<f32>;
+@group(0) @binding(9) var<uniform> clipZ: vec2<f32>;
+@group(0) @binding(10) var<uniform> toggles: vec4<i32>;
+@group(0) @binding(11) var texRayEnd: texture_2d<f32>;
 
 @group(1) @binding(0) var textureCT: texture_3d<f32>;
 @group(1) @binding(1) var textureRT: texture_3d<f32>;
@@ -204,7 +205,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	}
 
 	// Iteration params -- Default
-	var stepSize: f32 = 0.01;
+	var stepSize: f32 = stepsSize;
 	
 	if toggles[0] == 1
 	{

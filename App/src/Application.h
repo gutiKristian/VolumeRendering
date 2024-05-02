@@ -119,6 +119,7 @@ namespace med {
 
 		std::shared_ptr<UniformBuffer> p_UFragmentMode = nullptr;
 		std::shared_ptr<UniformBuffer> p_UStepsCount = nullptr;
+		std::shared_ptr<UniformBuffer> p_UStepSize = nullptr;
 
 		std::shared_ptr<RenderPipeline> p_RenderPipeline = nullptr;
 		std::shared_ptr<RenderPipeline> p_RenderPipelineEnd = nullptr;
@@ -166,7 +167,7 @@ namespace med {
 		// ImGui
 		int m_FragmentMode = 0;
 		int m_StepsCount = 200;
-
+		float m_StepSize = 0.1f;
 		// (variable step size, jitter, -, -)
 		bool m_BToggles[4] = { false, false, false, false };
 		glm::ivec4 m_Toggles{ 0 };

@@ -78,6 +78,8 @@ namespace med {
 
 		p_UFragmentMode->UpdateBuffer(queue, 0, &m_FragmentMode, sizeOfInt);
 		p_UStepsCount->UpdateBuffer(queue, 0, &m_StepsCount, sizeOfInt);
+		p_UStepSize->UpdateBuffer(queue, 0, &m_StepSize, sizeOfFloat);
+
 		p_UClipX->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsX), sizeof(glm::vec2));
 		p_UClipY->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsY), sizeof(glm::vec2));
 		p_UClipZ->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsZ), sizeof(glm::vec2));
@@ -208,14 +210,21 @@ namespace med {
 
 	void Application::OnImGuiRender()
 	{
-		ImGui::Begin("Debug settings");
-		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
-		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
+		ImGui::Begin("Main settings");
+		
+		ImGui::SeparatorText("General");
+		{
+			ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
+			ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
+			ImGui::SliderFloat("Step size", &m_StepSize, 0.001f, 1.0f);
+		}
 
 		ImGui::SeparatorText("Clipping");
-		ImGui::SliderFloat2("X", glm::value_ptr(m_ClipsX), 0.0f, 0.5f);
-		ImGui::SliderFloat2("Y", glm::value_ptr(m_ClipsY), 0.0f, 0.5f);
-		ImGui::SliderFloat2("Z", glm::value_ptr(m_ClipsZ), 0.0f, 0.5f);
+		{
+			ImGui::SliderFloat2("X", glm::value_ptr(m_ClipsX), 0.0f, 0.5f);
+			ImGui::SliderFloat2("Y", glm::value_ptr(m_ClipsY), 0.0f, 0.5f);
+			ImGui::SliderFloat2("Z", glm::value_ptr(m_ClipsZ), 0.0f, 0.5f);
+		}
 
 		ImGui::SeparatorText("Toggles");
 		{
@@ -404,6 +413,7 @@ namespace med {
 		p_UCameraPos =	UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_Camera.GetPosition()), sizeof(glm::vec3));
 		p_UFragmentMode = UniformBuffer::CreateFromData(device, queue, &m_FragmentMode, sizeof(int));
 		p_UStepsCount = UniformBuffer::CreateFromData(device, queue, &m_StepsCount, sizeof(int));
+		p_UStepSize = UniformBuffer::CreateFromData(device, queue, &m_StepSize, sizeof(float));
 
 		p_UClipX = UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_ClipsX), sizeof(glm::vec2));
 		p_UClipY = UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_ClipsY), sizeof(glm::vec2));
@@ -458,6 +468,7 @@ namespace med {
 		m_BGroupDefaultApp.AddSampler(*p_SamplerNN);
 		m_BGroupDefaultApp.AddBuffer(*p_UFragmentMode, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UStepsCount, WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddBuffer(*p_UStepSize, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UClipX, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UClipY, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UClipZ, WGPUShaderStage_Fragment);
