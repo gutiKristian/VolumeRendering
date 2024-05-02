@@ -21,9 +21,7 @@ struct LightData
 	ambient: vec3<f32>,
 	_alignment02: f32,
 	diffuse: vec3<f32>,
-	_alignment03: f32,
-	specular: vec3<f32>,
-	_alignment04: f32
+	_alignment03: f32
 }
 
 struct Ray
@@ -95,14 +93,15 @@ fn IsInSampleCoords(position: vec3<f32>) -> bool
 * @param screenSpaceCoord: screen space coordinates of the fragment, used to sample pre-rendered ray start and end
 * @return Ray: ray with start, end, direction and length
 */
-fn SetupRay(screenSpaceCoord: vec2<i32>) -> Ray
+fn SetupRay(screenSpaceCoord: vec2<i32>, start: vec3<f32>) -> Ray
 {
 	var ray: Ray;
 	// Ray setup
-	ray.start = textureLoad(texRayStart, screenSpaceCoord, 0).xyz;
+	ray.start = start;
 	ray.end = textureLoad(texRayEnd, screenSpaceCoord, 0).xyz;
 	ray.direction = normalize(ray.end.xyz - ray.start.xyz);
 	ray.length = length(ray.end.xyz - ray.start.xyz);
+
 	return ray;
 }
 
@@ -122,7 +121,7 @@ fn jitter(co: vec2<f32>) -> f32
 
 
 /*
-* Calculates Blinn-Phong shading model
+* Calculates Blinn-Phong shading model (no specular)
 * @param N: unit normal vector
 * @param L: unit vector pointing from sampled point to the light
 * @param V: unit view vector from point to camera
@@ -134,7 +133,7 @@ fn BlinnPhong(N: vec3f, worldPosition: vec3f) -> f32
 	var R: vec3f = 2 * (N * L)* N - L;
 	var H: vec3f = normalize(V + L); 
 
-	return length(light.diffuse * max(dot(N, L), 0.0)) * 1.2 + length(light.specular * pow(max(dot(N, H), 0.0), 3)) * 1.0 + 0.3;
+	return length(light.diffuse * max(dot(N, L), 0.0)) * 1.2; // length(light.specular * pow(max(dot(N, H), 0.0), 3)) * 1.0 + 0.3;
 }
 
 
@@ -185,7 +184,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	var wordlCoords: vec3f = in.worldCoord.xyz;
 
 	// Ray setup
-	let ray: Ray = SetupRay(vec2<i32>(i32(in.position.x), i32(in.position.y)));
+	let ray: Ray = SetupRay(vec2<i32>(i32(in.position.x), i32(in.position.y)), in.textureCoord);
 
 	switch fragmentMode {
 	  case 1: {
@@ -229,9 +228,9 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	for (var i: i32 = 0; i < stepsCount; i++)
 	{
 		// Volume sampling
-		var ctVolume: vec4f = textureSample(textureCT, samplerLin, currentPoistion);
-		var rtVolume: vec4f = textureSample(textureRT, samplerLin, currentPoistion);
-		var maskVol: vec4f = textureSample(textureMask, samplerLin, currentPoistion);
+		var ctVolume: vec4f = textureSample(textureCT, samplerLin, currentPosition);
+		var rtVolume: vec4f = textureSample(textureRT, samplerLin, currentPosition);
+		var maskVol: vec4f = textureSample(textureMask, samplerLin, currentPosition);
 
 		// When working with gradients, we need to be careful whether we initiated pre-calculation in OnStart
 		var gradient: vec3f = ctVolume.rgb;
@@ -245,7 +244,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var opacityRT: f32 = textureSample(tfOpacityRT, samplerLin, densityRT).r;
 		var colorRT: vec3f = textureSample(tfColorRT, samplerLin, densityRT).rgb;
 		
-		if IsInSampleCoords(currentPoistion) && dst.a < 1.0
+		if IsInSampleCoords(currentPosition) && dst.a < 1.0
 		{            
             // Colors
             var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
@@ -260,7 +259,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
             // Opacities
             // var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
-            // var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, currentPoistion, ray.start, dst.a);
+            // var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, currentPosition, ray.start, dst.a);
 
             // Blending
 		    var src: vec4<f32> = vec4f(color.r, color.g, color.b, opacity);
@@ -269,7 +268,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		}
 
 		// Advance ray
-		currentPoistion = currentPoistion + step;
+		currentPosition = currentPosition + step;
 		wordlCoords = wordlCoords + step;
 	}
 
