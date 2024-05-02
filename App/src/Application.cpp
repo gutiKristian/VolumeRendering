@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 #include <webgpu/webgpu_cpp.h>
+#include <numeric>
 
 #include "Base/Base.h"
 #include "Base/Filesystem.h"
@@ -39,6 +40,10 @@ namespace med {
 
 		base::WindowProps props{ .width = m_Width, .height = m_Height, .title = "Volume Rendering" };
 		m_Window = new base::Window(props);
+
+		m_FpsWindow.resize(ROLLING_WINDOW_SIZE, 0.0f);
+		m_FrameTimeWindow.resize(ROLLING_WINDOW_SIZE, 0.0f);
+
 		OnStart();
 	}
 
@@ -244,12 +249,21 @@ namespace med {
 		ImGui::End();
 
 		ImGui::Begin("Performance");
+		ImGui::SeparatorText("Current");
 		{
 			ImGui::Text("Frame time:");
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(m_FrameTime).c_str());
 			ImGui::Text("FPS:");
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(m_Fps).c_str());
 		}
+		ImGui::SeparatorText("Average");
+		{
+			ImGui::Text("Frame time:");
+			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(m_AverageFrametime).c_str());
+			ImGui::Text("FPS:");
+			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(m_AverageFps).c_str());
+		}
+
 		ImGui::End();
 
 		p_App->OnImGuiRender();
@@ -301,18 +315,30 @@ namespace med {
 		double currentTime = 0.0;
 		double timeDiff = 0.0;
 		unsigned int counter = 0;
-		constexpr double updateRat = 1.0 / 1.0;
+		constexpr double updateRat = 1.0 / 30.0;
+
+		int windowIndex = 0;
+
 		while (m_Running)
 		{
-
 			currentTime = glfwGetTime();
 			timeDiff = currentTime - prevTime;
 			++counter;
 			if (timeDiff >= updateRat)
 			{
+				if (windowIndex >= ROLLING_WINDOW_SIZE)
+				{
+					windowIndex = 0;
+				}
+
 				m_Fps = (1 / timeDiff) * counter;
 				m_FrameTime = (timeDiff / counter) * 1000;
 				prevTime = currentTime;
+				m_FpsWindow[windowIndex] = m_Fps;
+				m_FrameTimeWindow[windowIndex] = m_FrameTime;
+				m_AverageFrametime = std::reduce(m_FrameTimeWindow.begin(), m_FrameTimeWindow.end()) / ROLLING_WINDOW_SIZE;
+				m_AverageFps = std::reduce(m_FpsWindow.begin(), m_FpsWindow.end()) / ROLLING_WINDOW_SIZE;
+				++windowIndex;
 				counter = 0;
 			}
 

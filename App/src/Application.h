@@ -170,6 +170,12 @@ namespace med {
 		float m_StepSize = 0.1f;
 		float m_FrameTime = 0.0f;
 		float m_Fps = 0.0;
+		float m_AverageFrametime = 0.0;
+		float m_AverageFps = 0.0;
+		const int ROLLING_WINDOW_SIZE = 120;
+		std::vector<float> m_FpsWindow;
+		std::vector<float> m_FrameTimeWindow;
+
 
 		// (variable step size, jitter, -, -)
 		bool m_BToggles[4] = { false, false, false, false };
