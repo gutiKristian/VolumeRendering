@@ -137,7 +137,8 @@ namespace med
 			int value = 0;
 			if (file.IsNormalized())
 			{
-				value = static_cast<int>(data[i].a * m_TextureResolution);
+				// Sometimes the data may be capped, divided by value that is less than the max value in the data, this would go out of bounds
+				value = std::min(static_cast<int>(data[i].a * m_TextureResolution), m_TextureResolution - 1);
 			}
 			else
 			{

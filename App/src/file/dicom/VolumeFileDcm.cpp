@@ -12,6 +12,14 @@ namespace med
 		InitializeTransformMatrices();
 		CalcMainAxis();
 		m_CustomBitWidth = FileSystem::GetMaxUsedBits(m_MaxNumber);
+
+		// For now suppress ranges higher than 12 bits as these values are barely reached anyway
+		// and even 12bit is impossible to capture on many monitors
+		if (m_Params.Modality != DicomModality::RTDOSE && m_CustomBitWidth > 12)
+		{
+			m_CustomBitWidth = 12;
+		}
+
 		m_MaxNumber = (1 << m_CustomBitWidth) - 1;
 	}
 
