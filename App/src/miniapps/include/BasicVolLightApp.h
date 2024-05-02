@@ -28,6 +28,7 @@ namespace med
 		std::unique_ptr<ColorTF> p_ColorTf = nullptr;
 		std::shared_ptr<UniformBuffer> p_ULight = nullptr;
 
+
 		Light m_Light1
 		{
 			.Position = {5.0f, 5.0f, -5.0f, 1.0f},
