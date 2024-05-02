@@ -243,6 +243,15 @@ namespace med {
 
 		ImGui::End();
 
+		ImGui::Begin("Performance");
+		{
+			ImGui::Text("Frame time:");
+			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(m_FrameTime).c_str());
+			ImGui::Text("FPS:");
+			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(m_Fps).c_str());
+		}
+		ImGui::End();
+
 		p_App->OnImGuiRender();
 	}
 
@@ -287,8 +296,26 @@ namespace med {
 		emscripten_request_animation_frame_loop(Application::EMSRedraw, (void*)this);
 #else
 		base::Timer timer;
+
+		double prevTime = 0.0;
+		double currentTime = 0.0;
+		double timeDiff = 0.0;
+		unsigned int counter = 0;
+		constexpr double updateRat = 1.0 / 1.0;
 		while (m_Running)
 		{
+
+			currentTime = glfwGetTime();
+			timeDiff = currentTime - prevTime;
+			++counter;
+			if (timeDiff >= updateRat)
+			{
+				m_Fps = (1 / timeDiff) * counter;
+				m_FrameTime = (timeDiff / counter) * 1000;
+				prevTime = currentTime;
+				counter = 0;
+			}
+
 			auto ts = base::Timestep(timer.ElapsedNs());
 			timer.Reset();
 

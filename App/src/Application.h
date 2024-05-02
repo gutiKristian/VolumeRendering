@@ -168,6 +168,9 @@ namespace med {
 		int m_FragmentMode = 0;
 		int m_StepsCount = 200;
 		float m_StepSize = 0.1f;
+		float m_FrameTime = 0.0f;
+		float m_Fps = 0.0;
+
 		// (variable step size, jitter, -, -)
 		bool m_BToggles[4] = { false, false, false, false };
 		glm::ivec4 m_Toggles{ 0 };
