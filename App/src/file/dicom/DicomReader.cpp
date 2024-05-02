@@ -36,11 +36,13 @@ namespace med
 		
 		// Init
 		bool isDir = FileSystem::IsDirectory(name);
+		bool hasSoloFile = false;
 		std::vector<std::filesystem::path> paths;
 
 		if (isDir)
 		{
 			paths = SortDicomSlices(FileSystem::ListDirFiles(name, /*extension=*/".dcm"));
+			hasSoloFile = paths.size() == 1;
 		}
 		else
 		{
@@ -86,7 +88,7 @@ namespace med
 			}
 		}
 
-		if (isDir)
+		if (isDir && !hasSoloFile)
 		{
 			reader.m_Params.Z = numberOfFiles;
 		}
