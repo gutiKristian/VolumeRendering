@@ -81,6 +81,7 @@ namespace med {
 		p_UClipX->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsX), sizeof(glm::vec2));
 		p_UClipY->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsY), sizeof(glm::vec2));
 		p_UClipZ->UpdateBuffer(queue, 0, glm::value_ptr(m_ClipsZ), sizeof(glm::vec2));
+		p_UToggles->UpdateBuffer(queue, 0, &m_Toggles, sizeof(glm::ivec4));
 
 		p_App->OnUpdate(ts);
 	}
@@ -210,9 +211,27 @@ namespace med {
 		ImGui::Begin("Debug settings");
 		ImGui::ListBox("##", &m_FragmentMode, m_FragModes, 5);
 		ImGui::SliderInt("Number of steps", &m_StepsCount, 0, 1500);
+
+		ImGui::SeparatorText("Clipping");
 		ImGui::SliderFloat2("X", glm::value_ptr(m_ClipsX), 0.0f, 0.5f);
 		ImGui::SliderFloat2("Y", glm::value_ptr(m_ClipsY), 0.0f, 0.5f);
 		ImGui::SliderFloat2("Z", glm::value_ptr(m_ClipsZ), 0.0f, 0.5f);
+
+		ImGui::SeparatorText("Toggles");
+		{
+			if (ImGui::Checkbox("Variable step size", &m_BToggles[0]))
+			{
+				m_Toggles[0] = static_cast<int>(m_BToggles[0]);
+			}
+			ImGui::SetItemTooltip("Step size is calculated to conform the steps count along the ray");
+
+			if (ImGui::Checkbox("Use jittering", &m_BToggles[1]))
+			{
+				m_Toggles[1] = static_cast<int>(m_BToggles[1]);
+			}
+			ImGui::SetItemTooltip("Jittering offsets the starting position of the ray, to reduce artifacts.");
+		}
+
 		ImGui::End();
 
 		p_App->OnImGuiRender();
@@ -389,6 +408,8 @@ namespace med {
 		p_UClipX = UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_ClipsX), sizeof(glm::vec2));
 		p_UClipY = UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_ClipsY), sizeof(glm::vec2));
 		p_UClipZ = UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_ClipsZ), sizeof(glm::vec2));
+		p_UToggles= UniformBuffer::CreateFromData(device, queue, glm::value_ptr(m_Toggles), sizeof(glm::ivec4));
+
 
 		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16, &m_Camera.GetViewMatrix(), sizeof(float) * 16);
 		p_UCamera->UpdateBuffer(queue, sizeof(float) * 16 * 2, &m_Camera.GetProjectionMatrix(), sizeof(float) * 16);
@@ -440,6 +461,7 @@ namespace med {
 		m_BGroupDefaultApp.AddBuffer(*p_UClipX, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UClipY, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddBuffer(*p_UClipZ, WGPUShaderStage_Fragment);
+		m_BGroupDefaultApp.AddBuffer(*p_UToggles, WGPUShaderStage_Fragment);
 		m_BGroupDefaultApp.AddTexture(*p_TexEndPos, WGPUShaderStage_Fragment, WGPUTextureSampleType_UnfilterableFloat);
 		m_BGroupDefaultApp.FinalizeBindGroup(base::GraphicsContext::GetDevice());
 

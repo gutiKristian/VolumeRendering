@@ -45,8 +45,8 @@ struct Ray
 @group(0) @binding(6) var<uniform> clipX: vec2<f32>;
 @group(0) @binding(7) var<uniform> clipY: vec2<f32>;
 @group(0) @binding(8) var<uniform> clipZ: vec2<f32>;
-@group(0) @binding(9) var texRayEnd: texture_2d<f32>;
-
+@group(0) @binding(9) var<uniform> toggles: vec4<i32>;
+@group(0) @binding(10) var texRayEnd: texture_2d<f32>;
 
 @group(1) @binding(0) var textureCT: texture_3d<f32>;
 @group(1) @binding(1) var textureRT: texture_3d<f32>;
@@ -205,13 +205,25 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 	// Iteration params -- Default
 	var stepSize: f32 = 0.01;
+	
+	if toggles[0] == 1
+	{
+		stepSize = GetStepSize(ray.length, stepsCount);
+	}
 
  	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
-	// apply jitter using screen space coordinates, we could divide it (jitter input) by resolution to keep it same across all res.
-	var currentPoistion: vec3<f32> = ray.start.xyz + ray.direction * stepSize * jitter(in.position.xy); 
+	var currentPosition: vec3<f32> = ray.start.xyz;
+
+	if toggles[1] == 1
+	{
+		// apply jitter using screen space coordinates, we could divide it (jitter input) by resolution to keep it same across all res.
+		currentPosition = currentPosition + ray.direction * stepSize * jitter(in.position.xy);
+	}
+
 	var step: vec3<f32> = ray.direction * stepSize;
- 
-	var dst: vec4<f32> = vec4<f32>(0.0); // Output
+	
+	// Resulting pixel color
+	var dst: vec4<f32> = vec4<f32>(0.0);
 
 	for (var i: i32 = 0; i < stepsCount; i++)
 	{

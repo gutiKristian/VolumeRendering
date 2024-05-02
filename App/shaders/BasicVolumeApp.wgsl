@@ -32,7 +32,8 @@ struct Ray
 @group(0) @binding(6) var<uniform> clipX: vec2<f32>;
 @group(0) @binding(7) var<uniform> clipY: vec2<f32>;
 @group(0) @binding(8) var<uniform> clipZ: vec2<f32>;
-@group(0) @binding(9) var texRayEnd: texture_2d<f32>;
+@group(0) @binding(9) var<uniform> toggles: vec4<i32>;
+@group(0) @binding(10) var texRayEnd: texture_2d<f32>;
 
 // App
 @group(1) @binding(0) var textMain: texture_3d<f32>;
@@ -54,6 +55,13 @@ fn vs_main(@builtin(vertex_index) vID: u32, @location(0) vertexCoord: vec3f, @lo
 	return vs_out;
 }
 
+/*
+* Based on number of samples, it returns the size of the step to fit desired number of samples/steps
+*/
+fn GetStepSize(rayLength: f32, samples: i32) -> f32
+{
+	return rayLength / f32(samples);
+}
 
 /*
 * Checks whether the position is within out bbox basically,
@@ -135,12 +143,24 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 	// Iteration params -- Default
 	var stepSize: f32 = 0.01;
+	
+	if toggles[0] == 1
+	{
+		stepSize = GetStepSize(ray.length, stepsCount);
+	}
 
  	// Position on the cubes surface in uvw format <[0,0,0], [1,1,1]>
-	// apply jitter using screen space coordinates, we could divide it (jitter input) by resolution to keep it same across all res.
-	var currentPosition: vec3<f32> = ray.start.xyz + ray.direction * stepSize * jitter(in.position.xy);
+	var currentPosition: vec3<f32> = ray.start.xyz;
+
+	if toggles[1] == 1
+	{
+		// apply jitter using screen space coordinates, we could divide it (jitter input) by resolution to keep it same across all res.
+		currentPosition = currentPosition + ray.direction * stepSize * jitter(in.position.xy);
+	}
+
 	var step: vec3<f32> = ray.direction * stepSize;
- 
+	
+	// Resulting pixel color
 	var dst: vec4<f32> = vec4<f32>(0.0);
 
 	for (var i: i32 = 0; i < stepsCount; i++)
