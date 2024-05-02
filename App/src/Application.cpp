@@ -23,6 +23,7 @@
 #include "tf/LinearInterpolation.h"
 
 #include "miniapps/include/BasicVolumeApp.h"
+#include "miniapps/include/BasicVolLightApp.h"
 #include "miniapps/include/TFCalibrationApp.h"
 
 #if defined(PLATFORM_WEB)
@@ -63,7 +64,7 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
-		p_App = std::make_unique<BasicVolumeApp>();
+		p_App = std::make_unique<BasicVolLightApp>();
 		p_App->OnStart(m_Builder);
 		p_RenderPipeline = m_Builder.BuildPipeline();
 	}
