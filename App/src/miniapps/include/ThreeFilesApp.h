@@ -5,6 +5,7 @@
 #include "../../renderer/RenderPipeline.h"
 #include "../../tf/ColorTf.h"
 #include "../../tf/OpacityTf.h"
+#include "../../renderer/Light.h"
 
 namespace med
 {
@@ -30,22 +31,11 @@ namespace med
 		std::unique_ptr<ColorTF> p_ColorTfRT = nullptr;
 		std::shared_ptr<UniformBuffer> p_ULight = nullptr;
 		
-
-		// Directional, although we need only rgb, padding is added for alignment -> wgpu aligns to 16 bytes
-		struct Light
-		{
-			glm::vec4 Position{ 0.0f };
-			glm::vec4 Ambient{ 0.0f };
-			glm::vec4 Diffuse{ 0.0f };
-			glm::vec4 Specular{ 0.0f };
-		};
-
 		Light m_Light1
 		{
 			.Position = {5.0f, 5.0f, -5.0f, 1.0f},
 			.Ambient = glm::vec4{0.1f},
-			.Diffuse = glm::vec4(1.0f),
-			.Specular = glm::vec4(1.0f)
+			.Diffuse = glm::vec4(1.0f)
 		};
 
 	};
