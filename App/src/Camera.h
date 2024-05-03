@@ -36,6 +36,7 @@ namespace med
 		glm::vec3 GetForward() const;
 		glm::vec3 GetRight() const;
 		glm::vec3 GetPosition() const;
+		float GetZoom() const;
 		void Rotate(float, float);
 
 	private:

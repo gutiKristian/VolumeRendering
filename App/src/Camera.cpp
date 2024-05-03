@@ -114,6 +114,11 @@ namespace med
 		return m_Position - GetForward() * m_Distance;
 	}
 
+	float Camera::GetZoom() const
+	{
+		return m_Distance;
+	}
+
 	void Camera::KeyboardEvent(int key)
 	{
 		switch (key)

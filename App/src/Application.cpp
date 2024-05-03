@@ -64,7 +64,7 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
-		p_App = std::make_unique<BasicVolLightApp>();
+		p_App = std::make_unique<BasicVolumeApp>();
 		p_App->OnStart(m_Builder);
 
 		if (p_App->GetStepSize() != 0.0f)
@@ -263,6 +263,8 @@ namespace med {
 		ImGui::End();
 
 		ImGui::Begin("Performance");
+		ImGui::Text("Zoom:");
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(m_Camera.GetZoom()).c_str());
 		ImGui::SeparatorText("Current");
 		{
 			ImGui::Text("Frame time:");
