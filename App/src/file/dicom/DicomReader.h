@@ -60,6 +60,7 @@ namespace med
 
 	private:
 		/**
+		 * TODO: Make this return the params. Then passing only these params is sufficient for building 3D mask.
 		 * @brief Reads all necessary tags from the dicom file
 		 * @param f opened dicom file
 		 */
