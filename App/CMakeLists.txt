@@ -69,7 +69,7 @@ add_executable(App
 	"src/miniapps/ThreeFilesApp.cpp"
 	"src/miniapps/DicomInfoApp.cpp"
 	"src/miniapps/TFCalibrationApp.cpp"
-	"src/miniapps/BasicVolLightApp.cpp" "src/renderer/Light.h")
+	"src/miniapps/BasicVolLightApp.cpp" "src/renderer/Light.h" "src/miniapps/include/VolumeMaskApp.h" "src/miniapps/VolumeMaskApp.cpp")
 
 target_compile_definitions(App
 	PRIVATE
