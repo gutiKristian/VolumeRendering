@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <string>
+#include <sstream>
 #include <cassert>
 #include <limits>
 #include <queue>
@@ -12,6 +13,22 @@ namespace med
 	StructureFileDcm::StructureFileDcm(std::filesystem::path path, DicomStructParams params, std::vector<std::vector<std::vector<float>>> data) :
 		m_Path(path), m_Params(params), m_Data(data)
 	{
+	}
+
+	DicomStructParams StructureFileDcm::GetStructParams() const
+	{
+		return m_Params;
+	}
+
+	void StructureFileDcm::ListAvailableContours() const
+	{
+		std::stringstream s{};
+		s << "Contours:\n";
+		for (const auto& elem : GetStructParams().StructureSetROISequence)
+		{
+			s << "\t" << elem.Number << " : " << elem.Name << elem.AlgorithmType << "\n";
+		}
+		LOG_INFO(s.str().c_str());
 	}
 
 	DicomBaseParams med::StructureFileDcm::GetBaseParams() const

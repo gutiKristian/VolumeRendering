@@ -33,6 +33,11 @@ namespace med
 		StructureFileDcm(std::filesystem::path path, DicomStructParams params, std::vector<std::vector<std::vector<float>>> data);
 		
 	public:
+
+		DicomStructParams GetStructParams() const;
+
+		void ListAvailableContours() const;
+
 		/*
 		* @brief Creates a volume file (volume mask) from the contour data.
 		* @param other: Reference dicom file, file from which this contours were generated
