@@ -174,7 +174,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		var opacity: f32 = textureSample(tfOpacity, samplerLin, density).r;
 		var color: vec3f = textureSample(tfColor, samplerLin, density).rgb;
 		
-		if IsInSampleCoords(currentPosition) && dst.a < 1.0
+		if IsInSampleCoords(currentPosition) && dst.a <= 0.95
 		{
 			// Blending
 			dst = FrontToBackBlend(vec4f(color.r, color.g, color.b, opacity), dst); 

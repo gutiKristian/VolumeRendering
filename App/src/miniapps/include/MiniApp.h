@@ -41,7 +41,9 @@ namespace med
 			auto [x, y, z] = file.GetSize();
 			int max = std::max(x, std::max(y, z));
 			m_StepSize = 1.0f / static_cast<float>(max);
-			m_StepsCount = max;
+			// If we would have used unit cube, the length of the longest possible ray is sqrt(3),
+			// therefore we wouldn't be able to sample whole volume with stepsize 1 / max
+			m_StepsCount = std::sqrt(3) * max;
 		}
 
 		float GetStepSize() const { return m_StepSize; }

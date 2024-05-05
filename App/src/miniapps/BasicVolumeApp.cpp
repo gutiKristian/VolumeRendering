@@ -15,6 +15,8 @@ namespace med
 
 		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\HumanHead\\");
 		ctFile->NormalizeData();
+		
+		ComputeRecommendedSteppingParams(*ctFile);
 
 		p_OpacityTf = std::make_unique<OpacityTF>(256);
 		p_ColorTf = std::make_unique<ColorTF>(256);
