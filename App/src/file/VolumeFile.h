@@ -48,6 +48,12 @@ namespace med
 		void PreComputeGradientSobel();
 		
 		/*
+		* @brief Computes average of the gradient within the kernel.
+		* @param kernelSize: Convolution kernel size
+		*/
+		void AverageGradient(int kernelSize);
+
+		/*
 		* @brief Normalizes the density values to [0, 1] interval.
 		* Gradient values are untouched if already pre-computed.
 		*/

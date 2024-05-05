@@ -104,6 +104,52 @@ namespace med
 		LOG_INFO("Done");
 	}
 
+	void VolumeFile::AverageGradient(int kernelSize)
+	{
+		LOG_INFO("Averaging gradients");
+		
+		if (!m_HasGradient)
+		{
+			LOG_WARN("Gradient not computed.");
+			PreComputeGradient();
+		}
+		kernelSize = (kernelSize - 1) / 2;
+		auto [xS, yS, zS] = m_Size;
+
+		// Data traverse
+		for (int z = 0; z < zS; ++z)
+		{
+			for (int y = 0; y < yS; ++y)
+			{
+				for (int x = 0; x < xS; ++x)
+				{
+					glm::vec3 sum{ 0.0f };
+					int count = 0;
+					// Convolution
+					for (int k = z - kernelSize; k <= z + kernelSize; k++)
+					{
+						for (int j = y - kernelSize; j <= y + kernelSize; j++)
+						{
+							for (int i = x - kernelSize; i <= x + kernelSize; i++)
+							{
+								int c = GetIndexFrom3D(x, y, z);
+								if (c != -1)
+								{
+									sum.r = m_Data[c].r;
+									sum.g = m_Data[c].g;
+									sum.b = m_Data[c].b;
+									++count;
+								}
+							}
+						}
+					}
+					// End conv
+					sum /= static_cast<float>(count);
+				}
+			}
+		}
+	}
+
 	void VolumeFile::NormalizeData()
 	{
 		if (m_IsNormalized)
