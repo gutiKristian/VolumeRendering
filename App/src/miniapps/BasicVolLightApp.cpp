@@ -18,6 +18,7 @@ namespace med
 
 		ctFile->NormalizeData();
 		ctFile->PreComputeGradient(true);
+		ctFile->AverageGradient(3);
 
 
 		ComputeRecommendedSteppingParams(*ctFile);
