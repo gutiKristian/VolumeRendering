@@ -138,9 +138,16 @@ namespace med
 				LOG_INFO("Added colormap cp");
 			}
 
+			ImGui::InputText("File name", m_NameBuffer, IM_ARRAYSIZE(m_NameBuffer));
+
 			if (ImGui::Button("Save Color TF preset"))
 			{
-				std::string s = (FileSystem::GetDefaultPath() / "assets" / "colormap1").string();
+				std::string n = m_NameBuffer;
+				if (n.size() == 0)
+				{
+					n = "colorTF";
+				}
+				std::string s = (FileSystem::GetDefaultPath() / "assets" / n).string();
 				Save(s);
 			}
 
@@ -168,10 +175,11 @@ namespace med
 		file << GetTextureResolution() << "\n";
 		file << "data range\n";
 		file << GetDataRange() << "\n";
+		file << "control points number\n";
 		file << m_ControlPoints.size() << "\n";
 		for (int i = 0; i < m_ControlCol.size(); ++i)
 		{
-			file << m_ControlPoints[i].x << " " << m_ControlPoints[i].y << m_ControlCol[i].r << " " << m_ControlCol[i].g << " " << m_ControlCol[i].b << " " << m_ControlCol[i].a << "\n";
+			file << m_ControlPoints[i].x << " " << m_ControlPoints[i].y << " " << m_ControlCol[i].r << " " << m_ControlCol[i].g << " " << m_ControlCol[i].b << " " << m_ControlCol[i].a << "\n";
 		}
 		file.close();
 	}
@@ -191,16 +199,68 @@ namespace med
 			return;
 		}
 
+		// Resolution
 		std::getline(file, line);
-		int controlPoints = 0;
+		if (line != "resolution")
+		{
+			LOG_ERROR("Wrong format");
+			return;
+		}
+
+		int resolution = 0;
 		try
 		{
-			controlPoints = std::stoi(line);
+			std::getline(file, line);
+			resolution = std::stoi(line);
 		}
-		catch (const std::exception&)
+		catch (const std::exception& e)
 		{
-			LOG_ERROR("Invalid file format");
+			LOG_ERROR("Invalid resolution");
 			return;
+		}
+
+		// Data range
+		std::getline(file, line);
+		if (line != "data range")
+		{
+			LOG_ERROR("Wrong format");
+			return;
+		}
+
+		int dataRange = 0;
+		{
+			try
+			{
+				std::getline(file, line);
+				dataRange = std::stoi(line);
+			}
+			catch (const std::exception& e)
+			{
+				LOG_ERROR("Invalid data range");
+				return;
+			}
+		}
+
+		// CPS
+		std::getline(file, line);
+		if (line != "control points number")
+		{
+			LOG_ERROR("Wrong format");
+			return;
+		}
+
+		int controlPoints = 0;
+		{
+			try
+			{
+				std::getline(file, line);
+				controlPoints = std::stoi(line);
+			}
+			catch (const std::exception& e)
+			{
+				LOG_ERROR("Invalid data range");
+				return;
+			}
 		}
 
 		for (int i = 0; i < controlPoints; ++i)
@@ -222,11 +282,13 @@ namespace med
 		}
 		file.close();
 		
-		m_ControlCol = cpCol;
-		m_ControlPoints = cpPos;
+		m_ControlCol = std::move(cpCol);
+		m_ControlPoints = std::move(cpPos);
+		ResolveResolution(resolution);
+		m_Colors.resize(m_TextureResolution);
+		m_DataRange = dataRange;
 
-		// Jumping by 2 to avoid recalculation of the same interval
-		for (int i = 1; i < controlPoints; i+=2)
+		for (int i = 0; i < m_ControlPoints.size(); ++i)
 		{
 			UpdateYAxis(i);
 		}

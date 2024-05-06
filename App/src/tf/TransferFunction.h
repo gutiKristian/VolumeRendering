@@ -59,5 +59,6 @@ namespace med
 		int m_TextureResolution = 0;
 		int m_DataRange = 0;
 		bool m_ShouldUpdate = false;
+		char m_NameBuffer[30] = { 0 };
 	};
 }

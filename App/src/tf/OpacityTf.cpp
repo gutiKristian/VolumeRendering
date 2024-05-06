@@ -99,10 +99,17 @@ namespace med
 
 				int index = AddControlPoint(mousePos.x, mousePos.y);
 			}
+			
+			ImGui::InputText("File name", m_NameBuffer, IM_ARRAYSIZE(m_NameBuffer));
 
 			if (ImGui::Button("Save opacity TF preset"))
 			{
-				std::string str = (FileSystem::GetDefaultPath() / "assets" / "opacity1").string();
+				std::string n = m_NameBuffer;
+				if (n.size() == 0)
+				{
+					n = "opacityTF";
+				}
+				std::string str = (FileSystem::GetDefaultPath() / "assets" / n).string();
 				Save(str);
 			}
 
@@ -166,7 +173,7 @@ namespace med
 		file << GetTextureResolution() << "\n";
 		file << "data range\n";
 		file << GetDataRange() << "\n";
-		file << "control points number";
+		file << "control points number\n";
 		file << m_ControlPoints.size() << "\n";
 		for (const auto& cp : m_ControlPoints)
 		{
@@ -177,29 +184,82 @@ namespace med
 
 	void OpacityTF::Load(const std::string& name)
 	{
+		// TODO create T TryParse<T> func
 		std::ifstream file(name);
 		std::string line;
 		std::getline(file, line);
 		std::vector<glm::dvec2> cps{};
 
-		if (line != "[opacity]")
+		if (line != GetType())
 		{
-			LOG_ERROR("Invalid file format");
+			LOG_ERROR("Invalid transform function format");
 			return;
 		}
 
+		// Resolution
 		std::getline(file, line);
-		int controlPoints = 0;
+		if (line != "resolution")
+		{
+			LOG_ERROR("Wrong format");
+			return;
+		}
+
+		int resolution = 0;
 		try
 		{
-			controlPoints = std::stoi(line);
+			std::getline(file, line);
+			resolution = std::stoi(line);
 		}
 		catch (const std::exception& e)
 		{
-			LOG_ERROR("Invalid number of control points");
+			LOG_ERROR("Invalid resolution");
 			return;
 		}
-		
+
+		// Data range
+		std::getline(file, line);
+		if (line != "data range")
+		{
+			LOG_ERROR("Wrong format");
+			return;
+		}
+
+		int dataRange = 0;
+		{
+			try
+			{
+				std::getline(file, line);
+				dataRange = std::stoi(line);
+			}
+			catch (const std::exception& e)
+			{
+				LOG_ERROR("Invalid data range");
+				return;
+			}
+		}
+
+		// CPS
+		std::getline(file, line);
+		if (line != "control points number")
+		{
+			LOG_ERROR("Wrong format");
+			return;
+		}
+
+		int controlPoints = 0;
+		{
+			try
+			{
+				std::getline(file, line);
+				controlPoints = std::stoi(line);
+			}
+			catch (const std::exception& e)
+			{
+				LOG_ERROR("Invalid data range");
+				return;
+			}
+		}
+
 		for (int i = 0; i < controlPoints; ++i)
 		{
 			if (!std::getline(file, line))
@@ -214,10 +274,17 @@ namespace med
 			cps.emplace_back(x, y);
 		}
 		file.close();
-		m_ControlPoints = std::move(cps);
 
-		// Jumping by 2 to avoid recalculation of the same interval
-		for (int i = 1; i < m_ControlPoints.size(); i+=2)
+		// Update the state
+		m_ControlPoints = std::move(cps);
+		ResolveResolution(resolution);
+		// Allocate or destroy mem. if needed
+		m_XPoints.resize(m_TextureResolution, 0.0f);
+		m_YPoints.resize(m_TextureResolution, 0.0f);
+		m_DataRange = dataRange;
+		
+		// Re-calculate the values betweeb CPs
+		for (int i = 0; i < m_ControlPoints.size(); ++i)
 		{
 			UpdateYAxis(i);
 		}

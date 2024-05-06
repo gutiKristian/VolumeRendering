@@ -57,7 +57,7 @@ namespace med
 		constexpr int CONTROL_POINT_EXISTS = -1;
 		auto findPoint = [](const auto& obj, double x) { return obj.x < x; };
 
-		// On x-axis we always work with nearest integer values -- from 0 to 'bit depth of the voxel data'
+		// On x-axis we always work with nearest integer values -- from 0 to texture resolution
 		double x = std::round(mouseX);
 		double y = mouseY;
 
