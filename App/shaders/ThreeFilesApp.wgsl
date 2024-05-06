@@ -167,10 +167,6 @@ fn GradinetMagnitudeOpacityModulation(opacity: f32, gradient: vec3f) -> f32
 	return opacity * length(gradient);
 }
 
-// Either upload max value for dataset as uniform or upload already normalised data (had some gradient troubles)
-const DENSITY_FACTOR_CT = 1/4095.0;
-const DENSITY_FACTOR_RT = 1/32767.0;
-
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 {
@@ -230,12 +226,12 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		// Volume sampling
 		var ctVolume: vec4f = textureSample(textureCT, samplerLin, currentPosition);
 		var rtVolume: vec4f = textureSample(textureRT, samplerLin, currentPosition);
-		var maskVol: vec4f = textureSample(textureMask, samplerLin, currentPosition);
+		// var maskVol: vec4f = textureSample(textureMask, samplerLin, currentPosition);
 
 		// When working with gradients, we need to be careful whether we initiated pre-calculation in OnStart
 		var gradient: vec3f = ctVolume.rgb;
-		var densityCT: f32 = ctVolume.a * DENSITY_FACTOR_CT;
-		var densityRT: f32 = rtVolume.a * DENSITY_FACTOR_RT;
+		var densityCT: f32 = ctVolume.a;
+		var densityRT: f32 = rtVolume.a;
 
 		// Transfer function sampling
 		var opacityCT: f32 = textureSample(tfOpacityCT, samplerLin, densityCT).r;
@@ -249,13 +245,13 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
             // Colors
             var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
             var opacity: f32 = opacityCT;
-            var maskV: f32 = maskVol.r;
+            // var maskV: f32 = maskVol.r;
 
-            if maskV > 0
-            {
-                color = vec3f(1, 0.5, 0.5);
-                opacity = 1;
-            }
+            // if maskV > 0
+            // {
+            //     color = vec3f(1, 0.5, 0.5);
+            //     opacity = 1;
+            // }
 
             // Opacities
             // var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
