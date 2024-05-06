@@ -15,7 +15,7 @@ namespace med
 		virtual void Render() = 0;
 		virtual void UpdateTexture() = 0;
 		virtual std::string GetType() const = 0;
-		virtual void Save(const std::string& name) = 0;
+		virtual bool Save(const std::string& name) = 0;
 		virtual void Load(const std::string& name) = 0;
 	protected:
 		virtual void UpdateYAxis(int cpId) = 0;

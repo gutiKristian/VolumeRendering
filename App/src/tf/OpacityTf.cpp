@@ -164,7 +164,7 @@ namespace med
 		}
 	}
 
-	void OpacityTF::Save(const std::string& name)
+	bool OpacityTF::Save(const std::string& name)
 	{
 		// Create file with this structure first line is [opacity] second line is number of control points and then x y values
 		std::ofstream file(name);
@@ -180,6 +180,7 @@ namespace med
 			file << cp.x << " " << cp.y << "\n";
 		}
 		file.close();
+		return true;
 	}
 
 	void OpacityTF::Load(const std::string& name)

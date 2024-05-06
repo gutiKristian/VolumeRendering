@@ -21,7 +21,7 @@ namespace med
 		void Render() override;
 		std::string GetType() const override;
 		void UpdateTexture() override;
-		void Save(const std::string& name) override;
+		bool Save(const std::string& name) override;
 		void Load(const std::string& name) override;
 	private:
 		void UpdateYAxis(int cpId) override;

@@ -42,7 +42,7 @@ namespace med
 		* still avoiding the use of virtual functions (as render is called every frame)
 		* maybe in the future refactor with some Saveable interface (same for ColorTF)
 		*/
-		void Save(const std::string& name) override;
+		bool Save(const std::string& name) override;
 		void Load(const std::string& name) override;
 	private:
 	/*

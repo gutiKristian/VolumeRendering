@@ -165,7 +165,7 @@ namespace med
 		}
 	}
 
-	void ColorTF::Save(const std::string& name)
+	bool ColorTF::Save(const std::string& name)
 	{
 		assert(m_ControlCol.size() == m_ControlPoints.size() && "Number of control points colors don't match with number of positions");
 		// Create file with this structure first line is [opacity] second line is number of control points and then x y values
@@ -182,6 +182,7 @@ namespace med
 			file << m_ControlPoints[i].x << " " << m_ControlPoints[i].y << " " << m_ControlCol[i].r << " " << m_ControlCol[i].g << " " << m_ControlCol[i].b << " " << m_ControlCol[i].a << "\n";
 		}
 		file.close();
+		return true;
 	}
 
 	void ColorTF::Load(const std::string& name)
