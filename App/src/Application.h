@@ -167,7 +167,7 @@ namespace med {
 		// ImGui
 		int m_FragmentMode = 0;
 		int m_StepsCount = 200;
-		float m_StepSize = 0.1f;
+		float m_StepSize = 0.01f;
 		float m_FrameTime = 0.0f;
 		float m_Fps = 0.0;
 		float m_AverageFrametime = 0.0;
