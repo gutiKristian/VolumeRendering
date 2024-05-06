@@ -5,7 +5,13 @@
 #include "implot_internal.h"
 
 #include "Base/Timestep.h"
+#include "../../renderer/Texture.h"
+#include "../../renderer/BindGroup.h"
 #include "../../renderer/PipelineBuilder.h"
+#include "../../renderer/RenderPipeline.h"
+#include "../../tf/ColorTf.h"
+#include "../../tf/OpacityTf.h"
+#include "../../renderer/Light.h"
 #include "../../file/VolumeFile.h"
 
 #define MED_BEGIN_TAB_BAR(name) \

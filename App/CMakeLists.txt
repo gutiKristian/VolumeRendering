@@ -28,6 +28,7 @@ add_executable(App
 	"src/renderer/BindGroup.cpp"
 	"src/renderer/IndexBuffer.h"
 	"src/renderer/IndexBuffer.cpp"
+	"src/renderer/Light.h"
 	
 	"src/file/FileDataType.h"
 	"src/file/FileSystem.h"
@@ -65,11 +66,16 @@ add_executable(App
 	"src/miniapps/include/DicomInfoApp.h"
 	"src/miniapps/include/BasicVolLightApp.h"
 	"src/miniapps/include/TFCalibrationApp.h"
+	"src/miniapps/include/VolumeMaskApp.h" 
+	"src/miniapps/include/MutliCTRTApp.h" 
 	"src/miniapps/BasicVolumeApp.cpp"
 	"src/miniapps/ThreeFilesApp.cpp"
 	"src/miniapps/DicomInfoApp.cpp"
 	"src/miniapps/TFCalibrationApp.cpp"
-	"src/miniapps/BasicVolLightApp.cpp" "src/renderer/Light.h" "src/miniapps/include/VolumeMaskApp.h" "src/miniapps/VolumeMaskApp.cpp")
+	"src/miniapps/BasicVolLightApp.cpp" 
+	"src/miniapps/VolumeMaskApp.cpp" 
+	"src/miniapps/MutliCTRTApp.cpp"
+)
 
 target_compile_definitions(App
 	PRIVATE

@@ -26,6 +26,7 @@
 #include "miniapps/include/BasicVolLightApp.h"
 #include "miniapps/include/TFCalibrationApp.h"
 #include "miniapps/include/VolumeMaskApp.h"
+#include "miniapps/include/MutliCTRTApp.h"
 
 #if defined(PLATFORM_WEB)
 	#include <emscripten.h>
@@ -65,7 +66,7 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
-		p_App = std::make_unique<BasicVolumeApp>();
+		p_App = std::make_unique<MultiCTRTApp>();
 		p_App->OnStart(m_Builder);
 
 		if (p_App->GetStepSize() != 0.0f)
