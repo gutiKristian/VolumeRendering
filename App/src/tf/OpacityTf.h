@@ -44,6 +44,14 @@ namespace med
 		*/
 		bool Save(const std::string& name) override;
 		void Load(const std::string& name) override;
+
+		/*
+		* @brief Calibrates transfer function based on the provided mask. The mask is usually a filled contour.
+		* @param mask: The mask which determines the areas where calibration is performed
+		* @param data: File used to generate the histogram inside the areas
+		* @param activeContours: As mask may have up to 4 contours, this param tells us which should be taken into account
+		*/
+		void CalibrateOnMask(std::shared_ptr<const VolumeFile> mask, std::shared_ptr<const VolumeFile> file, std::array<int, 4> activeContours);
 	private:
 	/*
 	* @brief Recalculate the interval between control points

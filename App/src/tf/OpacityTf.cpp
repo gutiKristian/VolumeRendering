@@ -294,6 +294,87 @@ namespace med
 		LOG_INFO("Opacity TF loaded");
 	}
 
+	void OpacityTF::CalibrateOnMask(std::shared_ptr<const VolumeFile> mask, std::shared_ptr<const VolumeFile> file, std::array<int, 4> activeContours)
+	{
+		// Checking
+		if (file == nullptr || mask == nullptr)
+		{
+			LOG_ERROR("TF Calibration: NULLPTR, TF won't be calibrated");
+			return;
+		}
+
+		auto [x, y, z] = mask->GetSize();
+		auto [xx, yy, zz] = file->GetSize();
+
+		// Matching size check
+		if (x != xx || y != yy || z != zz)
+		{
+			LOG_ERROR("TF calibration, mask and data sizes do not match, TF won't be calibrated");
+			return;
+		}
+
+		size_t size = x * y * z;
+
+		// Empty file check
+		if (size == 0)
+		{
+			LOG_ERROR("TF calibration: empty file, TF won't be calibrated!");
+			return;
+		}
+
+
+		size_t maxValue = file->GetMaxNumber();
+
+		const auto& maskData = mask->GetVecReference();
+		const auto& fileData = file->GetVecReference();
+
+		assert(maskData.size() == fileData.size() && "Underlying data are not the same size");
+
+		// Max value check
+		if (maxValue == 0)
+		{
+			LOG_WARN("Max value is zero, looking for max value.");
+			maxValue = file->GetMaxNumber(fileData, 3); // alpha --> rgb may contain precomputed gradient
+			if (maxValue == 0)
+			{
+				LOG_ERROR("After check: max value is 0, TF won't be calibrated.");
+				return;
+			}
+		}
+
+		std::vector<int> cIndices{};
+		for (int i = 0; i < activeContours.size(); ++i)
+		{
+			if (activeContours[i] == 1)
+			{
+				cIndices.push_back(i);
+			}
+		}
+
+		// Check whether user flagged at least one contour
+		if (cIndices.size() == 0)
+		{
+			LOG_ERROR("No contour has been selected for calibration, TF won't be calibrated!"); \
+			return;
+		}
+
+		// calculate histogram inside the contour
+		std::vector<int> bin(maxValue, 0);
+
+		for (size_t i = 0; i < size; ++i)
+		{
+			for (auto contourIndex : cIndices)
+			{
+				if (maskData[i][contourIndex] != 0)
+				{
+					// Active contour
+					int value = fileData[i].a;
+					++bin[value];
+				}
+			}
+		}
+	}
+
 	void OpacityTF::UpdateYAxis(int cpId)
 	{
 		assert(cpId >= 0 && cpId < m_ControlPoints.size() && "Control point index is out of bounds");
