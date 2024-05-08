@@ -12,7 +12,7 @@ namespace med
 		auto contourFile = DicomReader::ReadStructFile("assets\\716^716_716_RTst_2013-04-02_230000_716-1-01_OCM.BladderShell_n1__00000\\");
 		auto ctFile = DicomReader::ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
 		auto rtDoseFile = DicomReader::ReadVolumeFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\");
-		auto volumeMask = contourFile->Create3DMask(*ctFile, { 2, 1, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM | 
+		auto volumeMask = contourFile->Create3DMask(*ctFile, { 3, 0, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM | 
 			ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING | ContourPostProcess::FILL);
 
 		p_OpacityTfCT = std::make_unique<OpacityTF>(256);

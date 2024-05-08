@@ -31,7 +31,7 @@ namespace med
 
 		Light m_Light1
 		{
-			.Position = {5.0f, 5.0f, -5.0f, 1.0f},
+			.Position = {0.0, 5.0f, 0.0f, 1.0f},
 			.Ambient = glm::vec4{0.1f},
 			.Diffuse = glm::vec4{1.0f}
 		};

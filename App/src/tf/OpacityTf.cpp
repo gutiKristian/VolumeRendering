@@ -359,7 +359,7 @@ namespace med
 		}
 
 		// calculate histogram inside the contour
-		std::vector<int> bin(maxValue, 0);
+		std::vector<double> bin(maxValue, 0.0);
 
 		for (size_t i = 0; i < size; ++i)
 		{
@@ -373,6 +373,70 @@ namespace med
 				}
 			}
 		}
+		/*
+		std::vector<int> tfBin(m_TextureResolution, 0);
+		const float factor = (m_TextureResolution - 1) / maxValue;
+		*/
+
+		int maxElem = *std::max_element(bin.begin(), bin.end());
+		std::vector<glm::dvec2> cps{};
+		cps.emplace_back(0.0, 0.0);
+
+		const double THRESHOLD_FOR_POINT = 0.3;
+		bool isPointActive = false;
+		int firstValueThresh = -1;
+		int lastValueThresh = -1;
+
+		for (int i = 0; i < maxValue; ++i)
+		{
+			if ((bin[i] / maxElem) >= THRESHOLD_FOR_POINT)
+			{
+				if (firstValueThresh == -1)
+				{
+					firstValueThresh = i;
+				}
+				lastValueThresh = i;
+				//cps.emplace_back(i, (bin[i] / maxElem) - THRESHOLD_FOR_POINT);
+			}
+			/*else if (isPointActive && (bin[i] / maxElem) < THRESHOLD_FOR_POINT)
+			{
+				isPointActive = false;
+			}*/
+		}
+
+		cps.emplace_back(firstValueThresh, bin[firstValueThresh] / maxElem);
+		cps.emplace_back(lastValueThresh, bin[lastValueThresh] / maxElem);
+		cps.emplace_back(m_TextureResolution - 1, 1.0);
+
+		/*if (cps.empty())
+		{
+			return;
+		}*/
+
+		// Neccessary first and last points
+		if (cps[0].x != 0.0)
+		{
+			cps.insert(cps.begin(), { 0.0, 0.0 });
+		}
+		if (cps.back().x != m_TextureResolution - 1)
+		{
+			cps.push_back({ m_TextureResolution - 1, 1.0 });
+		}
+
+		int newRes = (1 << file->GetMaxUsedBitDepth());
+		ResolveResolution(newRes);
+		m_XPoints.resize(m_TextureResolution, 0.0f);
+		m_YPoints.resize(m_TextureResolution, 0.0f);
+
+		m_ControlPoints = std::move(cps);
+
+
+		for (int i = 0; i < m_ControlPoints.size(); ++i)
+		{
+			UpdateYAxis(i);
+		}
+
+		m_ShouldUpdate = true;
 	}
 
 	void OpacityTF::UpdateYAxis(int cpId)

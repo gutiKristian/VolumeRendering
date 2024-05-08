@@ -13,13 +13,16 @@ namespace med
 	{
 		LOG_INFO("OnStart BasicVolumeMiniApp");
 
-		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\HumanHead\\");
+		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\bladder\\"); 716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000 
+		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\799_799_CT_2013-07-30_070000_GU_Helical.AutomA_n191__00000\\");
+
 		ctFile->NormalizeData();
 		
 		ComputeRecommendedSteppingParams(*ctFile);
 
-		p_OpacityTf = std::make_unique<OpacityTF>(256);
-		p_ColorTf = std::make_unique<ColorTF>(256);
+		p_OpacityTf = std::make_unique<OpacityTF>(4096);
+		p_ColorTf = std::make_unique<ColorTF>(4096);
+
 
 		p_OpacityTf->SetDataRange(ctFile->GetMaxNumber());
 		p_OpacityTf->ActivateHistogram(*ctFile);

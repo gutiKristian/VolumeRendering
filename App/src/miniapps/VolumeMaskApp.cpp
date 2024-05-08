@@ -18,7 +18,7 @@ namespace med
 		contourFile->ListAvailableContours();
 
 		auto ctFile = DicomReader::ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
-		auto volumeMask = contourFile->Create3DMask(*ctFile, { 2, 1, 4, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM |
+		auto volumeMask = contourFile->Create3DMask(*ctFile, { 1, 4, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM |
 			ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING);
 
 		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), volumeMask->GetVoidPtr(), WGPUTextureDimension_3D, volumeMask->GetSize(),
