@@ -73,6 +73,8 @@ fn vs_main(@builtin(vertex_index) vID: u32, @location(0) vertexCoord: vec3f, @lo
 }
 
 
+// UTIL
+
 /*
 * Checks whether the position is within out bbox basically,
 * but our bbox coordinates are basically 3D texture coordinates
@@ -119,6 +121,7 @@ fn jitter(co: vec2<f32>) -> f32
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
+// END UTIL
 
 /*
 * Calculates Blinn-Phong shading model (no specular)
@@ -140,14 +143,46 @@ fn BlinnPhong(N: vec3f, worldPosition: vec3f) -> vec3<f32>
 
 
 /*
-* Calculates opacity with help of gradient
-* @param opacity: opacity value retrieved from TF
+                                                ILLUSTRATIVE SECTION
+*/
+
+/*
+* Calculates the opacity value for an illustrative context preserving effect.
 * @param gradient: gradient vector of the sample, normalised in [0, 1]
+* @param positionWorld: world position of the sample
+* @param positionTexture: texture position of the sample
+* @param startPosTexture: texture position of the start of the ray
+* @param alpha_1: (alpha_{i-1}) opacity value of the sample
 * Returns opacity value for the sample
 */
-fn GradinetMagnitudeOpacityModulation(opacity: f32, gradient: vec3f) -> f32
+fn IllustrativeContextPreservingOpacity(opacity: f32, gradient: vec3f, positionWorld: vec3f, positionTexture: vec3f, normalization: f32, alpha_1: f32, 
+    startPosTexture: vec3<f32>) -> f32
 {
-	return opacity * length(gradient);
+		let kD: f32 = 2.5;
+		let kS: f32 = 1.0;
+		let kA: f32 = 0.5;
+		var L: vec3f = normalize(light.position - positionWorld);
+		var V: vec3f = normalize(cameraPosition - positionWorld);
+		var H: vec3f = normalize(V + L); 
+		var s: f32 = kA + kD * length(L * gradient) + kS * pow(length(H * gradient), 1);
+		
+		// Coefficients
+		var kt: f32 = 4.5;
+		var ks: f32 = 0.8;
+		
+        // Just for texture
+        var distanceToEye = length(positionTexture - startPosTexture);
+
+        if distanceToEye > 1.0
+        {
+            distanceToEye = 1.0;
+        }
+
+        // option where distance is taken from texture coords
+		return opacity * pow(length(gradient), pow(kt * s * (1 - distanceToEye) * (1 - alpha_1), ks)); // 246 0.00369
+
+        // option where the distance is taken from world coords
+        // return opacity * pow(length(gradient), pow(kt * s * (1 - (length(positionWorld - cameraPosition) / normalization)) * (1 - alpha_1), ks));
 }
 
 
@@ -157,6 +192,20 @@ fn CalculateWorldStep(r: Ray, stepSize: f32) -> vec3<f32>
 	var worldStep: vec3<f32> = r.direction * vec3f(stepSize * 1.0, stepSize * 1.0, stepSize * 0.7);
 	worldStep.z *= (-1.0); // it is inverted  in the world space
 	return worldStep;
+}
+
+/*
+* Illustrative contex-preserving needs normalized distance of sample point to the camera
+* this function computes maximal possible distance (world space of the last sample point basically or 
+* world space of the texture end texture coordinate)
+*/
+fn CalcNormalizationForIllustrativeDistance(r: Ray, stepSize: f32, worldStep: vec3<f32>, startingWorldPosition: vec3<f32>) -> f32
+{
+	var numberOfSteps = i32(r.length / stepSize);
+
+	// shift start coord in world space to the end
+	var endingWorldPosition = worldStep * f32(numberOfSteps) + startingWorldPosition;
+	return length(cameraPosition - endingWorldPosition);
 }
 
 
@@ -213,6 +262,9 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	var step: vec3<f32> = ray.direction * stepSize;
 	var worldStep: vec3<f32> = CalculateWorldStep(ray, stepSize);
 	
+	// For illustrative
+	var normFactorIllustrative: f32 = CalcNormalizationForIllustrativeDistance(ray, stepSize, worldStep, wordlCoords);
+	
 	// Resulting pixel color
 	var dst: vec4<f32> = vec4<f32>(0.0);
 
@@ -242,8 +294,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 			// color *= BlinnPhong(normalize(gradient), wordlCoords);
 
             // Opacities
-            var opacity: f32 = opacityCT;
-            // var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
+            var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, currentPosition, normFactorIllustrative, dst.a, ray.start);
 
             // Blending
 		    var src: vec4<f32> = vec4f(color.r, color.g, color.b, opacity);
@@ -256,6 +307,24 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	}
 
 	return dst;
+}
+
+
+
+fn ComputeGradient(position: vec3<f32>, step: f32, texture: texture_3d<f32>) -> vec3f
+{
+	var result = vec3f(0.0, 0.0, 0.0);
+	var dirs = array<vec3f, 3>(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(0.0, 0.0, 1.0));
+	result.x = textureSample(texture, samplerLin, position + dirs[0] * step).a - textureSample(texture, samplerLin, position - dirs[0] * step).a;
+	result.y = textureSample(texture, samplerLin, position + dirs[1] * step).a - textureSample(texture, samplerLin, position - dirs[1] * step).a;
+	result.z = textureSample(texture, samplerLin, position + dirs[2] * step).a - textureSample(texture, samplerLin, position - dirs[2] * step).a;
+	let l = length(result);
+	if l == 0.0
+	{
+		return vec3f(0.0);
+	}
+	return -result;
+	// return -result/l;
 }
 
 
