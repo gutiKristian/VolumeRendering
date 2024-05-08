@@ -48,6 +48,8 @@ namespace med
 		
 		DicomVolumeParams GetVolumeParams() const;
 
+		std::tuple<float, float, float> GetBBOXSize() const override;
+
 		/*
 		*  ================ These are contour related things, in the future ContourDcm could extend this VolumeFileDcm class ===================
 		*/

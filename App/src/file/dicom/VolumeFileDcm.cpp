@@ -54,6 +54,17 @@ namespace med
 		return m_Params;
 	}
 
+	std::tuple<float, float, float> VolumeFileDcm::GetBBOXSize() const
+	{
+		auto [x, y, z] = GetSize();
+		auto xSizeMM = (x + 1) * m_Params.PixelSpacing[0];
+		auto ySizeMM = (y + 1) * m_Params.PixelSpacing[1];
+		auto zSizeMM = z * m_Params.SliceThickness;
+		auto max = std::max(xSizeMM, std::max(ySizeMM, zSizeMM));
+
+		return std::tuple<float, float, float>(RoundTo2Dec(xSizeMM / max), RoundTo2Dec(ySizeMM / max), RoundTo2Dec(zSizeMM / max));
+	}
+
 	glm::vec3 VolumeFileDcm::PixelToRCSTransform(glm::vec2 coord) const
 	{
 		glm::vec4 res = m_PixelToRCS * glm::vec4(coord.x, coord.y, 0.0f, 1.0f);

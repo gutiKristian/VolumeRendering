@@ -44,6 +44,12 @@ namespace med
 		m_MaxNumber = maxNumber;
 	}
 
+	float VolumeFile::RoundTo2Dec(float number) const
+	{
+		int value = static_cast<int>(number * 100 + .5f);
+		return static_cast<float>(value) / 100;
+	}
+
 	size_t VolumeFile::GetMaxNumber(const std::vector<glm::vec4>& vec, int index) const
 	{
 		const std::vector<glm::vec4>::const_iterator maxElement = std::max_element(vec.begin(), vec.end(), [&](const glm::vec4& a, const glm::vec4& b) {
@@ -237,6 +243,14 @@ namespace med
 	std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> VolumeFile::GetSize() const
 	{
 		return m_Size;
+	}
+
+	std::tuple<float, float, float> VolumeFile::GetBBOXSize() const
+	{
+		auto [x, y, z] = GetSize();
+		float max = std::max(x, std::max(y, z));
+
+		return std::tuple<float, float, float>(RoundTo2Dec(x / max) , RoundTo2Dec(y / max), RoundTo2Dec(z / max));
 	}
 
 	FileDataType VolumeFile::GetFileType() const

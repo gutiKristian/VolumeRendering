@@ -38,6 +38,8 @@ namespace med
 		void SetPath(std::filesystem::path path);
 
 		void SetMaxNumber(size_t maxNumber);
+
+		float RoundTo2Dec(float number) const;
 	
 	public:
 		/**
@@ -66,6 +68,8 @@ namespace med
 		* @brief Get size/dimension of the input data.
 		*/
 		[[nodiscard]] std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> GetSize() const;
+
+		virtual std::tuple<float, float, float> GetBBOXSize() const;
 
 		/**
 		* @brief Data type saved inside of this file, setting this attribute is implemented by the subclass.
