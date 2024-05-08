@@ -71,6 +71,15 @@ namespace med {
 		void InitializeBindGroups();
 
 		/*
+		* Set the size of the bounding box. Default is a unit cube.
+		* The paramters are sizes (multiplied).
+		* @param x: size on the x axis
+		* @param y: size on the y axis
+		* @param z: size on the z axis
+		*/
+		void SetBoundingBoxSize(float x, float y, float z);
+
+		/*
 		* Initializes pipelines that are used during the runtime
 		* This function is called also on resize when pipelines need to be rebuilt
 		*/
@@ -139,14 +148,14 @@ namespace med {
 		// -----------------------------------------
 		float m_CubeVertexData[48] = {
 			/*,	   x     y      z     u	  v	   w */
-				 -0.5f, -0.5f,  0.25f,	0.0f, 0.0f, 0.0f,
-				  0.5f, -0.5f,  0.25f,	1.0f, 0.0f, 0.0f,
-				 -0.5f,  0.5f,  0.25f,	0.0f, 1.0f, 0.0f,
-				  0.5f,  0.5f,  0.25f,	1.0f, 1.0f, 0.0f,
-				 -0.5f, -0.5f, -0.25f,	0.0f, 0.0f, 1.0f,
-				  0.5f, -0.5f, -0.25f,	1.0f, 0.0f, 1.0f,
-				 -0.5f,  0.5f, -0.25f,	0.0f, 1.0f, 1.0f,
-				  0.5f,  0.5f, -0.25f,	1.0f, 1.0f, 1.0f
+				 -0.5f, -0.5f,  0.35f,	0.0f, 0.0f, 0.0f,
+				  0.5f, -0.5f,  0.35f,	1.0f, 0.0f, 0.0f,
+				 -0.5f,  0.5f,  0.35f,	0.0f, 1.0f, 0.0f,
+				  0.5f,  0.5f,  0.35f,	1.0f, 1.0f, 0.0f,
+				 -0.5f, -0.5f, -0.35f,	0.0f, 0.0f, 1.0f,
+				  0.5f, -0.5f, -0.35f,	1.0f, 0.0f, 1.0f,
+				 -0.5f,  0.5f, -0.35f,	0.0f, 1.0f, 1.0f,
+				  0.5f,  0.5f, -0.35f,	1.0f, 1.0f, 1.0f
 		};
 
 		uint16_t m_CubeIndexData[36] = {

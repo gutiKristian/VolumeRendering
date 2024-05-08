@@ -69,6 +69,7 @@ namespace med {
 		p_App = std::make_unique<MultiCTRTApp>();
 		p_App->OnStart(m_Builder);
 
+		// The abstraction of MiniApp is redundant layer, these would be attributes in every app
 		if (p_App->GetStepSize() != 0.0f)
 		{
 			LOG_INFO("Using MiniApp's required step size");
@@ -551,6 +552,20 @@ namespace med {
 		m_BGroupProxy.AddBuffer(*p_UCamera, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupProxy.AddBuffer(*p_UCameraPos, WGPUShaderStage_Vertex | WGPUShaderStage_Fragment);
 		m_BGroupProxy.FinalizeBindGroup(base::GraphicsContext::GetDevice());
+	}
+
+	void Application::SetBoundingBoxSize(float x, float y, float z)
+	{
+		//Structure of the data: x y z u v w
+		for (int i = 0; i <= 42; i+= 6)
+		{
+			m_CubeVertexData[i] *= x;
+			m_CubeVertexData[i + 1] *= y;
+			m_CubeVertexData[i + 2] *= z;
+		}
+		std::stringstream ss{};
+		ss << "Bounding box size: x: " << std::to_string(m_CubeVertexData[0]) << "; y: " << std::to_string(m_CubeVertexData[1]) << "; z: " << std::to_string(m_CubeVertexData[2]) << "\n";
+		LOG_INFO(ss.str().c_str());
 	}
 
 	void Application::InitializeRenderPipelines()
