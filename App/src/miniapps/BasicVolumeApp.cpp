@@ -12,7 +12,7 @@ namespace med
 	void BasicVolumeApp::OnStart(PipelineBuilder& pipeline)
 	{
 		LOG_INFO("OnStart BasicVolumeMiniApp");
-
+		 
 		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\bladder\\"); 716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000 
 		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\799_799_CT_2013-07-30_070000_GU_Helical.AutomA_n191__00000\\");
 

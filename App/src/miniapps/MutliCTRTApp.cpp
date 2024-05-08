@@ -17,6 +17,7 @@ namespace med
 		auto ctFile = DicomReader::ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
 		auto rtDoseFile = DicomReader::ReadVolumeFile("assets\\716^716_716_RTDOSE_2013-04-02_230000_716-1-01_Eclipse.Doses.0,.Generated.from.plan.'1.pelvis',.1.pelvis.#,.IN_n1__00000\\");
 		
+
 		// Before the visualisation we should check whether these files have same frame of reference and orientation
 		if (!ctFile->CompareFrameOfReference(*rtDoseFile))
 		{
@@ -28,6 +29,7 @@ namespace med
 			LOG_WARN("File have different orientation. Visualisation may not be accurate");
 		}
 
+		ctFile->PreComputeGradient(true);
 		ctFile->NormalizeData();
 		rtDoseFile->NormalizeData();
 
@@ -38,10 +40,10 @@ namespace med
 		// auto volumeMask = contourFile->Create3DMask(*ctFile, { 2, 1, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM |
 		//	ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING | ContourPostProcess::FILL);
 
-		p_OpacityTfCT = std::make_unique<OpacityTF>(256);
-		p_OpacityTfRT = std::make_unique<OpacityTF>(256);
-		p_ColorTfCT = std::make_unique<ColorTF>(256);
-		p_ColorTfRT = std::make_unique<ColorTF>(256);
+		p_OpacityTfCT = std::make_unique<OpacityTF>(1024);
+		p_OpacityTfRT = std::make_unique<OpacityTF>(1024);
+		p_ColorTfCT = std::make_unique<ColorTF>(1024);
+		p_ColorTfRT = std::make_unique<ColorTF>(1024);
 
 		p_TexCTData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");
@@ -109,7 +111,11 @@ namespace med
 	{
 		WGPUShaderModule shaderModule = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
 			FileSystem::ReadFile(FileSystem::GetDefaultPath() / "shaders" / "MultiCTRTApp.wgsl"));
-		pipeline.AddShaderModule(shaderModule);
+		
+		WGPUShaderModule shaderModuleIllustrative = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
+			FileSystem::ReadFile(FileSystem::GetDefaultPath() / "shaders" / "MutliCTRTIllustrative.wgsl"));
+
+		pipeline.AddShaderModule(shaderModuleIllustrative);
 		pipeline.AddBindGroup(m_BGroup);
 	}
 

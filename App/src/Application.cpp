@@ -66,7 +66,7 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
-		p_App = std::make_unique<BasicVolumeApp>();
+		p_App = std::make_unique<MultiCTRTApp>();
 		p_App->OnStart(m_Builder);
 
 		if (p_App->GetStepSize() != 0.0f)
