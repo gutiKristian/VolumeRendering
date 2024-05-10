@@ -136,9 +136,9 @@ fn jitter(co: vec2<f32>) -> f32
 */
 fn BlinnPhong(N: vec3f, worldPosition: vec3f) -> vec3<f32>
 {
-	let kD: f32 = 1.5;
-	let kA: f32 = 0.5;
-	var L: vec3f = normalize(light.position - worldPosition);
+	let kD: f32 = 5.5;
+	let kA: f32 = 1.0;
+	var L: vec3f = normalize(vec3f(0.0, 5.0, 0.0) - worldPosition);
 	// var V: vec3f = normalize(cameraPosition - worldPosition);
 	// var R: vec3f = 2 * (N * L)* N - L;
 	// var H: vec3f = normalize(V + L); 
@@ -182,6 +182,8 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 	// Iteration params -- Default
 	var stepSize: f32 = stepsSize;
+	var worldStep: vec3<f32> = CalculateWorldStep(ray, stepSize);
+
 	
 	if toggles[0] == 1
 	{
@@ -206,8 +208,8 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	{
 		// Volume sampling
 		var volumeSample: vec4f = textureSample(textMain, samplerLin, currentPosition);
-		var gradient: vec3<f32> = normalize(volumeSample.rgb);
-		// gradient = ComputeGradient(currentPosition, stepSize, textMain);
+		var gradient: vec3<f32> = volumeSample.rgb;
+		gradient = ComputeGradient(currentPosition, stepSize, textMain);
 
 		var density: f32 = volumeSample.a;
 
@@ -217,14 +219,18 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		
 		if IsInSampleCoords(currentPosition) && dst.a < 1.0
 		{
-			color *= BlinnPhong(gradient, wCoords);
+			color *= BlinnPhong(normalize(gradient), wCoords);
+			
+			// Gradient based opacity modulation
+			// opacity *= length(gradient);
+			
 			// Blending
 			dst = FrontToBackBlend(vec4f(color.r, color.g, color.b, opacity), dst); 
 		}
 
 		// Advance ray
 		currentPosition = currentPosition + step;
-		wCoords = wCoords + step;
+		wCoords = wCoords + worldStep;
 	}
 
 	return dst;

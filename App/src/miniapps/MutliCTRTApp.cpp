@@ -115,7 +115,7 @@ namespace med
 		WGPUShaderModule shaderModuleIllustrative = Shader::create_shader_module(base::GraphicsContext::GetDevice(),
 			FileSystem::ReadFile(FileSystem::GetDefaultPath() / "shaders" / "MutliCTRTIllustrative.wgsl"));
 
-		pipeline.AddShaderModule(shaderModuleIllustrative);
+		pipeline.AddShaderModule(shaderModule);
 		pipeline.AddBindGroup(m_BGroup);
 	}
 

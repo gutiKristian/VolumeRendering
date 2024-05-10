@@ -22,6 +22,10 @@ namespace med
 
 	private:
 		std::shared_ptr<Texture> p_TexData = nullptr;
+		std::shared_ptr<Texture> p_CTTexData = nullptr;
+		std::unique_ptr<OpacityTF> p_OpacityTf = nullptr;
+		std::unique_ptr<ColorTF> p_ColorTf = nullptr;
+
 		BindGroup m_BGroup;
 	};
 }

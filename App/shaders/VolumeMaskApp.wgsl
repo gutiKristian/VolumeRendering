@@ -38,6 +38,9 @@ struct Ray
 
 // App
 @group(1) @binding(0) var textMain: texture_3d<f32>;
+@group(1) @binding(1) var textData: texture_3d<f32>;
+@group(1) @binding(2) var tfOpacity: texture_1d<f32>;
+@group(1) @binding(3) var tfColor: texture_1d<f32>;
 
 @vertex
 fn vs_main(@builtin(vertex_index) vID: u32, @location(0) vertexCoord: vec3f, @location(1) textureCoord: vec3f) -> Fragment {
@@ -165,21 +168,23 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	for (var i: i32 = 0; i < stepsCount; i++)
 	{
 		// Volume sampling
-		var volumeSample: vec4f = textureSample(textMain, samplerLin, currentPosition);
+		var maskSample: vec4f = textureSample(textMain, samplerLin, currentPosition);
+		var rtSample: f32 = textureSample(textData, samplerLin, currentPosition).a;
 
-		var color: vec3f = volumeSample.rgb;
-		var opacity: f32 = 0.0;
+		var opacity: f32 = textureSample(tfOpacity, samplerLin, rtSample).r;
+		var color: vec3f = textureSample(tfColor, samplerLin, rtSample).rgb;
 
 		if IsInSampleCoords(currentPosition) && dst.a < 1.0
 		{
-            
-            if color.r > 0 || color.g > 0 || color.b > 0
-            {
-                opacity = 0.5;
-            }
+
+			if maskSample.r > 0 || maskSample.g > 0 || maskSample.b > 0
+			{
+				opacity = 0.5;
+				// color = vec3f(0.0, 0.0, 1.0);
+				dst = FrontToBackBlend(vec4f(color.r, color.g, color.b, opacity), dst); 
+			}
 
 			// Blending
-			dst = FrontToBackBlend(vec4f(color.r, color.g, color.b, opacity), dst); 
 		}
 
 		// Advance ray

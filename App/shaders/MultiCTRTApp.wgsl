@@ -128,9 +128,9 @@ fn jitter(co: vec2<f32>) -> f32
 */
 fn BlinnPhong(N: vec3f, worldPosition: vec3f) -> vec3<f32>
 {
-	let kD: f32 = 1.5;
+	let kD: f32 = 3.5;
 	let kA: f32 = 0.5;
-	var L: vec3f = normalize(light.position - worldPosition);
+	var L: vec3f = normalize(vec3f(0.0, -5.0, 0.0) - worldPosition);
 	// var V: vec3f = normalize(cameraPosition - worldPosition);
 	// var R: vec3f = 2 * (N * L)* N - L;
 	// var H: vec3f = normalize(V + L); 
@@ -239,11 +239,11 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		{            
             // Colors
             var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
-			// color *= BlinnPhong(normalize(gradient), wordlCoords);
+			color *= BlinnPhong(normalize(gradient), wordlCoords);
 
             // Opacities
-            var opacity: f32 = opacityCT;
-            // var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
+            // var opacity: f32 = opacityCT;
+            var opacity: f32 = GradinetMagnitudeOpacityModulation(opacityCT, gradient);
 
             // Blending
 		    var src: vec4<f32> = vec4f(color.r, color.g, color.b, opacity);

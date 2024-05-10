@@ -131,9 +131,9 @@ fn jitter(co: vec2<f32>) -> f32
 */
 fn BlinnPhong(N: vec3f, worldPosition: vec3f) -> vec3<f32>
 {
-	let kD: f32 = 1.5;
+	let kD: f32 = 3.5;
 	let kA: f32 = 0.5;
-	var L: vec3f = normalize(light.position - worldPosition);
+	var L: vec3f = normalize(vec3f(0.0, -5.0, 0.0) - worldPosition);
 	// var V: vec3f = normalize(cameraPosition - worldPosition);
 	// var R: vec3f = 2 * (N * L)* N - L;
 	// var H: vec3f = normalize(V + L); 
@@ -161,13 +161,13 @@ fn IllustrativeContextPreservingOpacity(opacity: f32, gradient: vec3f, positionW
 		let kD: f32 = 2.5;
 		let kS: f32 = 1.0;
 		let kA: f32 = 0.5;
-		var L: vec3f = normalize(light.position - positionWorld);
+		var L: vec3f = normalize(vec3f(0.0, -5.0, 0.0) - positionWorld);
 		var V: vec3f = normalize(cameraPosition - positionWorld);
 		var H: vec3f = normalize(V + L); 
 		var s: f32 = kA + kD * length(L * gradient) + kS * pow(length(H * gradient), 1);
 		
 		// Coefficients
-		var kt: f32 = 4.5;
+		var kt: f32 = 5.0;
 		var ks: f32 = 0.8;
 		
         // Just for texture
@@ -277,6 +277,8 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 
 		// When working with gradients, we need to be careful whether we initiated pre-calculation in OnStart
 		var gradient: vec3f = ctVolume.rgb;
+		// gradient = ComputeGradient(currentPosition, stepSize, textureCT);
+
 		var densityCT: f32 = ctVolume.a;
 		var densityRT: f32 = rtVolume.a;
 
@@ -291,9 +293,10 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		{            
             // Colors
             var color: vec3f = colorCT * (1.0 - opacityRT) + colorRT * opacityRT;
-			// color *= BlinnPhong(normalize(gradient), wordlCoords);
 
+			color *= BlinnPhong(normalize(gradient), wordlCoords);
             // Opacities
+			// var opacity = opacityCT;
             var opacity: f32 = IllustrativeContextPreservingOpacity(opacityCT, gradient, wordlCoords, currentPosition, normFactorIllustrative, dst.a, ray.start);
 
             // Blending

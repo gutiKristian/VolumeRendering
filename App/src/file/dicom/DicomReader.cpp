@@ -113,7 +113,7 @@ namespace med
 
 			if (files.size() > 1)
 			{
-				LOG_ERROR("Multiple contour files are not allowed!");
+				LOG_ERROR("Multiple contour files are not allowed! Check whether the provided file is a struct file or you calling correct funciton.");
 				return nullptr;
 			}
 
