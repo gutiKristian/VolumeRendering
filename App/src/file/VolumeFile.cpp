@@ -69,6 +69,11 @@ namespace med
 		return m_CustomBitWidth;
 	}
 
+	size_t VolumeFile::GetDataRange() const
+	{
+		return m_NormalizationValue != 0 ? m_NormalizationValue : GetMaxNumber();
+	}
+
 	void VolumeFile::PreComputeGradientSobel()
 	{
 		if (m_HasGradient)

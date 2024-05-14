@@ -85,14 +85,19 @@ namespace med
 		[[nodiscard]] const std::vector<glm::vec4>& GetVecReference() const;
 
 		/*
-		* @brief Maximum number within the dataset. Used in normalization.
-		* Note for dicom it is: 1 << GetMaxUsedBitDepth().
+		* @brief Maximum number within the dataset.
 		*/
 		[[nodiscard]] size_t GetMaxNumber() const;
 
 		[[nodiscard]] size_t GetMaxNumber(const std::vector<glm::vec4>& vec, int index = 0) const;
 
 		[[nodiscard]] int GetMaxUsedBitDepth() const;
+
+		/*
+		* @brief Returns value that is used for normalization of the data.
+		* This value should be used as a data range for TF.
+		*/
+		[[nodiscard]] size_t GetDataRange() const;
 
 		/**
 		 * @brief Maps 3D coordinate to the 1D data.

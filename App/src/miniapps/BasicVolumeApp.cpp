@@ -28,7 +28,7 @@ namespace med
 		p_OpacityTf = std::make_unique<OpacityTF>(4096);
 		p_ColorTf = std::make_unique<ColorTF>(4096);
 
-		p_OpacityTf->SetDataRange(ctFile->GetMaxNumber());
+		p_OpacityTf->SetDataRange(ctFile->GetDataRange());
 		p_OpacityTf->ActivateHistogram(*ctFile);
 
 
