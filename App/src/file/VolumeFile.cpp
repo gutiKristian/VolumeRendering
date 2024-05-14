@@ -93,9 +93,10 @@ namespace med
 						{
 							for (int k = -1; k <= 1; ++k)
 							{
-								gx += GetVoxelData(x + i, y + j, z + k).a * m_SobelX[k + 1][j + 1][i + 1];
-								gy += GetVoxelData(x + i, y + j, z + k).a * m_SobelY[k + 1][j + 1][i + 1];
-								gz += GetVoxelData(x + i, y + j, z + k).a * m_SobelZ[k + 1][j + 1][i + 1];
+								glm::vec4 voxel = GetVoxelData(x + i, y + j, z + k);
+								gx += voxel.a * m_SobelX[k + 1][j + 1][i + 1];
+								gy += voxel.a * m_SobelY[k + 1][j + 1][i + 1];
+								gz += voxel.a * m_SobelZ[k + 1][j + 1][i + 1];
 							}
 						}
 					}
@@ -156,13 +157,23 @@ namespace med
 		}
 	}
 
-	void VolumeFile::NormalizeData()
+	void VolumeFile::NormalizeData(int normalizationValue)
 	{
 		if (m_IsNormalized)
+		{
 			return;
+		}
+
+		if (normalizationValue == 0)
+		{
+			normalizationValue = GetMaxNumber();
+		}
+
+		m_NormalizationValue = normalizationValue;
+		
 		for (auto& vec : m_Data)
 		{
-			vec.a /= GetMaxNumber();
+			vec.a /= m_NormalizationValue;
 		}
 		m_IsNormalized = true;
 	}

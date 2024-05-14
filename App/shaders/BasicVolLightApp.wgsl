@@ -136,9 +136,9 @@ fn jitter(co: vec2<f32>) -> f32
 */
 fn BlinnPhong(N: vec3f, worldPosition: vec3f) -> vec3<f32>
 {
-	let kD: f32 = 5.5;
-	let kA: f32 = 1.0;
-	var L: vec3f = normalize(vec3f(0.0, 5.0, 0.0) - worldPosition);
+	let kD: f32 = 2.5;
+	let kA: f32 = 0.5;
+	var L: vec3f = normalize(light.position - worldPosition);
 	// var V: vec3f = normalize(cameraPosition - worldPosition);
 	// var R: vec3f = 2 * (N * L)* N - L;
 	// var H: vec3f = normalize(V + L); 
@@ -209,7 +209,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		// Volume sampling
 		var volumeSample: vec4f = textureSample(textMain, samplerLin, currentPosition);
 		var gradient: vec3<f32> = volumeSample.rgb;
-		gradient = ComputeGradient(currentPosition, stepSize, textMain);
+		//gradient = ComputeGradient(currentPosition, stepSize, textMain);
 
 		var density: f32 = volumeSample.a;
 

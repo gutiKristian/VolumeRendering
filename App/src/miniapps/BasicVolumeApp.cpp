@@ -14,26 +14,27 @@ namespace med
 		LOG_INFO("OnStart BasicVolumeMiniApp");
 		 
 		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\HumanHead\\"); 
-		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\chestCTContrast\\");
+		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\chestCTContrast\\");
 
 		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\CovidLungs1\\");
 		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\chestCTContrast\\");
 
-		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\799_799_CT_2013-07-30_070000_GU_Helical.AutomA_n191__00000\\"); // 716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000 
+		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\799_799_CT_2013-07-30_070000_GU_Helical.AutomA_n191__00000\\"); //799_799_CT_2013-07-30_070000_GU_Helical.AutomA_n191__00000 716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000 
 
 		ctFile->NormalizeData();
 		
 		ComputeRecommendedSteppingParams(*ctFile);
 
 		p_OpacityTf = std::make_unique<OpacityTF>(4096);
-		p_ColorTf = std::make_unique<ColorTF>(256);
-
-
-		p_OpacityTf->Load((FileSystem::GetDefaultPath() / "assets\\bone").string());
-		//p_ColorTf->Load((FileSystem::GetDefaultPath() / "assets\\tfcolorLungsContrast4096").string());
+		p_ColorTf = std::make_unique<ColorTF>(4096);
 
 		p_OpacityTf->SetDataRange(ctFile->GetMaxNumber());
 		p_OpacityTf->ActivateHistogram(*ctFile);
+
+
+		p_OpacityTf->Load((FileSystem::GetDefaultPath() / "assets\\bones2500").string(), TFLoadOption::RESCALE_TO_NEW_RANGE);
+		//p_ColorTf->Load((FileSystem::GetDefaultPath() / "assets\\tfcolorLungsContrast4096").string());
+
 
 		p_TexData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");

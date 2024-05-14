@@ -13,9 +13,7 @@
 #include "tf/OpacityTf.h"
 #include "tf/ColorTf.h"
 #include "file/VolumeFile.h"
-#include "miniapps/include/BasicVolumeApp.h"
-#include "miniapps/include/ThreeFilesApp.h"
-#include "miniapps/include/DicomInfoApp.h"
+#include "miniapps/include/MiniApp.h"
 
 #include <memory>
 

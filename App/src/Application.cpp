@@ -66,7 +66,8 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
-		p_App = std::make_unique<BasicVolumeApp>();
+		auto miniapp = std::make_unique<BasicVolumeApp>();
+		p_App = std::move(miniapp);
 		p_App->OnStart(m_Builder);
 
 		// The abstraction of MiniApp is redundant layer, these would be attributes in every app

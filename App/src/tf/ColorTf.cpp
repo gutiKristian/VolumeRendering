@@ -185,7 +185,7 @@ namespace med
 		return true;
 	}
 
-	void ColorTF::Load(const std::string& name)
+	void ColorTF::Load(const std::string& name, TFLoadOption option)
 	{
 		std::ifstream file(name);
 		std::string line;

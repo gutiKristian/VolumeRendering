@@ -43,7 +43,7 @@ namespace med
 		* maybe in the future refactor with some Saveable interface (same for ColorTF)
 		*/
 		bool Save(const std::string& name) override;
-		void Load(const std::string& name) override;
+		void Load(const std::string& name, TFLoadOption option = TFLoadOption::NONE) override;
 
 		/*
 		* @brief Calibrates transfer function based on the provided mask. The mask is usually a filled contour.

@@ -52,6 +52,74 @@ namespace med
 		m_DataRange = range;
 	}
 
+	glm::dvec2 TransferFunction::RemapCP(glm::dvec2 cp, int dataRange, int tfResolution)
+	{
+		tfResolution -= 1; // indexed from 0
+		int currentDataRange = GetDataRange();
+
+		if (currentDataRange == 0)
+		{
+			LOG_ERROR("Control point cannot be remapped to a new file data range.");
+			return cp;
+		}
+
+		// Basically to [0, 1]
+		double textureCoordinate = cp.x / tfResolution;
+		
+		// Density value that corresponded to the control point in dataset where it was calibrated
+		double oldDensityValue = textureCoordinate * dataRange;
+
+		if (oldDensityValue > currentDataRange) // && oldDensityValue > tfResolution
+		{
+			// even though tf resolution still might be able to cover this, there's no point to have this cp for this data range
+			LOG_INFO("The TF was defined on dataset with higher range, points outside of this data range will be clipped");
+			return { -1.0 , -1.0 };
+		}
+
+		// Now find where on x is oldDensityValue when data range is currentDataRange
+		// (to [0,1]) * to tf range
+		int newX = static_cast<int>((oldDensityValue / currentDataRange) * tfResolution); // * m_TextureResolution
+
+		return { newX, cp.y };
+	}
+
+	std::vector<glm::dvec2> TransferFunction::RemapCPVector(std::vector<glm::dvec2> cps, int dataRange, int tfResolution)
+	{
+		// If control points are merged into a one CP beacuse of data range and poor TF resolution
+		// then y coordinate of the cp is taken, there are many ways to handle this situation (average, median, maximal, minimal value)
+		std::vector<glm::dvec2> result{};
+
+		auto doesCpExist = [&result](double x) {
+			return std::find_if(result.begin(), result.end(), [x](const glm::dvec2& point) 
+				{ return point.x == x;}) != result.end();
+			};
+
+		for (auto cp : cps)
+		{
+			auto newCp = RemapCP(cp, dataRange, tfResolution);
+
+			// should be clipped
+			if (newCp.x == -1 && newCp.y == -1)
+			{
+				continue;
+			}
+
+			if (doesCpExist(newCp.x))
+			{
+				continue;
+			}
+
+			result.push_back(newCp);
+		}
+
+		if (!doesCpExist(tfResolution - 1))
+		{
+			result.emplace_back(tfResolution - 1, 1.0);
+		}
+
+		return result;
+	}
+
 	int TransferFunction::AddControlPoint(double mouseX, double mouseY, bool updateOnAdd)
 	{
 		constexpr int CONTROL_POINT_EXISTS = -1;

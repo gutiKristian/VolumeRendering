@@ -22,7 +22,7 @@ namespace med
 		std::string GetType() const override;
 		void UpdateTexture() override;
 		bool Save(const std::string& name) override;
-		void Load(const std::string& name) override;
+		void Load(const std::string& name, TFLoadOption option = TFLoadOption::NONE) override;
 	private:
 		void UpdateYAxis(int cpId) override;
 	private:

@@ -58,8 +58,9 @@ namespace med
 		/*
 		* @brief Normalizes the density values to [0, 1] interval.
 		* Gradient values are untouched if already pre-computed.
+		* @param normalizationValue: if 0 max number is taken as normalization factor
 		*/
-		void NormalizeData();
+		void NormalizeData(int normalizationValue = 0);
 
 		bool IsNormalized() const;
 		bool HasGradient() const;
@@ -122,6 +123,7 @@ namespace med
 
 		size_t m_MaxNumber = 0;
 		int m_CustomBitWidth = 0;
+		int m_NormalizationValue = 0;
 
 		std::vector<glm::vec4> m_Data{};
 		std::vector<float> m_DataSqueezed{};

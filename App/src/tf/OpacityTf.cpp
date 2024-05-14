@@ -183,7 +183,7 @@ namespace med
 		return true;
 	}
 
-	void OpacityTF::Load(const std::string& name)
+	void OpacityTF::Load(const std::string& name, TFLoadOption option)
 	{
 		// TODO create T TryParse<T> func
 		std::ifstream file(name);
@@ -275,6 +275,11 @@ namespace med
 			cps.emplace_back(x, y);
 		}
 		file.close();
+
+		if (option == TFLoadOption::RESCALE_TO_NEW_RANGE)
+		{
+			cps = RemapCPVector(cps, dataRange, resolution);
+		}
 
 		// Update the state
 		m_ControlPoints = std::move(cps);
