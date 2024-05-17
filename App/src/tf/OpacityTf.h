@@ -45,6 +45,8 @@ namespace med
 		bool Save(const std::string& name) override;
 		void Load(const std::string& name, TFLoadOption option = TFLoadOption::NONE) override;
 
+		void ResetTF() override;
+
 		/*
 		* @brief Calibrates transfer function based on the provided mask. The mask is usually a filled contour.
 		* @param mask: The mask which determines the areas where calibration is performed

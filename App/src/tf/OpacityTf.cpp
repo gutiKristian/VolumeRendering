@@ -20,6 +20,15 @@ namespace med
 		m_XPoints.resize(m_TextureResolution, 0.0f);
 		m_YPoints.resize(m_TextureResolution, 0.0f);
 
+		ResetTF();
+
+		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_YPoints.data(), WGPUTextureDimension_1D, {m_TextureResolution, 1, 1},
+			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Opacity TF");
+	}
+
+	void OpacityTF::ResetTF()
+	{
+		m_ControlPoints = {};
 		m_ControlPoints.emplace_back(0.0, 0.0);
 		m_ControlPoints.emplace_back(m_TextureResolution - 1.0, 1.0);
 
@@ -32,10 +41,9 @@ namespace med
 			m_XPoints[i] = i;
 			m_YPoints[i] = result[i];
 		}
-
-		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_YPoints.data(), WGPUTextureDimension_1D, {m_TextureResolution, 1, 1},
-			WGPUTextureFormat_R32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(float), "Opacity TF");
+		m_ShouldUpdate = true;
 	}
+
 
 	// Maybe in the future refactor: HandleClick, HandleDrag
 	void OpacityTF::Render()
@@ -113,6 +121,12 @@ namespace med
 				Save(str);
 			}
 
+			if (ImGui::Button("Reset"))
+			{
+				ResetTF();
+			}
+
+
 			ImPlot::EndPlot();
 		}
 	}
@@ -136,7 +150,7 @@ namespace med
 		const size_t size = xSize * ySize * slices;
 		float maxVal = 0.0f;
 		// If data are not normalized, normalize and convert to texture range, this is pre-computed factor
-		const float factor = m_TextureResolution / file.GetMaxNumber();
+		const float factor = m_TextureResolution / file.GetDataRange();
 		
 		for (std::uint32_t i = 0; i < size; ++i)
 		{
@@ -149,7 +163,7 @@ namespace med
 			}
 			else
 			{
-				value = static_cast<int>(data[i].a * factor);
+				value = std::min(static_cast<int>(data[i].a * factor), m_TextureResolution - 1);
 			}
 			
 			++m_Histogram[value];
@@ -185,7 +199,6 @@ namespace med
 
 	void OpacityTF::Load(const std::string& name, TFLoadOption option)
 	{
-		// TODO create T TryParse<T> func
 		std::ifstream file(name);
 		std::string line;
 		std::getline(file, line);
@@ -282,12 +295,13 @@ namespace med
 		}
 
 		// Update the state
-		m_ControlPoints = std::move(cps);
 		ResolveResolution(resolution);
 		// Allocate or destroy mem. if needed
 		m_XPoints.resize(m_TextureResolution, 0.0f);
 		m_YPoints.resize(m_TextureResolution, 0.0f);
-		m_DataRange = dataRange;
+		ResetTF();
+		
+		m_ControlPoints = std::move(cps);
 		
 		// Re-calculate the values betweeb CPs
 		for (int i = 0; i < m_ControlPoints.size(); ++i)
@@ -378,45 +392,75 @@ namespace med
 				}
 			}
 		}
-		/*
-		std::vector<int> tfBin(m_TextureResolution, 0);
-		const float factor = (m_TextureResolution - 1) / maxValue;
-		*/
 
 		int maxElem = *std::max_element(bin.begin(), bin.end());
 		std::vector<glm::dvec2> cps{};
-		cps.emplace_back(0.0, 0.0);
 
-		const double THRESHOLD_FOR_POINT = 0.3;
-		bool isPointActive = false;
+		auto doesCpExist = [&cps](int x) -> bool
+			{
+				return std::find_if(cps.begin(), cps.end(), [x](const glm::dvec2& point)
+					{ return point.x == x; }) != cps.end();
+			};
+
+
+		const double THRESHOLD_FOR_POINT = 0.8;
+
+		// ------------ ABOVE THRESH IS CP ----------------
+		/*{
+			for (int i = 0; i < maxValue; ++i)
+			{
+				auto freq = (bin[i] / maxElem);
+				if (freq >= THRESHOLD_FOR_POINT)
+				{
+					auto cpX = static_cast<int>((static_cast<double>(i) / file->GetMaxNumber()) * GetTextureResolution());
+					if (!doesCpExist(cpX))
+					{
+						cps.emplace_back(cpX, freq);
+					}
+				}
+			}
+		}*/
+
 		int firstValueThresh = -1;
 		int lastValueThresh = -1;
-
-		for (int i = 0; i < maxValue; ++i)
+		
+		// ----------------- INTERVAL DEFINITION --------------------
 		{
-			if ((bin[i] / maxElem) >= THRESHOLD_FOR_POINT)
+			for (int i = 0; i < maxValue; ++i)
 			{
-				if (firstValueThresh == -1)
+				auto freq = (bin[i] / maxElem);
+				if (freq >= THRESHOLD_FOR_POINT)
 				{
-					firstValueThresh = i;
+					if (firstValueThresh == -1)
+					{
+						firstValueThresh = i;
+					}
+					lastValueThresh = i;
 				}
-				lastValueThresh = i;
-				//cps.emplace_back(i, (bin[i] / maxElem) - THRESHOLD_FOR_POINT);
+				else
+				{
+					if (firstValueThresh != -1)
+					{
+
+						auto cpXFirst = static_cast<int>((static_cast<double>(firstValueThresh) / file->GetMaxNumber()) * GetTextureResolution());
+						auto cpxLast = static_cast<int>((static_cast<double>(lastValueThresh) / file->GetMaxNumber()) * GetTextureResolution());
+
+						if (!doesCpExist(cpXFirst))
+						{
+							cps.emplace_back(cpXFirst, bin[firstValueThresh] / maxElem);
+						}
+
+						if (cpXFirst != cpxLast)
+						{
+							cps.emplace_back(cpxLast, bin[lastValueThresh] / maxElem);
+						}
+
+						firstValueThresh = -1;
+					}
+				}
 			}
-			/*else if (isPointActive && (bin[i] / maxElem) < THRESHOLD_FOR_POINT)
-			{
-				isPointActive = false;
-			}*/
 		}
 
-		cps.emplace_back(firstValueThresh, bin[firstValueThresh] / maxElem);
-		cps.emplace_back(lastValueThresh, bin[lastValueThresh] / maxElem);
-		cps.emplace_back(m_TextureResolution - 1, 1.0);
-
-		/*if (cps.empty())
-		{
-			return;
-		}*/
 
 		// Neccessary first and last points
 		if (cps[0].x != 0.0)
@@ -425,7 +469,7 @@ namespace med
 		}
 		if (cps.back().x != m_TextureResolution - 1)
 		{
-			cps.push_back({ m_TextureResolution - 1, 1.0 });
+			cps.push_back({ m_TextureResolution - 1, 0.0 });
 		}
 
 		int newRes = (1 << file->GetMaxUsedBitDepth());

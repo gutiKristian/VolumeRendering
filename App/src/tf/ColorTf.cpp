@@ -18,21 +18,29 @@ namespace med
 	ColorTF::ColorTF(int desiredTfResolution)
 	{
 		ResolveResolution(desiredTfResolution);
+		ResetTF();
 
+		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_Colors.data(), WGPUTextureDimension_1D, {m_TextureResolution, 1, 1},
+						WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Color TF");
+	}
+
+	void ColorTF::ResetTF()
+	{
 		auto color1 = glm::vec4(0.0, 0.0, 0.0, 1.0);
 		auto color2 = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
 		m_Colors = LinearInterpolation::Generate<glm::vec4, int>(0, m_TextureResolution - 1, color1, color2, 1);
 
+		m_ControlCol = {};
 		m_ControlCol.push_back(color1);
 		m_ControlCol.push_back(color2);
 
+		m_ControlPoints = {};
 		m_ControlPoints.emplace_back(0.0, 0.5);
 		m_ControlPoints.emplace_back(m_TextureResolution - 1.0, 0.5);
-
-		p_Texture = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), m_Colors.data(), WGPUTextureDimension_1D, {m_TextureResolution, 1, 1},
-						WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Color TF");
+		m_ShouldUpdate = true;
 	}
+
 		
 	void ColorTF::Render()
 	{
@@ -149,6 +157,11 @@ namespace med
 				}
 				std::string s = (FileSystem::GetDefaultPath() / "assets" / n).string();
 				Save(s);
+			}
+
+			if (ImGui::Button("Reset"))
+			{
+				ResetTF();
 			}
 
 			ImPlot::EndPlot();
@@ -297,6 +310,7 @@ namespace med
 		m_ShouldUpdate = true;
 		LOG_INFO("Color TF loaded");
 	}
+
 
 	void ColorTF::UpdateYAxis(int cpId)
 	{

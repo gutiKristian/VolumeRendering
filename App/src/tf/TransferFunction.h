@@ -23,6 +23,7 @@ namespace med
 		virtual std::string GetType() const = 0;
 		virtual bool Save(const std::string& name) = 0;
 		virtual void Load(const std::string& name, TFLoadOption option = TFLoadOption::NONE) = 0;
+		virtual void ResetTF() = 0;
 	protected:
 		virtual void UpdateYAxis(int cpId) = 0;
 	// Implemented
