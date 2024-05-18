@@ -21,6 +21,11 @@ namespace med
 		void IntializePipeline(PipelineBuilder& pipeline) override;
 
 	private:
+		void DemoBasic();
+		void DemoCTReuse();
+		void DemoMRIReuse();
+
+	private:
 		std::shared_ptr<Texture> p_TexData = nullptr;
 		BindGroup m_BGroup;
 		std::unique_ptr<OpacityTF> p_OpacityTf = nullptr;

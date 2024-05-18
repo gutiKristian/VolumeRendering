@@ -38,8 +38,9 @@ struct Ray
 
 // App
 @group(1) @binding(0) var textMain: texture_3d<f32>;
-@group(1) @binding(1) var tfOpacity: texture_1d<f32>;
-@group(1) @binding(2) var tfColor: texture_1d<f32>;
+@group(1) @binding(1) var textMask: texture_3d<f32>;
+@group(1) @binding(2) var tfOpacity: texture_1d<f32>;
+@group(1) @binding(3) var tfColor: texture_1d<f32>;
 
 @vertex
 fn vs_main(@builtin(vertex_index) vID: u32, @location(0) vertexCoord: vec3f, @location(1) textureCoord: vec3f) -> Fragment {
@@ -168,11 +169,19 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	{
 		// Volume sampling
 		var volumeSample: vec4f = textureSample(textMain, samplerLin, currentPosition);
+		var maskSample: vec4f = textureSample(textMask, samplerNN, currentPosition);
+
 		var density: f32 = volumeSample.a;
 
 		// Transfer function sampling
 		var opacity: f32 = textureSample(tfOpacity, samplerLin, density).r;
 		var color: vec3f = textureSample(tfColor, samplerLin, density).rgb;
+
+		if maskSample.r > 0
+		{
+			color = vec3f(1.0, 1.0, 0.0);
+			opacity = 0.1;
+		}
 		
 		if IsInSampleCoords(currentPosition) && dst.a <= 0.95
 		{

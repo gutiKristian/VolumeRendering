@@ -39,8 +39,11 @@ struct Ray
 // App
 @group(1) @binding(0) var textMain: texture_3d<f32>;
 @group(1) @binding(1) var textData: texture_3d<f32>;
-@group(1) @binding(2) var tfOpacity: texture_1d<f32>;
-@group(1) @binding(3) var tfColor: texture_1d<f32>;
+@group(1) @binding(2) var textCTData: texture_3d<f32>;
+@group(1) @binding(3) var tfOpacityCT: texture_1d<f32>;
+@group(1) @binding(4) var tfColorCT: texture_1d<f32>;
+@group(1) @binding(5) var tfOpacityRT: texture_1d<f32>;
+@group(1) @binding(6) var tfColorRT: texture_1d<f32>;
 
 @vertex
 fn vs_main(@builtin(vertex_index) vID: u32, @location(0) vertexCoord: vec3f, @location(1) textureCoord: vec3f) -> Fragment {
@@ -110,6 +113,17 @@ fn jitter(co: vec2<f32>) -> f32
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
+fn BlinnPhong(N: vec3f, worldPosition: vec3f) -> vec3<f32>
+{
+	let kD: f32 = 1.5;
+	let kA: f32 = 0.5;
+	var L: vec3f = normalize(vec3f(0.0, 5.0, 5.0) - worldPosition);
+
+	return vec3f(0.96, 0.76, 0.67) * max(dot(N, L), 0.0) * kD + vec3f(1.0, 1.0, 1.0) * kA;
+}
+
+
+
 
 @fragment
 fn fs_main(in: Fragment) -> @location(0) vec4<f32>
@@ -121,7 +135,7 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 	texC.x =  0.5*texC.x + 0.5;
 	texC.y = -0.5*texC.y + 0.5;
 
-	var wordlCoords: vec3f = in.worldCoord.xyz;
+	var worldCoords: vec3f = in.worldCoord.xyz;
 
 	// Ray setup
 	let ray: Ray = SetupRay(vec2<i32>(i32(in.position.x), i32(in.position.y)), in.textureCoord);
@@ -170,25 +184,33 @@ fn fs_main(in: Fragment) -> @location(0) vec4<f32>
 		// Volume sampling
 		var maskSample: vec4f = textureSample(textMain, samplerLin, currentPosition);
 		var rtSample: f32 = textureSample(textData, samplerLin, currentPosition).a;
+		var ctData = textureSample(textCTData, samplerLin, currentPosition);
+		var ctSample: f32 = ctData.a;
+		var ctGradient: vec3f = normalize(ctData.rgb);
 
-		var opacity: f32 = textureSample(tfOpacity, samplerLin, rtSample).r;
-		var color: vec3f = textureSample(tfColor, samplerLin, rtSample).rgb;
+		var opacityRT: f32 = textureSample(tfOpacityRT, samplerLin, rtSample).r;
+		var colorRT: vec3f = textureSample(tfColorRT, samplerLin, rtSample).rgb;
+
+		var opacityCT: f32 = textureSample(tfOpacityCT, samplerLin, ctSample).r;
+		var colorCT: vec3f = textureSample(tfColorCT, samplerLin, ctSample).rgb;
 
 		if IsInSampleCoords(currentPosition) && dst.a < 1.0
 		{
-
+			var color: vec3f = colorCT * BlinnPhong(ctGradient, worldCoords);
+			var opacity: f32 = opacityCT;
 			if maskSample.r > 0 || maskSample.g > 0 || maskSample.b > 0
 			{
-				opacity = 0.5;
-				// color = vec3f(0.0, 0.0, 1.0);
-				dst = FrontToBackBlend(vec4f(color.r, color.g, color.b, opacity), dst); 
+				opacity = opacityRT;
+				color = colorRT;
 			}
 
 			// Blending
+			dst = FrontToBackBlend(vec4f(color.r, color.g, color.b, opacity), dst); 
 		}
 
 		// Advance ray
 		currentPosition = currentPosition + step;
+		worldCoords =  worldCoords + step;
 	}
 
 	return dst;

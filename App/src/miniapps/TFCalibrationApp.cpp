@@ -14,19 +14,27 @@ namespace med
 		auto ctFile = DicomReader::ReadVolumeFile("assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
 		auto volumeMask = contourFile->Create3DMask(*ctFile, { 4, 0, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM |
 			ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING | ContourPostProcess::FILL);
+		auto volumeMaskNoFill = contourFile->Create3DMask(*ctFile, { 4, 0, 0, 0 }, ContourPostProcess::RECONSTRUCT_BRESENHAM |
+			ContourPostProcess::PROCESS_NON_DUPLICATES | ContourPostProcess::CLOSING);
+		
+		contourFile->ListAvailableContours();
 
+		p_OpacityTfCT = std::make_unique<OpacityTF>(ctFile->GetMaxNumber());
+		p_ColorTfCT = std::make_unique<ColorTF>(ctFile->GetMaxNumber());
+		
 		// Must be called before normalization
-		p_OpacityTfCT = std::make_unique<OpacityTF>(4096);
-		p_ColorTfCT = std::make_unique<ColorTF>(4096);
 		p_OpacityTfCT->CalibrateOnMask(volumeMask, ctFile, { 1, 0, 0, 0 });
-
+		p_OpacityTfCT->ActivateHistogram(*ctFile);
 
 		ctFile->NormalizeData();
 		p_TexCTData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), ctFile->GetVoidPtr(), WGPUTextureDimension_3D, ctFile->GetSize(),
 			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "CT data texture");
+		p_TexMaskData = Texture::CreateFromData(base::GraphicsContext::GetDevice(), base::GraphicsContext::GetQueue(), volumeMaskNoFill->GetVoidPtr(), WGPUTextureDimension_3D, volumeMaskNoFill->GetSize(),
+			WGPUTextureFormat_RGBA32Float, WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst, sizeof(glm::vec4), "Mask data texture");
 
 		
 		m_BGroup.AddTexture(*p_TexCTData, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
+		m_BGroup.AddTexture(*p_TexMaskData, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroup.AddTexture(*p_OpacityTfCT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroup.AddTexture(*p_ColorTfCT->GetTexture(), WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
 		m_BGroup.FinalizeBindGroup(base::GraphicsContext::GetDevice());

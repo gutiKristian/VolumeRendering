@@ -51,7 +51,7 @@ namespace med
 		if (ImPlot::BeginPlot("##optfplot"))
 		{
 			// This sets up axes 1
-			ImPlot::SetupAxes("Voxel value", "Alpha", 0, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit);
+			ImPlot::SetupAxes("Voxel value", "Alpha", 0, ImPlotAxisFlags_AutoFit);
 
 			// Setup limits, X: 0-4095 (data resolution -- bits per pixel), Y: 0-1 (could be anything in the future)
 			ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 0.0, m_TextureResolution - 1.0);
@@ -403,7 +403,7 @@ namespace med
 			};
 
 
-		const double THRESHOLD_FOR_POINT = 0.8;
+		const double THRESHOLD_FOR_POINT = 0.6;
 
 		// ------------ ABOVE THRESH IS CP ----------------
 		/*{
@@ -472,8 +472,6 @@ namespace med
 			cps.push_back({ m_TextureResolution - 1, 0.0 });
 		}
 
-		int newRes = (1 << file->GetMaxUsedBitDepth());
-		ResolveResolution(newRes);
 		m_XPoints.resize(m_TextureResolution, 0.0f);
 		m_YPoints.resize(m_TextureResolution, 0.0f);
 
