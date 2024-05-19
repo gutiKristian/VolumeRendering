@@ -13,9 +13,9 @@ namespace med
 	{
 		LOG_INFO("OnStart BasicVolumeMiniApp");
 		 		
-		//DemoBasic();
+		DemoBasic();
 		//DemoCTReuse();
-		DemoMRIReuse();
+		//DemoMRIReuse();
 		
 			
 		m_BGroup.AddTexture(*p_TexData, WGPUShaderStage_Fragment, WGPUTextureSampleType_Float);
