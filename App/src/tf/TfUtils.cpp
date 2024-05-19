@@ -15,6 +15,16 @@ namespace med
 		auto& cp = controlPoints[index];
 		const auto cpSize = controlPoints.size();
 
+		// Can't move the first and last cp on the x-axis
+		if (index == 0)
+		{
+			cp.x = X_MIN;
+		}
+		else if (index == cpSize - 1)
+		{
+			cp.x = X_MAX;
+		}
+
 		// Clamp the control point to the plot area
 		cp.y = std::clamp(cp.y, 0.0, 1.0);
 		cp.x = std::clamp(cp.x, X_MIN, X_MAX);
