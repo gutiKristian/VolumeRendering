@@ -17,7 +17,7 @@
 	url = https://github.com/glfw/glfw
 [submodule "vendor/dcm/ext/dcm"]
 	path = vendor/dcm/ext/dcm
-	url = https://github.com/sprinfall/dcm.git
+	url = https://github.com/gutiKristian/dcm.git
 	ignore = dirty
 [submodule "vendor/implot/ext/implot"]
 	path = vendor/implot/ext/implot
