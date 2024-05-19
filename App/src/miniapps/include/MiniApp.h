@@ -32,6 +32,7 @@
 
 namespace med
 {
+	// A bit redundant abstraction made just for the showcase purposes
 	class MiniApp
 	{
 	public:
@@ -54,8 +55,10 @@ namespace med
 
 		float GetStepSize() const { return m_StepSize; }
 		int GetStepsCount() const { return m_StepsCount; }
+		std::tuple<float, float, float> GetBBoxSize() const { return m_BBoxSize; }
 	protected:
 		float m_StepSize = 0.0f;
 		int m_StepsCount = 0;
+		std::tuple<float, float, float> m_BBoxSize = { 0.0f, 0.0f, 0.0f };
 	};
 }

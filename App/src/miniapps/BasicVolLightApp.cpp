@@ -18,9 +18,8 @@ namespace med
 		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
 
 		ctFile->NormalizeData();
-		//ctFile->PreComputeGradientSobel();
 		ctFile->PreComputeGradient();
-		//ctFile->AverageGradient(5);
+		ctFile->AverageGradient(5);
 
 		ComputeRecommendedSteppingParams(*ctFile);
 		

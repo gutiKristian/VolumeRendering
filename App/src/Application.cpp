@@ -83,6 +83,13 @@ namespace med {
 			m_StepsCount = p_App->GetStepsCount();
 		}
 
+		/*auto [bx, by, bz] = p_App->GetBBoxSize();
+		if (bx != 0 && by != 0 && bz != 0)
+		{
+			SetBoundingBoxSize(bx, by, bz);
+		}*/
+
+
 		p_RenderPipeline = m_Builder.BuildPipeline();
 	}
 
