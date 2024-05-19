@@ -111,8 +111,7 @@ namespace med
 
 	void BasicVolumeApp::DemoMRIReuse()
 	{
-		//auto mriFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\pelvis1MRI\\");
-		auto mriFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\covidmri\\");
+		auto mriFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\pelvis1MRI\\");
 
 		mriFile->NormalizeData();
 
