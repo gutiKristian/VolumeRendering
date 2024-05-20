@@ -78,7 +78,7 @@ fn GetStepSize(rayLength: f32, samples: i32) -> f32
 fn CalculateWorldStep(r: Ray, stepSize: f32) -> vec3<f32>
 {
 	// BBox ratio from uniforms
-	var worldStep: vec3<f32> = r.direction * vec3f(stepSize * 1.0, stepSize * 1.0, stepSize * 0.7);
+	var worldStep: vec3<f32> = r.direction * vec3f(stepSize * 1.0, stepSize * 1.0, stepSize * 0.5);
 	worldStep.z *= (-1.0); // it is inverted  in the world space
 	return worldStep;
 }
