@@ -18,7 +18,7 @@
 [submodule "vendor/dcm/ext/dcm"]
 	path = vendor/dcm/ext/dcm
 	url = https://github.com/gutiKristian/dcm.git
-	branch = master
+	branch = main
 	ignore = dirty
 [submodule "vendor/implot/ext/implot"]
 	path = vendor/implot/ext/implot
