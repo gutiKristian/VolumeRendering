@@ -15,11 +15,6 @@
 [submodule "WebgpuLib/vendor/glfw/ext/glfw"]
 	path = WebgpuLib/vendor/glfw/ext/glfw
 	url = https://github.com/glfw/glfw
-[submodule "vendor/dcm/ext/dcm"]
-	path = vendor/dcm/ext/dcm
-	url = https://github.com/gutiKristian/dcm.git
-	branch = main
-	ignore = dirty
 [submodule "vendor/implot/ext/implot"]
 	path = vendor/implot/ext/implot
 	url = https://github.com/epezent/implot.git
