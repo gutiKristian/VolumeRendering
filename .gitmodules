@@ -18,3 +18,6 @@
 [submodule "vendor/implot/ext/implot"]
 	path = vendor/implot/ext/implot
 	url = https://github.com/epezent/implot.git
+[submodule "vendor/dcm/ext/dcm"]
+	path = vendor/dcm/ext/dcm
+	url = https://github.com/gutiKristian/dcm.git
