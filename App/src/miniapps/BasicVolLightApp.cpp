@@ -26,8 +26,9 @@ namespace med
 		p_OpacityTf = std::make_unique<OpacityTF>(4096);
 		p_ColorTf = std::make_unique<ColorTF>(4096);
 
-		p_OpacityTf->Load((FileSystem::GetDefaultPath() / "assets\\this").string());
-		p_ColorTf->Load((FileSystem::GetDefaultPath() / "assets\\tfcolorLungsContrast4096").string());
+		// Example of loading TFs
+		//p_OpacityTf->Load((FileSystem::GetDefaultPath() / "assets\\x").string());
+		//p_ColorTf->Load((FileSystem::GetDefaultPath() / "assets\\y").string());
 
 		p_OpacityTf->SetDataRange(ctFile->GetMaxNumber());
 		p_OpacityTf->ActivateHistogram(*ctFile);
