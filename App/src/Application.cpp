@@ -66,7 +66,7 @@ namespace med {
 		InitializeIndexBuffers();
 		InitializeBindGroups();
 		InitializeRenderPipelines();
-		auto miniapp = std::make_unique<TFCalibrationApp>();
+		auto miniapp = std::make_unique<BasicVolLightApp>();
 		p_App = std::move(miniapp);
 		p_App->OnStart(m_Builder);
 

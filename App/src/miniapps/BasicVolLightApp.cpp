@@ -13,9 +13,12 @@ namespace med
 	{
 		LOG_INFO("OnStart Basic volume app with light");
 
-		 //auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\HumanHead\\");
+		 auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\HumanHead\\");
 		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\chestCTContrast\\");
-		auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
+		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\716^716_716_CT_2013-04-02_230000_716-1-01_716-1_n81__00000\\");
+
+		//auto ctFile = DicomReader::ReadVolumeFile(FileSystem::GetDefaultPath() / "assets\\AGIA2YVL\\");
+
 
 		ctFile->NormalizeData();
 		ctFile->PreComputeGradient();

@@ -117,7 +117,7 @@ fn BlinnPhong(N: vec3f, worldPosition: vec3f) -> vec3<f32>
 {
 	let kD: f32 = 1.5;
 	let kA: f32 = 0.5;
-	var L: vec3f = normalize(vec3f(0.0, 5.0, 5.0) - worldPosition);
+	var L: vec3f = normalize(vec3f(0.0, -5.0, 0.0) - worldPosition);
 
 	return vec3f(0.96, 0.76, 0.67) * max(dot(N, L), 0.0) * kD + vec3f(1.0, 1.0, 1.0) * kA;
 }

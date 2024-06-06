@@ -34,6 +34,8 @@ namespace med
 		rtFile->NormalizeData();
 		ctFile->NormalizeData();
 
+		ComputeRecommendedSteppingParams(*ctFile);
+
 		p_OpacityTfCT->SetDataRange(ctFile->GetDataRange());
 		p_OpacityTfCT->ActivateHistogram(*ctFile);
 
