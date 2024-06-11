@@ -21,3 +21,4 @@
 [submodule "vendor/dcm/ext/dcm"]
 	path = vendor/dcm/ext/dcm
 	url = https://github.com/gutiKristian/dcm.git
+	ignore = dirty
